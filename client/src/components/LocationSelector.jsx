@@ -4,18 +4,27 @@ import api from '../services/api';
 
 const FIELD_ORDER = ['state', 'district', 'city', 'area'];
 
-function Field({ label, value, onChange, options, disabled, placeholder }) {
+/** Helper to safely extract list data regardless of response wrapping */
+function extractList(res) {
+  const body = res?.data;
+  if (Array.isArray(body?.data)) return body.data;
+  if (Array.isArray(body)) return body;
+  if (Array.isArray(res)) return res;
+  return [];
+}
+
+function Field({ label, value, onChange, options = [], disabled, placeholder, loading }) {
   return (
     <div className="flex flex-1 flex-col gap-1 px-4 py-2.5 first:pl-0 sm:border-l sm:border-line sm:first:border-l-0">
       <label className="text-[11px] tracking-wide text-ink/45">{label}</label>
       <select
         value={value}
-        disabled={disabled}
+        disabled={disabled || loading}
         onChange={(e) => onChange(e.target.value)}
-        className="appearance-none bg-transparent font-display text-[15px] font-medium text-ink outline-none disabled:text-ink/30"
+        className="appearance-none bg-transparent font-display text-[15px] font-medium text-ink outline-none disabled:text-ink/30 cursor-pointer disabled:cursor-not-allowed"
       >
-        <option value="">{placeholder}</option>
-        {options.map((opt) => (
+        <option value="">{loading ? `Loading...` : placeholder}</option>
+        {(options || []).map((opt) => (
           <option key={opt._id} value={opt._id} data-slug={opt.slug} data-name={opt.name}>
             {opt.name}
           </option>
@@ -32,51 +41,134 @@ export default function LocationSelector() {
   const [cities, setCities] = useState([]);
   const [areas, setAreas] = useState([]);
 
+  const [loading, setLoading] = useState({
+    state: false,
+    district: false,
+    city: false,
+    area: false,
+  });
+  const [fetchError, setFetchError] = useState(null);
+
   const [selected, setSelected] = useState({ state: '', district: '', city: '', area: '' });
   const [slugs, setSlugs] = useState({ state: '', district: '', city: '', area: '' });
 
+  // Fetch active states on mount
   useEffect(() => {
+    let isMounted = true;
+    setLoading((prev) => ({ ...prev, state: true }));
+    setFetchError(null);
+
     api
       .get('/locations/states')
-      .then(({ data }) => setStates(data.data))
-      .catch(() => setStates([]));
+      .then((res) => {
+        if (!isMounted) return;
+        const list = extractList(res);
+        setStates(list);
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        console.error('[LocationSelector] Failed to fetch states:', err);
+        setFetchError('Unable to load states. Please ensure the server is running.');
+        setStates([]);
+      })
+      .finally(() => {
+        if (isMounted) setLoading((prev) => ({ ...prev, state: false }));
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
+  // Fetch districts when state changes
   useEffect(() => {
     if (!selected.state) {
       setDistricts([]);
       return;
     }
+    let isMounted = true;
+    setLoading((prev) => ({ ...prev, district: true }));
+
     api
       .get(`/locations/districts/${selected.state}`)
-      .then(({ data }) => setDistricts(data.data))
-      .catch(() => setDistricts([]));
+      .then((res) => {
+        if (!isMounted) return;
+        setDistricts(extractList(res));
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        console.error('[LocationSelector] Failed to fetch districts:', err);
+        setDistricts([]);
+      })
+      .finally(() => {
+        if (isMounted) setLoading((prev) => ({ ...prev, district: false }));
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [selected.state]);
 
+  // Fetch cities when district changes
   useEffect(() => {
     if (!selected.district) {
       setCities([]);
       return;
     }
+    let isMounted = true;
+    setLoading((prev) => ({ ...prev, city: true }));
+
     api
       .get(`/locations/cities/${selected.district}`)
-      .then(({ data }) => setCities(data.data))
-      .catch(() => setCities([]));
+      .then((res) => {
+        if (!isMounted) return;
+        setCities(extractList(res));
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        console.error('[LocationSelector] Failed to fetch cities:', err);
+        setCities([]);
+      })
+      .finally(() => {
+        if (isMounted) setLoading((prev) => ({ ...prev, city: false }));
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [selected.district]);
 
+  // Fetch areas when city changes
   useEffect(() => {
     if (!selected.city) {
       setAreas([]);
       return;
     }
+    let isMounted = true;
+    setLoading((prev) => ({ ...prev, area: true }));
+
     api
       .get(`/locations/areas/${selected.city}`)
-      .then(({ data }) => setAreas(data.data))
-      .catch(() => setAreas([]));
+      .then((res) => {
+        if (!isMounted) return;
+        setAreas(extractList(res));
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        console.error('[LocationSelector] Failed to fetch areas:', err);
+        setAreas([]);
+      })
+      .finally(() => {
+        if (isMounted) setLoading((prev) => ({ ...prev, area: false }));
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [selected.city]);
 
-  const handleChange = (level) => (id, list) => {
-    const optionsList = { state: states, district: districts, city: cities, area: areas }[level];
+  const handleChange = (level) => (id) => {
+    const optionsList = { state: states, district: districts, city: cities, area: areas }[level] || [];
     const match = optionsList.find((o) => o._id === id);
 
     const resetFrom = FIELD_ORDER.indexOf(level) + 1;
@@ -92,7 +184,7 @@ export default function LocationSelector() {
     });
   };
 
-  const canExplore = selected.state && selected.district && selected.city;
+  const canExplore = Boolean(selected.state && selected.district && selected.city);
 
   const handleExplore = () => {
     if (!canExplore) return;
@@ -104,12 +196,18 @@ export default function LocationSelector() {
 
   return (
     <div className="rounded-md border border-line bg-white/70 p-4 shadow-[0_1px_0_0_#D9D2C2] sm:p-2">
+      {fetchError && (
+        <div className="mb-2 px-3 py-1.5 text-xs text-vermilion bg-vermilion/10 rounded">
+          {fetchError}
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row sm:items-stretch">
         <Field
           label="State"
           value={selected.state}
           onChange={(id) => handleChange('state')(id)}
           options={states}
+          loading={loading.state}
           placeholder="Select state"
         />
         <Field
@@ -118,6 +216,7 @@ export default function LocationSelector() {
           onChange={(id) => handleChange('district')(id)}
           options={districts}
           disabled={!selected.state}
+          loading={loading.district}
           placeholder="Select district"
         />
         <Field
@@ -126,6 +225,7 @@ export default function LocationSelector() {
           onChange={(id) => handleChange('city')(id)}
           options={cities}
           disabled={!selected.district}
+          loading={loading.city}
           placeholder="Select city"
         />
         <Field
@@ -134,6 +234,7 @@ export default function LocationSelector() {
           onChange={(id) => handleChange('area')(id)}
           options={areas}
           disabled={!selected.city}
+          loading={loading.area}
           placeholder="Select area"
         />
         <div className="flex items-center px-2 pt-2 sm:pt-0">

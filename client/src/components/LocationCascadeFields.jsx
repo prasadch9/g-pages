@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 
+function extractList(res) {
+  const body = res?.data;
+  if (Array.isArray(body?.data)) return body.data;
+  if (Array.isArray(body)) return body;
+  if (Array.isArray(res)) return res;
+  return [];
+}
+
 /**
  * A plain cascading State -> District -> City -> Area picker for forms
  * (e.g. registration, business listing creation). Unlike LocationSelector,
@@ -14,22 +22,46 @@ export default function LocationCascadeFields({ value, onChange }) {
   const [areas, setAreas] = useState([]);
 
   useEffect(() => {
-    api.get('/locations/states').then(({ data }) => setStates(data.data)).catch(() => {});
+    api
+      .get('/locations/states')
+      .then((res) => setStates(extractList(res)))
+      .catch((err) => {
+        console.error('[LocationCascadeFields] Failed to fetch states:', err);
+        setStates([]);
+      });
   }, []);
 
   useEffect(() => {
     if (!value.state) return setDistricts([]);
-    api.get(`/locations/districts/${value.state}`).then(({ data }) => setDistricts(data.data)).catch(() => {});
+    api
+      .get(`/locations/districts/${value.state}`)
+      .then((res) => setDistricts(extractList(res)))
+      .catch((err) => {
+        console.error('[LocationCascadeFields] Failed to fetch districts:', err);
+        setDistricts([]);
+      });
   }, [value.state]);
 
   useEffect(() => {
     if (!value.district) return setCities([]);
-    api.get(`/locations/cities/${value.district}`).then(({ data }) => setCities(data.data)).catch(() => {});
+    api
+      .get(`/locations/cities/${value.district}`)
+      .then((res) => setCities(extractList(res)))
+      .catch((err) => {
+        console.error('[LocationCascadeFields] Failed to fetch cities:', err);
+        setCities([]);
+      });
   }, [value.district]);
 
   useEffect(() => {
     if (!value.city) return setAreas([]);
-    api.get(`/locations/areas/${value.city}`).then(({ data }) => setAreas(data.data)).catch(() => {});
+    api
+      .get(`/locations/areas/${value.city}`)
+      .then((res) => setAreas(extractList(res)))
+      .catch((err) => {
+        console.error('[LocationCascadeFields] Failed to fetch areas:', err);
+        setAreas([]);
+      });
   }, [value.city]);
 
   const set = (field) => (e) => {

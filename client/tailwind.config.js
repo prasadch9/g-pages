@@ -4,29 +4,39 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Brand palette — G-PAGES
         ink: {
-          DEFAULT: '#1B2A4A',
-          light: '#2E4270',
-          dark: '#101A30',
+          DEFAULT: '#0D1B3E',   // deep navy (logo "PAGES" colour)
+          light: '#1B2A55',
+          dark: '#060F24',
         },
-        paper: '#FAF6EC',
+        paper: '#FFFFFF',
         marigold: {
-          DEFAULT: '#E8A33D',
-          dark: '#C9821E',
+          DEFAULT: '#F47224',   // brand orange (logo pin colour)
+          dark: '#D9621A',
         },
-        vermilion: '#C1442D',
-        moss: '#3F7A5C',
-        line: '#D9D2C2',
+        accent: {
+          DEFAULT: '#1A56DB',   // brand blue (logo "G" colour)
+          light: '#3B6FEF',
+          pale: '#EBF0FF',
+        },
+        vermilion: '#E53E3E',
+        moss: '#2E7D5E',
+        line: '#E2E8F0',
+        canvas: '#F5F7FA',      // light-grey section backgrounds
       },
       fontFamily: {
-        display: ['"Fraunces"', 'serif'],
-        body: ['"Inter"', 'sans-serif'],
+        display: ['"Inter"', 'sans-serif'],
+        body:    ['"Inter"', 'sans-serif'],
+        sans:    ['"Inter"', 'sans-serif'],
       },
       borderRadius: {
-        sm: '3px',
-        DEFAULT: '4px',
-        md: '6px',
-        lg: '10px',
+        sm:  '4px',
+        DEFAULT: '6px',
+        md:  '8px',
+        lg:  '12px',
+        xl:  '16px',
+        '2xl': '20px',
       },
     },
   },

@@ -9,9 +9,53 @@ export default function ExplorePage() {
   const [state, setState] = useState('');
   const [district, setDistrict] = useState('');
 
-  useEffect(() => { api.get('/locations/states').then(({ data }) => setStates(data.data)).catch(() => {}); }, []);
-  useEffect(() => { setDistrict(''); setCities([]); if (state) api.get(`/locations/districts/${state}`).then(({ data }) => setDistricts(data.data)); else setDistricts([]); }, [state]);
-  useEffect(() => { if (district) api.get(`/locations/cities/${district}`).then(({ data }) => setCities(data.data)); else setCities([]); }, [district]);
+  const extractList = (res) => {
+    const body = res?.data;
+    if (Array.isArray(body?.data)) return body.data;
+    if (Array.isArray(body)) return body;
+    if (Array.isArray(res)) return res;
+    return [];
+  };
+
+  useEffect(() => {
+    api
+      .get('/locations/states')
+      .then((res) => setStates(extractList(res)))
+      .catch((err) => {
+        console.error('[ExplorePage] Failed to fetch states:', err);
+        setStates([]);
+      });
+  }, []);
+
+  useEffect(() => {
+    setDistrict('');
+    setCities([]);
+    if (state) {
+      api
+        .get(`/locations/districts/${state}`)
+        .then((res) => setDistricts(extractList(res)))
+        .catch((err) => {
+          console.error('[ExplorePage] Failed to fetch districts:', err);
+          setDistricts([]);
+        });
+    } else {
+      setDistricts([]);
+    }
+  }, [state]);
+
+  useEffect(() => {
+    if (district) {
+      api
+        .get(`/locations/cities/${district}`)
+        .then((res) => setCities(extractList(res)))
+        .catch((err) => {
+          console.error('[ExplorePage] Failed to fetch cities:', err);
+          setCities([]);
+        });
+    } else {
+      setCities([]);
+    }
+  }, [district]);
 
   return (
     <div className="container-page py-12 sm:py-16">

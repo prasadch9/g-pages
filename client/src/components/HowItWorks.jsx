@@ -2,43 +2,81 @@ import React from 'react';
 
 const STEPS = [
   {
-    n: '1',
+    num: '01',
     title: 'Choose your location',
-    text: 'Pick your state, district and city — or let us detect it — to see what\u2019s actually near you.',
+    desc: 'Select your state, district, and city using the search tool to see results near you.',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-6 w-6" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+        <circle cx="12" cy="9" r="2.5" />
+      </svg>
+    ),
   },
   {
-    n: '2',
+    num: '02',
     title: 'Pick a category',
-    text: 'Schools, hospitals, restaurants, salons — browse by what you need, filtered to your area.',
+    desc: 'Browse schools, hospitals, restaurants, shops and 13+ business categories.',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-6 w-6" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
+      </svg>
+    ),
   },
   {
-    n: '3',
-    title: 'Connect with confidence',
-    text: 'Every listing is verified before it goes live. Read real reviews, call, or get directions in one tap.',
+    num: '03',
+    title: 'Connect with the business',
+    desc: 'View contact details, address, hours and services — then call, visit or enquire directly.',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-6 w-6" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 .14h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.14-1.14a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0121.86 15l.06 1.92z" />
+      </svg>
+    ),
   },
 ];
 
 export default function HowItWorks() {
   return (
-    <section className="border-b border-line bg-white/40 py-16">
+    <section className="border-b border-line bg-white section-pad">
       <div className="container-page">
-        <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
-          How Google Pages works
-        </h2>
+        {/* Heading */}
+        <div className="mb-12 max-w-lg">
+          <p className="mb-1 text-[11px] font-bold uppercase tracking-widest text-marigold">
+            Simple. Fast. Free.
+          </p>
+          <h2 className="font-display text-2xl font-bold text-ink sm:text-3xl">
+            How G-PAGES works
+          </h2>
+          <p className="mt-2 text-[15px] text-ink/50">
+            Three easy steps to find any local business or service near you.
+          </p>
+        </div>
 
-        <div className="mt-10 grid gap-10 sm:grid-cols-3">
+        {/* Steps */}
+        <div className="grid gap-8 sm:grid-cols-3">
           {STEPS.map((step, i) => (
-            <div key={step.n} className="relative pl-2">
-              <div className="flex items-baseline gap-3">
-                <span className="font-display text-3xl font-semibold text-marigold-dark">
-                  {step.n}
-                </span>
-                <h3 className="font-display text-lg font-medium text-ink">{step.title}</h3>
+            <div key={step.num} className="flex gap-5">
+              {/* Number + icon */}
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-accent-pale text-accent">
+                  {step.icon}
+                </div>
+                {/* Connector line */}
+                {i < STEPS.length - 1 && (
+                  <div className="hidden h-full w-px bg-line sm:block" />
+                )}
               </div>
-              <p className="mt-2 max-w-xs text-[15px] leading-relaxed text-ink/60">{step.text}</p>
-              {i < STEPS.length - 1 && (
-                <div className="mt-6 hidden h-px w-full bg-line sm:block" />
-              )}
+
+              {/* Text */}
+              <div className="pt-1">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-marigold">
+                  Step {step.num}
+                </span>
+                <h3 className="mt-1 text-[16px] font-semibold text-ink">{step.title}</h3>
+                <p className="mt-1.5 text-[14px] leading-relaxed text-ink/55">{step.desc}</p>
+              </div>
             </div>
           ))}
         </div>

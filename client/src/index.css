@@ -10,10 +10,10 @@
     @apply bg-paper text-ink font-body antialiased;
   }
   ::selection {
-    @apply bg-marigold/30;
+    background-color: #EBF0FF;
   }
   :focus-visible {
-    outline: 2px solid #1B2A4A;
+    outline: 2px solid #1A56DB;
     outline-offset: 2px;
   }
 }
@@ -21,6 +21,18 @@
 @layer utilities {
   .container-page {
     @apply mx-auto w-full max-w-7xl px-5 sm:px-8;
+  }
+  .section-pad {
+    @apply py-14 sm:py-20;
+  }
+  .footer__logo,
+  .footer-logo {
+    display: block;
+    width: 170px;
+    height: auto;
+    max-width: 100%;
+    object-fit: contain;
+    filter: none;
   }
 }
 
