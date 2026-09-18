@@ -2,6 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 
+const ICONS = {
+  Schools: '🎓', Colleges: '🏢', Universities: '🏛️', 'Training Institutes': '📚', Academies: '🎯', 'Sports Academies': '🏅', Hospitals: '🏥', 'Multispeciality Hospitals': '🏨', Cardiology: '❤️', ENT: '👂', Dental: '🦷', 'Hearing Solutions': '🦻', 'Fitness Centres': '🏋️', Temples: '🛕', Churches: '⛪', Trusts: '🤝', NGOs: '🌍', Associations: '👥', 'Marriage Bureaus': '💍', 'Function Halls': '🏛️', 'Event Organizers': '🎉', 'Catering Services': '🍽️', 'Flower Decoration': '💐', 'Fashion Designers': '👗', 'Beauty Parlours': '💄', 'Saloon & Spa': '💆', 'Tours & Travels': '🧳', 'Hotels & Residencies': '🏨', Resorts: '🏝️', 'Party Zones': '🎊', 'Real Estate': '🏠', Construction: '🏗️', Roofing: '🧱', 'Interiors & Decorations': '🛋️', 'Tiles Shops': '🔲', 'Furniture Shops': '🪑', Restaurants: '🍴', 'Coffee Shops': '☕', 'Sweet Shops & Bakery': '🧁', 'Food Processing': '🥫', 'Shopping Malls': '🏬', Boutique: '🛍️', 'Home Appliances': '🔌', 'Mattress Shops': '🛏️', Nurseries: '🌱', 'Car Showrooms': '🚗', 'Small Scale Industries': '🏭', 'Trading Businesses': '📦', Consultancies: '💼', Agencies: '📣', 'Manpower Agencies': '🧑‍💼', Professions: '🧑‍⚕️', 'Packers & Movers': '📦', 'Sculptures (Arts)': '🗿',
+  Clinics: '🩺', Pharmacies: '💊', Hotels: '🛏️', 'Fashion Stores': '🛍️', Banks: '🏦', Gyms: '🏋️', Salons: '✂️', Theatres: '🎬', 'Tourist Places': '📍', Parks: '🌳', 'IT Companies': '💻', 'Coaching Centers': '📖', Libraries: '📚', 'Automobile Dealers': '🚙', 'Government Offices': '🏛️',
+};
+
 export default function CategoriesPage() {
   const [categories, setCategories] = useState([]);
   const [query, setQuery] = useState('');
@@ -23,7 +28,9 @@ const visible = categories.filter((category) => category.name.toLowerCase().incl
       <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {visible.map((category) => (
           <Link key={category._id} to={`/categories/${category.slug}`} className="group rounded-2xl border border-line bg-white/70 p-5 transition hover:-translate-y-1 hover:border-ink/30 hover:shadow-lg">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-marigold/25 font-display text-lg text-ink">{category.name.charAt(0)}</div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 text-2xl shadow-sm transition duration-300 group-hover:rotate-3 group-hover:scale-110 group-hover:from-cyan-100 group-hover:to-blue-100">
+              {ICONS[category.name] || '📌'}
+            </div>
             <h2 className="mt-5 font-display text-lg font-semibold text-ink group-hover:text-vermilion">{category.name}</h2>
             <p className="mt-2 line-clamp-2 text-sm text-ink/50">{category.description || `Discover trusted ${category.name.toLowerCase()} near you.`}</p>
             <span className="mt-5 inline-block text-sm font-medium text-ink/60 group-hover:text-ink">View places →</span>

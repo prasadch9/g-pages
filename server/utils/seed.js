@@ -10,9 +10,19 @@
 
 require('dotenv').config();
 
+const dns = require('dns');
 const mongoose = require('mongoose');
 const slugify = require('slugify');
 const bcrypt = require('bcryptjs');
+
+const dnsServers = (process.env.DNS_SERVERS || '')
+  .split(',')
+  .map((server) => server.trim())
+  .filter(Boolean);
+
+if (dnsServers.length > 0) {
+  dns.setServers(dnsServers);
+}
 
 const connectDB = require('../config/db');
 const Location = require('../models/Location');
@@ -38,7 +48,7 @@ const createSlug = (name) => {
 // CATEGORY DATA
 // ============================================================
 
-const CATEGORIES = [
+const LEGACY_CATEGORIES = [
   {
     name: 'Schools',
     order: 1,
@@ -219,6 +229,33 @@ const CATEGORIES = [
     order: 23,
   },
 ];
+
+const REQUESTED_CATEGORY_NAMES = [
+  'Schools', 'Colleges', 'Universities', 'Training Institutes', 'Academies', 'Sports Academies',
+  'Hospitals', 'Multispeciality Hospitals', 'Cardiology', 'ENT', 'Dental', 'Hearing Solutions', 'Fitness Centres',
+  'Temples', 'Churches', 'Trusts', 'NGOs', 'Associations',
+  'Marriage Bureaus', 'Function Halls', 'Event Organizers', 'Catering Services', 'Flower Decoration',
+  'Fashion Designers', 'Beauty Parlours', 'Saloon & Spa',
+  'Tours & Travels', 'Hotels & Residencies', 'Resorts', 'Party Zones',
+  'Real Estate', 'Construction', 'Roofing', 'Interiors & Decorations', 'Tiles Shops', 'Furniture Shops',
+  'Restaurants', 'Coffee Shops', 'Sweet Shops & Bakery', 'Food Processing',
+  'Shopping Malls', 'Boutique', 'Home Appliances', 'Mattress Shops', 'Nurseries',
+  'Car Showrooms',
+  'Small Scale Industries', 'Trading Businesses',
+  'Consultancies', 'Agencies', 'Manpower Agencies', 'Professions',
+  'Packers & Movers',
+  'Sculptures (Arts)',
+];
+
+const LEGACY_FILTERS = Object.fromEntries(
+  LEGACY_CATEGORIES.filter((category) => category.filters).map((category) => [category.name, category.filters])
+);
+
+const CATEGORIES = REQUESTED_CATEGORY_NAMES.map((name, index) => ({
+  name,
+  order: index + 1,
+  ...(LEGACY_FILTERS[name] ? { filters: LEGACY_FILTERS[name] } : {}),
+}));
 
 
 // ============================================================

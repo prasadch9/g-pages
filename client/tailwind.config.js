@@ -5,18 +5,18 @@ export default {
     extend: {
       colors: {
         ink: {
-          DEFAULT: '#1B2A4A',
-          light: '#2E4270',
-          dark: '#101A30',
+          DEFAULT: '#102A43',
+          light: '#243B53',
+          dark: '#071B31',
         },
-        paper: '#FAF6EC',
+        paper: '#F6F9FC',
         marigold: {
-          DEFAULT: '#E8A33D',
-          dark: '#C9821E',
+          DEFAULT: '#14B8A6',
+          dark: '#0F8F82',
         },
-        vermilion: '#C1442D',
-        moss: '#3F7A5C',
-        line: '#D9D2C2',
+        vermilion: '#E76F51',
+        moss: '#198754',
+        line: '#D9E2EC',
       },
       fontFamily: {
         display: ['"Fraunces"', 'serif'],

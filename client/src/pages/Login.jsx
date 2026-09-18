@@ -50,7 +50,7 @@ export default function Login() {
 
   return (
     <div className="container-page flex min-h-[70vh] items-center justify-center py-16">
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-sm rounded-3xl border border-white/80 bg-white/85 p-7 shadow-[0_20px_55px_rgba(16,42,67,0.12)] backdrop-blur sm:p-8">
         <h1 className="font-display text-2xl font-semibold text-ink">Log in to Google Pages</h1>
         <p className="mt-1 text-sm text-ink/55">Pick up right where you left off.</p>
 
@@ -81,7 +81,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={submitting}
-            className="mt-2 rounded bg-ink py-2.5 text-[15px] font-medium text-paper transition hover:bg-ink-light disabled:opacity-60"
+            className="mt-2 rounded-lg bg-marigold py-2.5 text-[15px] font-medium text-white shadow-sm transition hover:bg-marigold-dark disabled:opacity-60"
           >
             {submitting ? 'Logging in…' : 'Log in'}
           </button>

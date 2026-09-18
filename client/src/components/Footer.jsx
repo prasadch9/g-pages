@@ -32,12 +32,12 @@ const COLUMNS = [
 
 export default function Footer() {
   return (
-    <footer className="bg-ink-dark py-14 text-paper/70">
+    <footer className="bg-[#071d33] py-10 text-paper/70">
       <div className="container-page grid gap-10 sm:grid-cols-2 md:grid-cols-4">
         <div>
-          <div className="font-display text-lg font-semibold text-paper">
-            Google<span className="text-marigold">Pages</span>
-          </div>
+          <Link to="/" aria-label="G-PAGES home" className="inline-flex rounded-md bg-white p-1.5">
+            <img src="/images/branding/gpages-logo.png" alt="G-PAGES" className="h-12 w-32 object-contain" />
+          </Link>
           <p className="mt-3 max-w-[220px] text-sm leading-relaxed">
             Helping people discover trusted places, one city at a time.
           </p>

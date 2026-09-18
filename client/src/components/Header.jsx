@@ -15,11 +15,10 @@ export default function Header() {
   const { user, logout } = useAuth();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur">
-      <div className="container-page flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-baseline gap-1 font-display text-xl font-semibold text-ink">
-          Google
-          <span className="text-marigold-dark">Pages</span>
+    <header className="sticky top-0 z-40 border-b border-line bg-white/95 shadow-sm backdrop-blur">
+      <div className="container-page flex h-[58px] items-center justify-between">
+        <Link to="/" aria-label="G-PAGES home" className="flex items-center">
+          <img src="/images/branding/gpages-logo.png" alt="G-PAGES" className="h-10 w-24 object-contain sm:h-11 sm:w-28" />
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
@@ -29,7 +28,7 @@ export default function Header() {
               to={link.to}
               className={({ isActive }) =>
                 `text-[15px] transition-colors hover:text-ink ${
-                  isActive ? 'text-ink font-medium' : 'text-ink/60'
+                  isActive ? 'border-b-2 border-blue-600 py-[19px] text-blue-600 font-medium' : 'py-[21px] text-ink/75'
                 }`
               }
             >
@@ -67,7 +66,7 @@ export default function Header() {
               </Link>
               <Link
                 to="/register"
-                className="rounded bg-ink px-4 py-2 text-[15px] font-medium text-paper transition hover:bg-ink-light"
+                className="rounded-lg bg-blue-600 px-4 py-2 text-[15px] font-medium text-white shadow-sm transition hover:bg-blue-700"
               >
                 Join Google Pages
               </Link>
@@ -94,7 +93,7 @@ export default function Header() {
       </div>
 
       {open && (
-        <div className="border-t border-line bg-paper px-5 pb-5 pt-2 md:hidden">
+        <div className="border-t border-line bg-white px-5 pb-5 pt-2 md:hidden">
           <nav className="flex flex-col gap-1">
             {NAV_LINKS.map((link) => (
               <NavLink
@@ -120,7 +119,7 @@ export default function Header() {
                 <Link to="/login" className="rounded border border-line px-4 py-2.5 text-center text-[15px] text-ink/70">
                   Log in
                 </Link>
-                <Link to="/register" className="rounded bg-ink px-4 py-2.5 text-center text-[15px] font-medium text-paper">
+                <Link to="/register" className="rounded-lg bg-marigold px-4 py-2.5 text-center text-[15px] font-medium text-white">
                   Join Google Pages
                 </Link>
               </>

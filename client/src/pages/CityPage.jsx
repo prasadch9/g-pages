@@ -5,6 +5,16 @@ import api from '../services/api';
 import PlacesSlideshow from '../components/PlacesSlideshow';
 import PlaceCard from '../components/PlaceCard';
 
+const CATEGORY_ICONS = {
+  Schools: '🎓', Colleges: '🏢', Universities: '🏛️', Hospitals: '🏥', Clinics: '🩺', Pharmacies: '💊',
+  Restaurants: '🍴', Hotels: '🛏️', 'Fashion Stores': '🛍️', 'Shopping Malls': '🏬', Banks: '🏦', Gyms: '🏋️',
+  Salons: '✂️', Theatres: '🎬', 'Tourist Places': '📍', Temples: '🛕', Parks: '🌳', 'IT Companies': '🏢',
+  'Coaching Centers': '📖', Libraries: '📚', 'Automobile Dealers': '🚗', 'Government Offices': '🏛️', 'Real Estate': '🏠',
+};
+
+// Dedicated wide visual for the Rajahmundry city masthead, independent of the carousel slide.
+const RAJAHMUNDRY_HERO_IMAGE = 'https://cdn.tripuntold.com/media/photos/location/2018/10/29/a4ce0187-5174-44cb-89f1-01242e9bdd29.jpg';
+
 const RAJAHMUNDRY_FAMOUS_PLACES = [
   {
     name: 'Godavari Arch Bridge',
@@ -13,22 +23,10 @@ const RAJAHMUNDRY_FAMOUS_PLACES = [
     coverImage: 'https://commons.wikimedia.org/wiki/Special:FilePath/Rajahmundry%20godavari%20bridge.jpg?width=1400',
   },
   {
-    name: 'Dowleswaram Barrage',
-    category: { name: 'Heritage landmark' },
-    address: 'Dowleswaram, near Rajahmundry',
-    coverImage: 'https://commons.wikimedia.org/wiki/Special:FilePath/Dowleswaram%20Barrage%20near%20Rajahmundry%20on%20River%20Godavari.jpg?width=1400',
-  },
-  {
     name: 'Pushkar Ghat',
     category: { name: 'Riverside attraction' },
     address: 'Godavari riverfront, Rajahmundry',
     coverImage: 'https://commons.wikimedia.org/wiki/Special:FilePath/Pushkara%20ghat%20rajamahendravaram.jpg?width=1400',
-  },
-  {
-    name: 'ISKCON Temple',
-    category: { name: 'Temple' },
-    address: 'Rajahmundry, Andhra Pradesh',
-    coverImage: 'https://commons.wikimedia.org/wiki/Special:FilePath/ISKCON%20temple%20in%20Rajahmundry.jpg?width=1400',
   },
   {
     name: 'Rajahmundry Railway Station',
@@ -37,22 +35,40 @@ const RAJAHMUNDRY_FAMOUS_PLACES = [
     coverImage: 'https://commons.wikimedia.org/wiki/Special:FilePath/Rajahmundry%20Railway%20Station.jpg?width=1400',
   },
   {
-    name: 'Godavari Railway Station',
-    category: { name: 'Railway landmark' },
-    address: 'Godavari Railway Station, Rajahmundry',
-    coverImage: 'https://commons.wikimedia.org/wiki/Special:FilePath/Name%20board%20of%20Godavari%20Railway%20station%20in%20Rajahmundry.JPG?width=1400',
-  },
-  {
     name: 'Rajahmundry Arch Railway Bridge',
     category: { name: 'Engineering landmark' },
     address: 'Godavari River, Rajahmundry',
     coverImage: 'https://commons.wikimedia.org/wiki/Special:FilePath/Rajahmundry%20arch%20railway%20bridge.jpg?width=1400',
   },
   {
-    name: 'Havelock Old Railway Bridge',
-    category: { name: 'Historic landmark' },
-    address: 'Godavari River, Rajahmundry',
-    coverImage: 'https://commons.wikimedia.org/wiki/Special:FilePath/Havelock%20Old%20Railway%20bridge%20on%20Godavari%20River%2001.jpg?width=1400',
+    name: 'Pushkar Ghat Night View',
+    category: { name: 'Scenic attraction' },
+    address: 'Rajahmundry, Andhra Pradesh',
+    coverImage: 'https://images.openai.com/static-rsc-4/AjPjZcjaPegB76R-WtfDoRKj96bd6-paDPi46MhPCa6_4DQ-XbN3nYzHIX05wWMlamIdstVnx4oJfBQJTSq-oeaVThwrbTZhQ0PTl6ZbFhL0TonmPB5uK5qh18uedMl0kcDnDQtzLGUn25KKbyLtbjUZfyrYH_CcFF88qzm6XCWQqpP9BIJ4jd1s6uMDfYJ0?purpose=fullsize',
+  },
+  {
+    name: 'Shiva Fountain',
+    category: { name: 'Scenic attraction' },
+    address: 'Rajahmundry, Andhra Pradesh',
+    coverImage: 'https://images.openai.com/static-rsc-4/Cd1zNogWmDu0hP2iz3VBf9-bzgGZJNXLYpOuzDaZQGiiAPeC2luEXT2A97c8wx6yi41AUZy7dmK6Fxg4MhlvTQKnmiub2suXcGL5sN-M3xhwxWz3-0HvhqTp6S-8fPosxmNEjfdIxpIoUhBlC9sCBT4omnD4YlHhxicYOueRPn2JkTmHSx8xcH4_ppM1xJxE?purpose=fullsize',
+  },
+  {
+    name: 'Godavari Night View',
+    category: { name: 'Scenic attraction' },
+    address: 'Rajahmundry, Andhra Pradesh',
+    coverImage: 'https://images.openai.com/static-rsc-4/Vya-DKBm8BI1nbDOYLC0zSQoR15aGpFjtCSeuiSPcpFD6cml9BIlwN1ssETsP9N1AMbf3rBBEBtZKDZ3GH4OZYPgkyFaJkVGeThiWETsZu2KK2AMItsRRZWLJ2bC5Wy8EfAql6T4GUoYkC4gcBmGbfUulbkIWqHyCXNgDfoVo7j0EV2vSzXMx3S9hJ5tWSQ_?purpose=fullsize',
+  },
+  {
+    name: 'Sri Uma Markandeyeswara Temple',
+    category: { name: 'Scenic attraction' },
+    address: 'Rajahmundry, Andhra Pradesh',
+    coverImage: 'https://images.openai.com/static-rsc-4/49c0Ug-I90CVBSOoZIze3L3cBQQwcf4ZqhHpJgWnZZ0HM-A9mg-vZnBuoTbnWunmzB0IsrIG5cqjtFrepzwlp1RULgoIuHTMYPMsU10e-g5gJ3-0rwMgYDaOL2PNExC1Xh9iiTpEKXZ1MSj_vcruWNPSqNh5r3p_vxfyTQf-fYNesvP0q4_KyKbPG-QMnH9x?purpose=fullsize',
+  },
+  {
+    name: 'Saraswathi Ghat',
+    category: { name: 'Scenic attraction' },
+    address: 'Rajahmundry, Andhra Pradesh',
+    coverImage: 'https://images.openai.com/static-rsc-4/Hk20lwCJOufJXOWW2gLzR6e_CoOGcsWcyA7bwUuzzz8frhol3Ha4VuNESQpAYWu8JOVRcKfG3gClnEz7iEUmLC2EcQZjt9F0tRWK0Xl5qDD789Sd88Uqm5hgz4gFHegNd6a-7losqA3D6Mr8XL-RAgo9ZscBtemUGah9XxuyjvYVgFzHr639Nqkt0cfJ_tWC?purpose=fullsize',
   },
 ];
 
@@ -396,6 +412,27 @@ const VIJAYAWADA_FAMOUS_PLACES = [
   },
 ];
 
+const MACHILIPATNAM_FAMOUS_PLACES = [
+  {
+    name: 'Manginapudi Beach',
+    category: { name: 'Famous beach' },
+    address: 'Manginapudi, near Machilipatnam, Andhra Pradesh',
+    coverImage: '/images/machilipatnam/manginapudi-beach.jpg',
+  },
+  {
+    name: 'Panduranga Swamy Temple',
+    category: { name: 'Famous temple' },
+    address: 'Chilakalapudi, Machilipatnam, Andhra Pradesh',
+    coverImage: '/images/machilipatnam/panduranga-swamy-temple.jpg',
+  },
+  {
+    name: 'Machilipatnam Lighthouse',
+    category: { name: 'Coastal landmark' },
+    address: 'Machilipatnam, Andhra Pradesh',
+    coverImage: '/images/machilipatnam/machilipatnam-lighthouse.jpg',
+  },
+];
+
 export default function CityPage() {
   const { state, district, city } = useParams();
   const [searchParams] = useSearchParams();
@@ -498,7 +535,7 @@ export default function CityPage() {
     : cityKey === 'kurnool'
       ? ADDITIONAL_CITY_FAMOUS_PLACES.kurnool
     : cityKey === 'rajahmundry'
-    ? RAJAHMUNDRY_FAMOUS_PLACES
+    ? [...RAJAHMUNDRY_FAMOUS_PLACES.slice(8), ...RAJAHMUNDRY_FAMOUS_PLACES.slice(0, 8)]
     : cityKey === 'kakinada'
       ? KAKINADA_FAMOUS_PLACES
     : cityKey === 'anakapalle'
@@ -517,67 +554,76 @@ export default function CityPage() {
                 ? AMALAPURAM_FAMOUS_PLACES
                 : cityKey === 'vijayawada'
                   ? VIJAYAWADA_FAMOUS_PLACES
+                  : cityKey === 'machilipatnam'
+                    ? MACHILIPATNAM_FAMOUS_PLACES
       : trending;
   const featuredCityPlace =
     popularPlaces.find((place) => place.coverImage || place.images?.[0]) ||
     trending.find((place) => place.coverImage || place.images?.[0]);
   const cityHeroImage = featuredCityPlace?.coverImage || featuredCityPlace?.images?.[0];
+  const heroImage = cityKey === 'rajahmundry' ? RAJAHMUNDRY_HERO_IMAGE : cityHeroImage;
 
   return (
-    <div>
-      <section className="border-b border-line bg-white/40 py-10">
-        <div className="container-page">
-          <p className="text-sm text-ink/50">
+    <div className="city-page">
+      <section className="city-hero relative overflow-hidden border-b border-line">
+        <div className="container-page relative overflow-hidden py-6 sm:py-7">
+          {heroImage && <img src={heroImage} alt="" aria-hidden="true" className="city-hero-background" />}
+          <div className="city-hero-overlay" />
+          <div className="relative z-10">
+          <p className="relative text-xs font-medium text-ink/65 sm:text-sm">
             {resolved.state?.name} {resolved.district && `› ${resolved.district.name}`}
           </p>
-          <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-start sm:gap-6">
-            <h1 className="font-display text-3xl font-semibold text-ink sm:text-4xl">{cityName}</h1>
-            {cityHeroImage && (
-              <img
-                src={cityHeroImage}
-                alt={`${cityName} - ${featuredCityPlace.name}`}
-                className="h-14 w-52 max-w-full rounded-lg border border-line/80 object-cover shadow-[0_6px_18px_rgba(27,42,74,0.12)] sm:h-16 sm:w-56"
-              />
-            )}
+          <div className="relative mt-3">
+            <h1 className="font-display text-3xl font-bold tracking-tight text-ink sm:text-[38px]">{cityName}</h1>
           </div>
-          <p className="mt-2 max-w-lg text-[15px] text-ink/60">
+          <p className="relative mt-2 max-w-lg text-[15px] text-ink/75">
             Explore the best places, businesses and organizations in {cityName}.
           </p>
 
-          <form onSubmit={handleSearch} className="mt-6 flex max-w-md gap-2">
+          <form onSubmit={handleSearch} className="relative mt-5 flex max-w-xl gap-2">
+            <div className="relative min-w-0 flex-1">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-ink/55"><circle cx="11" cy="11" r="6" strokeWidth="2" /><path d="m16 16 4 4" strokeWidth="2" strokeLinecap="round" /></svg>
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={`Search in ${cityName}…`}
-              className="flex-1 rounded border border-line bg-white px-3 py-2.5 text-[15px] outline-none focus:border-ink/40"
+              className="w-full rounded-lg border border-line bg-white/95 py-3 pl-11 pr-3 text-[15px] shadow-sm outline-none focus:border-blue-500"
             />
-            <button type="submit" className="rounded bg-ink px-5 py-2.5 text-[15px] font-medium text-paper hover:bg-ink-light">
+            </div>
+            <button type="submit" className="rounded-lg bg-blue-600 px-7 py-2.5 text-[15px] font-semibold text-white shadow-sm hover:bg-blue-700">
               Search
             </button>
           </form>
+          </div>
         </div>
       </section>
 
       {popularPlaces.length > 0 && (
-        <section className="container-page py-10">
-          <h2 className="font-display text-xl font-semibold text-ink">Popular places in {cityName}</h2>
-          <div className="mt-5">
+        <section className="container-page py-6 sm:py-7">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="font-display text-xl font-bold tracking-tight text-ink">Popular places in {cityName}</h2>
+            <Link to={`/search?city=${resolved.city._id}`} className="text-sm font-medium text-blue-600 hover:underline">View all</Link>
+          </div>
+          <div className="mt-3">
             <PlacesSlideshow places={popularPlaces} />
           </div>
         </section>
       )}
 
-      <section className="border-t border-line bg-white/30 py-10">
+      <section className="border-y border-line bg-[#fbfdff] py-6 sm:py-7">
         <div className="container-page">
-          <h2 className="font-display text-xl font-semibold text-ink">Categories in {cityName}</h2>
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="font-display text-xl font-bold tracking-tight text-ink">Categories in {cityName}</h2>
+            <Link to="/categories" className="text-sm font-medium text-blue-600 hover:underline">View all categories</Link>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
             {categories.map((cat) => (
               <Link
                 key={cat._id}
                 to={`/${state}/${district}/${city}/${cat.slug}`}
-                className="flex h-20 items-center justify-center gap-2 rounded border border-line bg-white/60 px-2 text-center font-display text-[15px] text-ink transition hover:border-ink/25 hover:text-vermilion"
+                className="flex h-14 items-center gap-3 rounded-lg border border-line bg-white px-3 text-left text-[13px] font-medium text-ink transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-sm"
               >
-                {cat.name}
+                <span className="text-xl leading-none">{CATEGORY_ICONS[cat.name] || '📌'}</span><span>{cat.name}</span>
               </Link>
             ))}
           </div>
@@ -585,9 +631,12 @@ export default function CityPage() {
       </section>
 
       {latest.length > 0 && (
-        <section className="container-page py-10">
-          <h2 className="font-display text-xl font-semibold text-ink">Latest listings</h2>
-          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="container-page py-6 sm:py-8">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="font-display text-xl font-bold tracking-tight text-ink">Latest listings</h2>
+            <Link to={`/search?city=${resolved.city._id}`} className="text-sm font-medium text-blue-600 hover:underline">View all listings</Link>
+          </div>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {latest.map((place) => (
               <PlaceCard key={place._id} place={place} />
             ))}
