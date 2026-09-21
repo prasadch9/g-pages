@@ -13,8 +13,18 @@ const initialForm = {
   email: '',
   website: '',
   services: '',
-  imageUrl: '',
+  coverImage: '',
+  galleryImages: '',
+  facilities: '',
+  video: '',
+  board: '',
+  classes: '',
+  facebook: '',
+  instagram: '',
+  whatsapp: '',
 };
+
+const splitList = (value) => value.split(/[,\n]/).map((item) => item.trim()).filter(Boolean);
 
 export default function CreateListing() {
   const navigate = useNavigate();
@@ -51,10 +61,20 @@ export default function CreateListing() {
         phone: form.phone || undefined,
         email: form.email || undefined,
         website: form.website || undefined,
-        services: form.services
-          ? form.services.split(',').map((s) => s.trim()).filter(Boolean)
-          : [],
-        images: form.imageUrl ? [form.imageUrl] : [],
+        services: splitList(form.services),
+        facilities: splitList(form.facilities),
+        images: splitList(form.galleryImages),
+        coverImage: form.coverImage || undefined,
+        video: form.video || undefined,
+        socialLinks: {
+          facebook: form.facebook || undefined,
+          instagram: form.instagram || undefined,
+          whatsapp: form.whatsapp || undefined,
+        },
+        attributes: {
+          board: form.board || undefined,
+          classes: form.classes || undefined,
+        },
         location: {
           state: location.state,
           district: location.district,
@@ -131,8 +151,59 @@ export default function CreateListing() {
           </div>
 
           <div className="col-span-2">
+            <h2 className="font-display text-lg font-medium text-ink">Photos and facilities</h2>
+            <p className="mt-1 text-xs text-ink/50">All of these are optional. Separate multiple values with commas or new lines.</p>
+          </div>
+
+          <div className="col-span-2">
             <label className="text-sm text-ink/70">Cover image URL</label>
-            <input value={form.imageUrl} onChange={update('imageUrl')} placeholder="https://…" className={inputClass} />
+            <input value={form.coverImage} onChange={update('coverImage')} placeholder="https://…" className={inputClass} />
+          </div>
+
+          <div className="col-span-2">
+            <label className="text-sm text-ink/70">Gallery image URLs</label>
+            <textarea rows={3} value={form.galleryImages} onChange={update('galleryImages')} placeholder="https://…\nhttps://…" className={inputClass} />
+          </div>
+
+          <div className="col-span-2">
+            <label className="text-sm text-ink/70">Facilities</label>
+            <textarea rows={2} value={form.facilities} onChange={update('facilities')} placeholder="School bus, Library, Science lab, Playground" className={inputClass} />
+          </div>
+
+          <div className="col-span-2">
+            <h2 className="font-display text-lg font-medium text-ink">School academics</h2>
+            <p className="mt-1 text-xs text-ink/50">Optional. These details appear only when provided.</p>
+          </div>
+
+          <div className="col-span-2 sm:col-span-1">
+            <label className="text-sm text-ink/70">Curriculum / board</label>
+            <input value={form.board} onChange={update('board')} placeholder="CBSE, State Board, ICSE" className={inputClass} />
+          </div>
+          <div className="col-span-2 sm:col-span-1">
+            <label className="text-sm text-ink/70">Classes offered</label>
+            <input value={form.classes} onChange={update('classes')} placeholder="LKG to Class 10" className={inputClass} />
+          </div>
+
+          <div className="col-span-2">
+            <h2 className="font-display text-lg font-medium text-ink">Video and social links</h2>
+            <p className="mt-1 text-xs text-ink/50">Optional. Empty links stay hidden on the public page.</p>
+          </div>
+
+          <div className="col-span-2">
+            <label className="text-sm text-ink/70">Video URL</label>
+            <input value={form.video} onChange={update('video')} placeholder="https://youtube.com/watch?v=…" className={inputClass} />
+          </div>
+          <div className="col-span-2 sm:col-span-1">
+            <label className="text-sm text-ink/70">Facebook URL</label>
+            <input value={form.facebook} onChange={update('facebook')} placeholder="https://facebook.com/…" className={inputClass} />
+          </div>
+          <div className="col-span-2 sm:col-span-1">
+            <label className="text-sm text-ink/70">Instagram URL</label>
+            <input value={form.instagram} onChange={update('instagram')} placeholder="https://instagram.com/…" className={inputClass} />
+          </div>
+          <div className="col-span-2 sm:col-span-1">
+            <label className="text-sm text-ink/70">WhatsApp number or link</label>
+            <input value={form.whatsapp} onChange={update('whatsapp')} placeholder="https://wa.me/91…" className={inputClass} />
           </div>
 
           {error && <p className="col-span-2 text-sm text-vermilion">{error}</p>}

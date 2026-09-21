@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import GoogleAuthButton from '../components/GoogleAuthButton';
 
 const initialForm = {
   name: '',
@@ -15,7 +16,7 @@ const initialForm = {
 };
 
 export default function Register() {
-  const { register } = useAuth();
+  const { register, googleLogin } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [form, setForm] = useState(() => ({
@@ -24,6 +25,7 @@ export default function Register() {
   }));
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [googleSubmitting, setGoogleSubmitting] = useState(false);
 
   const update = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
@@ -45,11 +47,29 @@ export default function Register() {
     }
   };
 
+  const handleGoogleSuccess = async (credential) => {
+    setError('');
+    setGoogleSubmitting(true);
+    try {
+      await googleLogin(credential);
+      navigate('/', { replace: true });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setGoogleSubmitting(false);
+    }
+  };
+
   return (
     <div className="container-page flex min-h-[70vh] items-center justify-center py-16">
       <div className="w-full max-w-md">
         <h1 className="font-display text-2xl font-semibold text-ink">Create your account</h1>
         <p className="mt-1 text-sm text-ink/55">Join Google Pages to save favorites and write reviews.</p>
+
+        <div className="mt-6">
+          <GoogleAuthButton onSuccess={handleGoogleSuccess} onError={setError} disabled={googleSubmitting || submitting} />
+        </div>
+        <div className="my-5 flex items-center gap-3 text-xs text-ink/35"><span className="h-px flex-1 bg-line" />OR<span className="h-px flex-1 bg-line" /></div>
 
         <form onSubmit={handleSubmit} className="mt-8 grid grid-cols-2 gap-4">
           <div className="col-span-2 flex gap-2 rounded border border-line bg-white/50 p-1">

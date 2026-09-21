@@ -245,6 +245,20 @@ const suspendBusiness = async (req, res, next) => {
   }
 };
 
+/** DELETE /api/admin/businesses/:id */
+const deleteBusiness = async (req, res, next) => {
+  try {
+    const place = await Place.findByIdAndDelete(req.params.id);
+    if (!place) return next(new AppError('Listing not found.', 404));
+
+    await BusinessRequest.deleteMany({ place: place._id });
+
+    res.status(200).json({ success: true, message: 'Listing deleted.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // --- Platform analytics ---
 
 /** GET /api/admin/analytics */
@@ -307,6 +321,7 @@ module.exports = {
   approveBusiness,
   rejectBusiness,
   suspendBusiness,
+  deleteBusiness,
   getAnalytics,
   importPlaces,
 };

@@ -50,20 +50,22 @@ export default function Footer() {
           </div>
         </div>
 
-        {COLUMNS.map((col) => (
-          <div key={col.title}>
-            <h4 className="font-display text-sm font-medium text-paper">{col.title}</h4>
-            <ul className="mt-4 flex flex-col gap-2.5 text-sm">
-              {col.links.map((link) => (
-                <li key={link.label}>
-                  <Link to={link.to} className="hover:text-paper">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        <div className="col-span-3 grid grid-cols-3 gap-2 sm:contents">
+          {COLUMNS.map((col) => (
+            <div key={col.title} className="min-w-0">
+              <h4 className="font-display text-xs font-medium text-paper sm:text-sm">{col.title}</h4>
+              <ul className="mt-3 flex flex-col gap-2 text-[11px] sm:mt-4 sm:gap-2.5 sm:text-sm">
+                {col.links.map((link) => (
+                  <li key={link.label}>
+                    <Link to={link.to} className="hover:text-paper">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="container-page mt-12 border-t border-paper/10 pt-6 text-xs text-paper/40">

@@ -85,40 +85,40 @@ export default function Hero() {
       <div className="container-page relative isolate overflow-hidden">
         <img src={activeSlide.image} alt={`${activeSlide.city} city view`} className="home-hero-image" />
         <div className="home-hero-shade" />
-        <div className="relative grid gap-10 py-12 sm:py-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:py-20">
-        <div>
-          <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-cyan-100 backdrop-blur"><span className="h-2 w-2 rounded-full bg-emerald-400" /> Your city, beautifully organised</p>
-          <h1 className="mt-5 max-w-xl font-display text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl">
+        <div className="relative grid gap-8 py-8 sm:gap-10 sm:py-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:py-20">
+        <div className="contents lg:block">
+          <p className="order-1 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-cyan-100 backdrop-blur lg:order-none"><span className="h-2 w-2 rounded-full bg-emerald-400" /> Your city, beautifully organised</p>
+          <h1 className="order-2 mt-4 max-w-xl font-display text-3xl font-bold leading-[1.05] tracking-tight text-white sm:mt-5 sm:text-5xl lg:order-none lg:text-6xl">
             Discover everything around <span className="text-cyan-300">you.</span>
           </h1>
-          <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-white/85">
+          <p className="order-3 mt-4 max-w-xl text-[15px] leading-relaxed text-white/85 sm:mt-5 sm:text-[17px] lg:order-none">
             Find trusted schools, colleges, hospitals, businesses, shopping
             destinations, restaurants and more in your city — verified by
             Google Pages, reviewed by people who've actually been there.
           </p>
 
-          <div className="mt-8 rounded-2xl border border-white/60 bg-white/95 p-2 shadow-[0_20px_60px_rgba(2,12,27,0.34)] backdrop-blur sm:p-3">
+          <div className="order-5 mt-5 rounded-2xl border border-white/60 bg-white/95 p-1.5 shadow-[0_20px_60px_rgba(2,12,27,0.34)] backdrop-blur sm:mt-8 sm:p-3 lg:order-none">
             <p className="px-3 pb-2 pt-1 text-xs font-semibold uppercase tracking-[0.12em] text-ink/45">Start exploring near you</p>
             <LocationSelector />
           </div>
 
-          <div className="mt-8 flex flex-wrap gap-7 border-t border-white/20 pt-5 text-sm text-white/75">
+          <div className="order-6 mt-5 flex flex-wrap gap-x-5 gap-y-3 border-t border-white/20 pt-4 text-xs text-white/75 sm:mt-8 sm:gap-7 sm:pt-5 sm:text-sm lg:order-none">
             <div>
-              <div className="font-display text-2xl font-bold text-white">28+</div>
+              <div className="font-display text-xl font-bold text-white sm:text-2xl">28+</div>
               states covered
             </div>
             <div>
-              <div className="font-display text-2xl font-bold text-white">40k+</div>
+              <div className="font-display text-xl font-bold text-white sm:text-2xl">40k+</div>
               verified listings
             </div>
             <div>
-              <div className="font-display text-2xl font-bold text-white">2M+</div>
+              <div className="font-display text-xl font-bold text-white sm:text-2xl">2M+</div>
               monthly visits
             </div>
           </div>
         </div>
 
-        <div className="relative hidden overflow-hidden rounded-3xl border border-white/20 bg-white/10 p-3 shadow-[0_24px_70px_rgba(0,0,0,.3)] lg:block">
+        <div className="relative order-4 overflow-hidden rounded-3xl border border-white/20 bg-white/10 p-3 shadow-[0_24px_70px_rgba(0,0,0,.3)] lg:order-none">
           <img key={activeSlide.image} src={activeSlide.image} alt={`${activeSlide.city} city view`} className="home-city-slide aspect-[4/3] h-auto w-full rounded-2xl object-cover" />
           <div className="absolute left-8 top-8 rounded-2xl bg-white/95 px-4 py-3 shadow-lg"><p className="text-xs font-semibold text-blue-600">📍 EXPLORE NOW</p><p className="mt-1 font-display text-xl font-bold text-ink">{activeSlide.city}</p><p className="text-xs text-ink/55">{activeSlide.caption}</p></div>
           <div className="absolute bottom-8 right-8 rounded-xl border border-white/30 bg-slate-950/50 px-4 py-3 text-sm font-medium text-white backdrop-blur">{activeSlide.count} →</div>

@@ -1,10 +1,13 @@
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
 const generateToken = require('../utils/generateToken');
 const sendEmail = require('../utils/sendEmail');
 const { AppError } = require('../middleware/errorHandler');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -101,6 +104,60 @@ const login = async (req, res, next) => {
   }
 };
 
+/** POST /api/auth/google — verifies a Google Identity Services credential. */
+const googleLogin = async (req, res, next) => {
+  try {
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      return next(new AppError('Google sign-in is not configured on the server.', 503));
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: req.body.credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const profile = ticket.getPayload();
+    if (!profile?.email || !profile.email_verified) {
+      return next(new AppError('Google account email could not be verified.', 401));
+    }
+
+    let user = await User.findOne({ email: profile.email.toLowerCase() });
+    if (!user) {
+      let mobile = '';
+      let attempt = 0;
+      do {
+        const suffix = crypto.createHash('sha256').update(`${profile.sub}:${attempt}`).digest('hex').replace(/\D/g, '').slice(0, 9).padEnd(9, '0');
+        mobile = `6${suffix}`;
+        attempt += 1;
+      } while (await User.exists({ mobile }));
+
+      user = await User.create({
+        name: profile.name || profile.email.split('@')[0],
+        email: profile.email.toLowerCase(),
+        mobile,
+        passwordHash: await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 12),
+        avatar: profile.picture || null,
+      });
+
+      await Notification.create({
+        user: user._id,
+        title: 'Welcome to Google Pages',
+        message: `Hi ${user.name}, your account has been created successfully.`,
+        type: 'registration',
+      });
+    }
+
+    if (user.status === 'blocked') {
+      return next(new AppError('This account has been blocked. Contact support.', 403));
+    }
+
+    const token = generateToken(user);
+    res.cookie('token', token, COOKIE_OPTIONS);
+    res.status(200).json({ success: true, message: 'Logged in with Google successfully.', token, user: user.toSafeObject() });
+  } catch (error) {
+    next(new AppError('Unable to sign in with Google. Please try again.', 401));
+  }
+};
+
 /** POST /api/auth/forgot-password */
 const forgotPassword = async (req, res, next) => {
   try {
@@ -177,4 +234,4 @@ const logout = async (req, res, next) => {
   }
 };
 
-module.exports = { register, login, forgotPassword, resetPassword, getMe, logout };
+module.exports = { register, login, googleLogin, forgotPassword, resetPassword, getMe, logout };

@@ -101,6 +101,11 @@ const placeSchema = new mongoose.Schema(
         type: String,
         default: null,
       },
+
+      whatsapp: {
+        type: String,
+        default: null,
+      },
     },
 
     images: [
@@ -115,6 +120,11 @@ const placeSchema = new mongoose.Schema(
     },
 
     coverImage: {
+      type: String,
+      default: null,
+    },
+
+    video: {
       type: String,
       default: null,
     },

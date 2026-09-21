@@ -309,6 +309,7 @@ Required environment values:
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=long_random_secret
 CLIENT_URL=http://localhost:5173
+GOOGLE_CLIENT_ID=your_google_web_client_id
 ```
 
 Optional seed admin values:
@@ -328,6 +329,7 @@ npm run dev
 ```
 
 The frontend defaults to `http://localhost:5000/api`. Set `VITE_API_URL` when using another API URL.
+For Google sign-in, create a Google OAuth Web application client, add `http://localhost:5173` as an authorized JavaScript origin, then set the same client ID in `server/.env` as `GOOGLE_CLIENT_ID` and in `client/.env` as `VITE_GOOGLE_CLIENT_ID`.
 
 ## 13. Production recommendations
 

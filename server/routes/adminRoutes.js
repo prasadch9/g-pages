@@ -9,6 +9,7 @@ const {
   approveBusiness,
   rejectBusiness,
   suspendBusiness,
+  deleteBusiness,
   getAnalytics,
 } = require('../controllers/adminController');
 const { getReportsAdmin, updateReportAdmin } = require('../controllers/reportController');
@@ -36,6 +37,7 @@ router.get('/businesses', getBusinesses);
 router.put('/businesses/:id/approve', approveBusiness);
 router.put('/businesses/:id/reject', rejectBusiness);
 router.put('/businesses/:id/suspend', suspendBusiness);
+router.delete('/businesses/:id', deleteBusiness);
 
 router.get('/reviews', getAllReviewsAdmin);
 router.put('/reviews/:id/status', setReviewStatusAdmin);

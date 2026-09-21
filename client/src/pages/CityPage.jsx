@@ -4,6 +4,7 @@ import useResolvedLocation from '../hooks/useResolvedLocation';
 import api from '../services/api';
 import PlacesSlideshow from '../components/PlacesSlideshow';
 import PlaceCard from '../components/PlaceCard';
+import GroupedCategoryGrid from '../components/GroupedCategoryGrid';
 
 const CATEGORY_ICONS = {
   Schools: '🎓', Colleges: '🏢', Universities: '🏛️', Hospitals: '🏥', Clinics: '🩺', Pharmacies: '💊',
@@ -610,23 +611,17 @@ export default function CityPage() {
         </section>
       )}
 
-      <section className="border-y border-line bg-[#fbfdff] py-6 sm:py-7">
+      <section className="border-y border-line bg-[#f7fbff] py-14 sm:py-16">
         <div className="container-page">
           <div className="flex items-center justify-between gap-4">
-            <h2 className="font-display text-xl font-bold tracking-tight text-ink">Categories in {cityName}</h2>
-            <Link to="/categories" className="text-sm font-medium text-blue-600 hover:underline">View all categories</Link>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-600">Explore smarter</p>
+              <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-ink">What are you looking for?</h2>
+              <p className="mt-1 text-sm text-ink/55">Find trusted places in {cityName} by category.</p>
+            </div>
+            <Link to="/categories" className="hidden rounded-full border border-blue-100 bg-white px-4 py-2 text-sm font-semibold text-blue-600 shadow-sm hover:bg-blue-50 sm:block">View all categories →</Link>
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {categories.map((cat) => (
-              <Link
-                key={cat._id}
-                to={`/${state}/${district}/${city}/${cat.slug}`}
-                className="flex h-14 items-center gap-3 rounded-lg border border-line bg-white px-3 text-left text-[13px] font-medium text-ink transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-sm"
-              >
-                <span className="text-xl leading-none">{CATEGORY_ICONS[cat.name] || '📌'}</span><span>{cat.name}</span>
-              </Link>
-            ))}
-          </div>
+          <GroupedCategoryGrid categories={categories} cityPath={`/${state}/${district}/${city}`} />
         </div>
       </section>
 

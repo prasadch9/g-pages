@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import GoogleAuthButton from '../components/GoogleAuthButton';
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ identifier: '', password: '' });
@@ -13,6 +14,7 @@ export default function Login() {
   const [showForgot, setShowForgot] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotMessage, setForgotMessage] = useState('');
+  const [googleSubmitting, setGoogleSubmitting] = useState(false);
 
   // Preserve the page the user originally wanted (e.g. a city+category page)
   // so we can redirect them back after a successful login.
@@ -48,11 +50,30 @@ export default function Login() {
     }
   };
 
+  const handleGoogleSuccess = async (credential) => {
+    setError('');
+    setGoogleSubmitting(true);
+    try {
+      const loggedInUser = await googleLogin(credential);
+      const roleHome = loggedInUser.role === 'admin' ? '/admin' : loggedInUser.role === 'business' ? '/business/dashboard' : '/dashboard';
+      navigate(redirectTo !== '/' ? redirectTo : roleHome, { replace: true });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setGoogleSubmitting(false);
+    }
+  };
+
   return (
     <div className="container-page flex min-h-[70vh] items-center justify-center py-16">
       <div className="w-full max-w-sm rounded-3xl border border-white/80 bg-white/85 p-7 shadow-[0_20px_55px_rgba(16,42,67,0.12)] backdrop-blur sm:p-8">
         <h1 className="font-display text-2xl font-semibold text-ink">Log in to Google Pages</h1>
         <p className="mt-1 text-sm text-ink/55">Pick up right where you left off.</p>
+
+        <div className="mt-6">
+          <GoogleAuthButton onSuccess={handleGoogleSuccess} onError={setError} disabled={googleSubmitting || submitting} />
+        </div>
+        <div className="my-5 flex items-center gap-3 text-xs text-ink/35"><span className="h-px flex-1 bg-line" />OR<span className="h-px flex-1 bg-line" /></div>
 
         <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
           <div>

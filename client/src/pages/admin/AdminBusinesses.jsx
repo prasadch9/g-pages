@@ -69,6 +69,18 @@ export default function AdminBusinesses() {
     }
   };
 
+  const deleteBusiness = async (place) => {
+    if (!window.confirm(`Delete "${place.name}" permanently? This cannot be undone.`)) return;
+
+    setActionError('');
+    try {
+      await api.delete(`/admin/businesses/${place._id}`);
+      load();
+    } catch (err) {
+      setActionError(err.message);
+    }
+  };
+
   return (
     <div>
       <div className="mb-6 rounded-xl border border-line bg-white/70 p-4 shadow-sm">
@@ -118,8 +130,9 @@ export default function AdminBusinesses() {
                 <p className="mt-1 max-w-lg text-sm text-ink/60">{place.address}</p>
               </div>
 
-              {status === 'pending' && (
-                <div className="flex shrink-0 gap-2">
+              <div className="flex shrink-0 gap-2">
+                {status === 'pending' && (
+                  <>
                   <button
                     onClick={() => approve(place._id)}
                     className="rounded bg-moss px-3 py-1.5 text-sm font-medium text-paper hover:opacity-90"
@@ -132,8 +145,15 @@ export default function AdminBusinesses() {
                   >
                     Reject
                   </button>
-                </div>
-              )}
+                  </>
+                )}
+                <button
+                  onClick={() => deleteBusiness(place)}
+                  className="rounded border border-vermilion px-3 py-1.5 text-sm font-medium text-vermilion hover:bg-vermilion/10"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
 
             {rejectingId === place._id && (

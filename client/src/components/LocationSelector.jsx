@@ -15,13 +15,13 @@ function extractList(res) {
 
 function Field({ label, value, onChange, options = [], disabled, placeholder, loading }) {
   return (
-    <div className="flex flex-1 flex-col gap-1 px-4 py-2.5 first:pl-0 sm:border-l sm:border-line sm:first:border-l-0">
+    <div className="min-w-0 flex flex-1 flex-col gap-1 px-3 py-2 first:pl-0 sm:px-4 sm:py-2.5 sm:border-l sm:border-line sm:first:border-l-0">
       <label className="text-[11px] tracking-wide text-ink/45">{label}</label>
       <select
         value={value}
         disabled={disabled || loading}
         onChange={(e) => onChange(e.target.value)}
-        className="appearance-none bg-transparent font-display text-[15px] font-medium text-ink outline-none disabled:text-ink/30 cursor-pointer disabled:cursor-not-allowed"
+        className="w-full min-w-0 appearance-none bg-transparent font-display text-sm font-medium text-ink outline-none disabled:text-ink/30 cursor-pointer disabled:cursor-not-allowed sm:text-[15px]"
       >
         <option value="">{loading ? `Loading...` : placeholder}</option>
         {(options || []).map((opt) => (
@@ -195,7 +195,7 @@ export default function LocationSelector() {
   };
 
   return (
-    <div className="rounded-md border border-line bg-white/70 p-4 shadow-[0_1px_0_0_#D9D2C2] sm:p-2">
+    <div className="rounded-md border border-line bg-white/70 p-2 shadow-[0_1px_0_0_#D9D2C2] sm:p-2">
       {fetchError && (
         <div className="mb-2 px-3 py-1.5 text-xs text-vermilion bg-vermilion/10 rounded">
           {fetchError}
@@ -241,7 +241,7 @@ export default function LocationSelector() {
           <button
             onClick={handleExplore}
             disabled={!canExplore}
-            className="w-full whitespace-nowrap rounded bg-vermilion px-6 py-3 text-[15px] font-medium text-paper transition hover:bg-vermilion/90 disabled:cursor-not-allowed disabled:bg-ink/15 disabled:text-ink/40 sm:w-auto"
+            className="w-full whitespace-nowrap rounded bg-vermilion px-4 py-2.5 text-sm font-medium text-paper transition hover:bg-vermilion/90 disabled:cursor-not-allowed disabled:bg-ink/15 disabled:text-ink/40 sm:w-auto sm:px-6 sm:py-3 sm:text-[15px]"
           >
             Explore now
           </button>

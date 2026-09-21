@@ -38,6 +38,10 @@ npm run dev                 # http://localhost:5173
 The frontend expects the API at `http://localhost:5000/api` by default. Override with a
 `VITE_API_URL` env var if needed.
 
+To enable **Continue with Google**, create a Google OAuth Web application client with
+`http://localhost:5173` as an authorized JavaScript origin. Set its ID as
+`GOOGLE_CLIENT_ID` in `server/.env` and `VITE_GOOGLE_CLIENT_ID` in `client/.env`.
+
 ### 3. Try it out
 
 1. Register an account at `/register`.

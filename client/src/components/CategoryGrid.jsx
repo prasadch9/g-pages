@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import GroupedCategoryGrid from './GroupedCategoryGrid';
 
 const ICONS = {
   Schools: '🎓', Colleges: '🏢', Universities: '🏛️', 'Training Institutes': '📚', Academies: '🎯', 'Sports Academies': '🏅',
@@ -43,14 +44,16 @@ export default function CategoryGrid() {
           </Link>
         </div>
 
-        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+        {loading && <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
           {loading &&
             Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className="h-28 animate-pulse rounded-2xl border border-line bg-white" />
             ))}
+        </div>}
 
-          {!loading && categories.length === 0 &&
-            Array.from({ length: 6 }).map((_, i) => (
+        {!loading && categories.length === 0 &&
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
                 className="flex h-28 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-line text-ink/30"
@@ -58,20 +61,9 @@ export default function CategoryGrid() {
                 <span className="text-xs">Add categories in admin</span>
               </div>
             ))}
+          </div>}
 
-          {categories.map((cat) => (
-            <Link
-              key={cat._id}
-              to={`/categories/${cat.slug}`}
-              className="group flex h-28 flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_8px_24px_rgba(15,64,104,.06)] transition duration-300 hover:-translate-y-1 hover:border-cyan-300 hover:shadow-[0_16px_30px_rgba(15,64,104,.14)]"
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 text-2xl">{ICONS[cat.name] || '📌'}</span>
-              <span className="text-sm font-semibold leading-tight text-ink group-hover:text-blue-700">
-                {cat.name}
-              </span>
-            </Link>
-          ))}
-        </div>
+        {!loading && categories.length > 0 && <GroupedCategoryGrid categories={categories} />}
       </div>
     </section>
   );
