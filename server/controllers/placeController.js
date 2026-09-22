@@ -1,6 +1,92 @@
 const Place = require('../models/Place');
+const Category = require('../models/Category');
 const Favorite = require('../models/Favorite');
 const { AppError } = require('../middleware/errorHandler');
+
+const foodBusinessTypes = {
+  Restaurants: 'restaurant',
+  'Coffee Shops': 'coffee-shop',
+  'Sweet Shops & Bakery': 'bakery',
+  'Catering Services': 'catering',
+  'Food Processing': 'food-processing',
+};
+
+const validateBusinessTaxonomy = async (payload) => {
+  if (!payload.category) return;
+
+  const category = await Category.findById(payload.category).select('name parent');
+  if (!category) throw new AppError('Selected category was not found.', 400);
+
+  const subcategory = payload.subcategory
+    ? await Category.findById(payload.subcategory).select('name parent')
+    : null;
+  if (payload.subcategory && !subcategory) throw new AppError('Selected subcategory was not found.', 400);
+
+  if (category.name !== 'Food & Dining') {
+    if (subcategory && String(subcategory.parent) !== String(category._id)) {
+      throw new AppError('Selected subcategory does not belong to the selected category.', 400);
+    }
+    return;
+  }
+
+  if (!subcategory || String(subcategory.parent) !== String(category._id) || !foodBusinessTypes[subcategory.name]) {
+    throw new AppError('Food & Dining requires a valid subcategory.', 400);
+  }
+
+  const businessType = payload.attributes?.businessProfile?.businessType;
+  if (businessType !== foodBusinessTypes[subcategory.name]) {
+    throw new AppError(`Business type must be ${foodBusinessTypes[subcategory.name]} for ${subcategory.name}.`, 400);
+  }
+};
+
+const normalizeAttributes = (attributes) => {
+  if (!attributes || typeof attributes !== 'object') return attributes;
+  const normalized = { ...attributes };
+  const profile = normalized.businessProfile;
+  if (profile && typeof profile === 'object') {
+    const common = { ...(profile.common || {}) };
+    common.gallery = Array.isArray(common.gallery) ? common.gallery.filter(Boolean).slice(0, 10) : [];
+    common.videos = Array.isArray(common.videos) ? common.videos.filter(Boolean).slice(0, 50) : [];
+    normalized.businessProfile = { ...profile, common };
+  }
+  // Legacy restaurantProfile data is intentionally preserved for backwards compatibility.
+  return normalized;
+};
+
+const normalizeGallery = (images) => Array.isArray(images) ? images.filter(Boolean).slice(0, 10) : images;
+
+const isSafeImageUrl = (value) => {
+  if (typeof value !== 'string' || !value.trim()) return false;
+  if (value.startsWith('/uploads/') || value.startsWith('/images/')) return true;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' || url.protocol === 'http:';
+  } catch {
+    return false;
+  }
+};
+
+const validateBusinessMedia = (payload) => {
+  const common = payload.attributes?.businessProfile?.common;
+  const imageValues = [
+    payload.logo,
+    payload.coverImage,
+    ...(payload.images || []),
+    common?.logo,
+    common?.coverImage,
+    ...(common?.gallery || []),
+  ].filter(Boolean);
+
+  if (Array.isArray(payload.images) && payload.images.length > 10) {
+    throw new AppError('A gallery can contain at most 10 images.', 400);
+  }
+  if (Array.isArray(common?.gallery) && common.gallery.length > 10) {
+    throw new AppError('A gallery can contain at most 10 images.', 400);
+  }
+  if (imageValues.some((value) => !isSafeImageUrl(value))) {
+    throw new AppError('Image URLs must be valid HTTP(S) URLs or uploaded image paths.', 400);
+  }
+};
 
 /**
  * GET /api/places
@@ -57,7 +143,8 @@ const getPlaces = async (req, res, next) => {
 
     const [places, total] = await Promise.all([
       Place.find(filter)
-        .populate('category', 'name slug icon')
+        .populate('category', 'name slug icon parent')
+        .populate('subcategory', 'name slug parent')
         .sort(sortMap[sort] || sortMap.rating)
         .skip(skip)
         .limit(Number(limit)),
@@ -91,7 +178,8 @@ const getPlaces = async (req, res, next) => {
 const getPlaceById = async (req, res, next) => {
   try {
     const place = await Place.findById(req.params.id)
-      .populate('category', 'name slug icon filters')
+      .populate('category', 'name slug icon filters parent')
+      .populate('subcategory', 'name slug parent')
       .populate('location.state location.district location.city location.area', 'name slug')
       .populate('owner', 'name email');
 
@@ -140,7 +228,18 @@ const getTrending = async (req, res, next) => {
 /** POST /api/places — business owner submits a new listing (starts as 'pending'). */
 const createPlace = async (req, res, next) => {
   try {
-    const place = await Place.create({ ...req.body, owner: req.user._id, status: 'pending' });
+    await validateBusinessTaxonomy(req.body);
+    validateBusinessMedia(req.body);
+    if (req.body.attributes?.businessProfile?.businessType && req.body.attributes.restaurantProfile) {
+      throw new AppError('Food & Dining listings must use attributes.businessProfile; restaurantProfile is legacy-only.', 400);
+    }
+    const place = await Place.create({
+      ...req.body,
+      images: normalizeGallery(req.body.images),
+      attributes: normalizeAttributes(req.body.attributes),
+      owner: req.user._id,
+      status: 'pending',
+    });
 
     const BusinessRequest = require('../models/BusinessRequest');
     await BusinessRequest.create({
@@ -170,7 +269,17 @@ const updatePlace = async (req, res, next) => {
       return next(new AppError('You do not have permission to edit this listing.', 403));
     }
 
-    Object.assign(place, req.body);
+    await validateBusinessTaxonomy({
+      category: req.body.category || place.category,
+      subcategory: req.body.subcategory || place.subcategory,
+      attributes: req.body.attributes || place.attributes,
+    });
+    Object.assign(place, {
+      ...req.body,
+      images: req.body.images === undefined ? place.images : normalizeGallery(req.body.images),
+      attributes: req.body.attributes === undefined ? place.attributes : normalizeAttributes(req.body.attributes),
+    });
+    validateBusinessMedia(req.body);
     if (isOwner && req.user.role !== 'admin') {
       place.status = 'pending'; // owner edits require re-approval
       place.rejectionReason = null;
@@ -243,7 +352,8 @@ const getMyFavorites = async (req, res, next) => {
 const getMyPlaces = async (req, res, next) => {
   try {
     const places = await Place.find({ owner: req.user._id })
-      .populate('category', 'name slug')
+      .populate('category', 'name slug parent')
+      .populate('subcategory', 'name slug parent')
       .sort('-createdAt');
     res.status(200).json({ success: true, data: places });
   } catch (error) {

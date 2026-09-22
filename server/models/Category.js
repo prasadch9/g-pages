@@ -18,6 +18,12 @@ const categorySchema = new mongoose.Schema(
       trim: true,
     },
 
+    parent: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Category',
+      default: null,
+    },
+
     icon: {
       type: String,
       default: null,

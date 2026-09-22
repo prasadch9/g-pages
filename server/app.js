@@ -16,9 +16,12 @@ const reportRoutes = require('./routes/reportRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const enquiryRoutes = require('./routes/enquiryRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const mediaRoutes = require('./routes/mediaRoutes');
+const { uploadDirectory } = require('./controllers/mediaController');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
+app.set('trust proxy', 1);
 
 // --- Security & core middleware ---
 app.use(helmet()); // sensible secure HTTP headers
@@ -72,6 +75,12 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/enquiries', enquiryRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/media', mediaRoutes);
+app.use('/uploads', express.static(uploadDirectory, {
+  fallthrough: false,
+  maxAge: '7d',
+  setHeaders: (res) => res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin'),
+}));
 
 // --- Error handling (must be last) ---
 app.use(notFound);

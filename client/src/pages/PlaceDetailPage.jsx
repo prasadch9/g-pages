@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import FavoriteButton from '../components/FavoriteButton';
 import ReviewsSection from '../components/ReviewsSection';
+import { resolveFoodBusinessType } from '../components/public/PublicProfileShared';
 
 const DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
 const REPORT_REASONS = [
@@ -303,6 +304,12 @@ export default function PlaceDetailPage() {
   const academics = place.attributes || {};
   const gallery = place.images || [];
   const isSchoolCategory = ['school', 'schools'].includes((place.category?.slug || '').toLowerCase()) || ['school', 'schools'].includes((place.category?.name || '').toLowerCase());
+  const foodBusinessType = resolveFoodBusinessType(place);
+  const businessType = place.attributes?.businessProfile?.businessType;
+  const isRestaurant = businessType === 'restaurant'
+    || (!businessType && !place.attributes?.businessProfile && Boolean(place.attributes?.restaurantProfile))
+    || ['restaurant', 'restaurants'].includes((place.subcategory?.slug || place.category?.slug || '').toLowerCase())
+    || ['restaurant', 'restaurants'].includes((place.subcategory?.name || place.category?.name || '').toLowerCase());
 
   if (isSchoolCategory) {
     return (
@@ -320,6 +327,8 @@ export default function PlaceDetailPage() {
       </>
     );
   }
+
+  if (foodBusinessType) return <Navigate to={`/business/${place._id}`} replace />;
 
   return (
     <div className="container-page py-10">
@@ -342,6 +351,11 @@ export default function PlaceDetailPage() {
         </div>
 
         <div className="flex flex-wrap gap-2">
+          {isRestaurant && (
+            <Link to={`/business/${place._id}`} className="rounded border border-vermilion bg-vermilion px-4 py-2 text-sm font-medium text-paper hover:bg-vermilion/90">
+              Restaurant profile
+            </Link>
+          )}
           <FavoriteButton placeId={place._id} />
           <button onClick={handleShare} className="rounded border border-line px-4 py-2 text-sm text-ink/70 hover:border-ink/30">
             Share

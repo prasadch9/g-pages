@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -25,12 +25,19 @@ import CityPage from './pages/CityPage';
 import CategoryListingPage from './pages/CategoryListingPage';
 import PlaceDetailPage from './pages/PlaceDetailPage';
 import SearchResultsPage from './pages/SearchResultsPage';
+import PublicBusinessProfilePage from './pages/PublicBusinessProfilePage';
+import RestaurantEditor from './pages/business/RestaurantEditor';
+import BusinessEditorPage from './pages/business/BusinessEditorPage';
 import WhatsAppButton from './components/WhatsAppButton';
 
 export default function App() {
+  const location = useLocation();
+  const isRestaurantProfile = /^\/business\/[^/]+$/.test(location.pathname);
+  const isBusinessOwnerSurface = /^(\/business\/dashboard|\/business\/listings\/new(?:\/restaurant)?|\/business\/listings\/[^/]+\/edit)$/.test(location.pathname);
+
   return (
     <div className="flex min-h-screen flex-col bg-paper">
-      <Header />
+      {!isRestaurantProfile && !isBusinessOwnerSurface && <Header />}
       <main className="flex-1 bg-[radial-gradient(circle_at_8%_8%,rgba(20,184,166,0.10),transparent_22rem),radial-gradient(circle_at_92%_35%,rgba(59,130,246,0.09),transparent_26rem)]">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -39,6 +46,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/search" element={<SearchResultsPage />} />
           <Route path="/place/:id" element={<PlaceDetailPage />} />
+          <Route path="/business/:businessId" element={<PublicBusinessProfilePage />} />
           <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/categories/:category" element={<CategoryPlacesPage />} />
           <Route path="/explore" element={<ExplorePage />} />
@@ -66,7 +74,23 @@ export default function App() {
             path="/business/listings/new"
             element={
               <ProtectedRoute roles={['business']}>
-                <CreateListing />
+                <CreateListing foodDiningOnly />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/business/listings/new/restaurant"
+            element={
+              <ProtectedRoute roles={['business']}>
+                <CreateListing foodDiningOnly />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/business/listings/:id/edit"
+            element={
+              <ProtectedRoute roles={['business', 'admin']}>
+                <BusinessEditorPage />
               </ProtectedRoute>
             }
           />
@@ -96,8 +120,8 @@ export default function App() {
           <Route path="*" element={<ComingSoon title="This page" />} />
         </Routes>
       </main>
-      <Footer />
-      <WhatsAppButton />
+      {!isRestaurantProfile && !isBusinessOwnerSurface && <Footer />}
+      {!isRestaurantProfile && !isBusinessOwnerSurface && <WhatsAppButton />}
     </div>
   );
 }

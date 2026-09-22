@@ -231,6 +231,7 @@ const LEGACY_CATEGORIES = [
 ];
 
 const REQUESTED_CATEGORY_NAMES = [
+  'Food & Dining',
   'Schools', 'Colleges', 'Universities', 'Training Institutes', 'Academies', 'Sports Academies',
   'Hospitals', 'Multispeciality Hospitals', 'Cardiology', 'ENT', 'Dental', 'Hearing Solutions', 'Fitness Centres',
   'Temples', 'Churches', 'Trusts', 'NGOs', 'Associations',
@@ -360,6 +361,7 @@ const run = async () => {
             name: category.name,
             slug: slug,
             order: category.order,
+            parent: null,
             filters: category.filters || [],
           },
         },
@@ -369,6 +371,14 @@ const run = async () => {
           new: true,
           setDefaultsOnInsert: true,
         }
+      );
+    }
+
+    const foodDiningCategory = await Category.findOne({ name: 'Food & Dining' });
+    if (foodDiningCategory) {
+      await Category.updateMany(
+        { name: { $in: ['Restaurants', 'Coffee Shops', 'Sweet Shops & Bakery', 'Catering Services', 'Food Processing'] } },
+        { $set: { parent: foodDiningCategory._id } }
       );
     }
 
@@ -541,8 +551,14 @@ const run = async () => {
     const seedAdmin = await User.findOneAndUpdate(
       { email: seedAdminEmail },
       {
-        $set: { name: 'Google Pages Admin', email: seedAdminEmail, mobile: process.env.SEED_ADMIN_MOBILE || '9999999999', role: 'admin', status: 'active' },
-        $setOnInsert: { passwordHash: adminPasswordHash },
+        $set: {
+          name: 'Google Pages Admin',
+          email: seedAdminEmail,
+          mobile: process.env.SEED_ADMIN_MOBILE || '9999999999',
+          passwordHash: adminPasswordHash,
+          role: 'admin',
+          status: 'active',
+        },
       },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );

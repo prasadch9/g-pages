@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import LocationCascadeFields from '../../components/LocationCascadeFields';
+import BusinessMediaUploader from '../../components/business/BusinessMediaUploader';
 
 const initialLocation = { state: '', district: '', city: '', area: '' };
 
@@ -68,7 +69,7 @@ export default function CreateListing({ foodDiningOnly = false, restaurantOnly =
     priceRange: '',
     foodType: 'Both',
     establishedYear: '',
-    services: 'Dine In\nTake Away\nHome Delivery\nOnline Ordering',
+    services: 'Dine-in\nTakeaway\nDelivery\nOnline Ordering\nTable Reservation\nParty Hall\nBirthday Parties\nCatering\nParking\nAC\nWi-Fi\nFamily Dining\nOutdoor Dining\nPrivate Dining\nKids Area\nLive Kitchen',
     menu: '',
     coffeeType: '',
     beverageCategories: '',
@@ -89,6 +90,7 @@ export default function CreateListing({ foodDiningOnly = false, restaurantOnly =
     operations: '',
     facilities: '',
     certifications: '',
+    typeFeatures: '',
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -103,7 +105,9 @@ export default function CreateListing({ foodDiningOnly = false, restaurantOnly =
         const matchingFoodChildren = all.filter((category) => String(category.parent?._id || category.parent) === String(foodParent?._id)
           || foodDiningSubcategoryNames.includes(category.name));
         const foodChildren = foodDiningSubcategoryNames
-          .map((name) => matchingFoodChildren.find((category) => category.name === name))
+          .map((name) => matchingFoodChildren.find((category) => category.name === name
+            && String(category.parent?._id || category.parent) === String(foodParent?._id))
+            || matchingFoodChildren.find((category) => category.name === name))
           .filter(Boolean);
         const visible = isFoodDiningFlow ? [foodParent, ...foodChildren].filter(Boolean) : all;
 
@@ -168,7 +172,7 @@ export default function CreateListing({ foodDiningOnly = false, restaurantOnly =
             <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Price Range</label><select value={form.priceRange} onChange={update('priceRange')} className={inputClass}><option value="">Select</option><option>₹</option><option>₹₹</option><option>₹₹₹</option><option>₹₹₹₹</option></select></div>
             <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Food Type</label><select value={form.foodType} onChange={update('foodType')} className={inputClass}><option>Both</option><option>Veg</option><option>Non-Veg</option></select></div>
             <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Established Year</label><input value={form.establishedYear} onChange={update('establishedYear')} className={inputClass} /></div>
-            <div className="col-span-2"><label className="text-sm text-ink/70">Restaurant Services</label><textarea rows={4} value={form.services} onChange={update('services')} className={inputClass} /></div>
+            <div className="col-span-2"><label className="text-sm text-ink/70">Restaurant Services & Facilities</label><textarea rows={5} value={form.services} onChange={update('services')} placeholder="Dine-in, Takeaway, Delivery, Online Ordering, Table Reservation, Party Hall, Birthday Parties, Catering, Parking, AC, Wi-Fi, Family Dining, Outdoor Dining, Private Dining, Kids Area, Live Kitchen" className={inputClass} /></div>
             <div className="col-span-2"><label className="text-sm text-ink/70">Menu / Signature Dishes</label><textarea rows={3} value={form.menu} onChange={update('menu')} placeholder="Chef specials, menu highlights, signature dishes" className={inputClass} /></div>
           </>
         );
@@ -180,6 +184,7 @@ export default function CreateListing({ foodDiningOnly = false, restaurantOnly =
             <div className="col-span-2"><label className="text-sm text-ink/70">Coffee / Beverage Categories</label><textarea rows={3} value={form.beverageCategories} onChange={update('beverageCategories')} placeholder="Espresso, Cappuccino, Latte, Cold Coffee, Tea, Milkshakes, Smoothies, Juices" className={inputClass} /></div>
             <div className="col-span-2"><label className="text-sm text-ink/70">Food / Snacks</label><textarea rows={3} value={form.snacks} onChange={update('snacks')} placeholder="Sandwiches, Pastries, Cookies, Cakes, Snacks" className={inputClass} /></div>
             <div className="col-span-2"><label className="text-sm text-ink/70">Cafe Facilities</label><textarea rows={3} value={form.cafeFacilities} onChange={update('cafeFacilities')} placeholder="Indoor Seating, Outdoor Seating, Free Wi-Fi, Charging Points, AC, Parking, Work-Friendly, Pet-Friendly" className={inputClass} /></div>
+            <div className="col-span-2"><label className="text-sm text-ink/70">Coffee Shop Features</label><textarea rows={3} value={form.typeFeatures} onChange={update('typeFeatures')} placeholder="Indoor Seating, Outdoor Seating, Wi-Fi, Charging, AC, Parking, Work/Study Friendly, Pet Friendly, Takeaway, Delivery, Online Ordering" className={inputClass} /></div>
           </>
         );
       case 'bakery':
@@ -189,6 +194,7 @@ export default function CreateListing({ foodDiningOnly = false, restaurantOnly =
             <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Established Year</label><input value={form.establishedYear} onChange={update('establishedYear')} className={inputClass} /></div>
             <div className="col-span-2"><label className="text-sm text-ink/70">Products</label><textarea rows={3} value={form.products} onChange={update('products')} placeholder="Traditional Sweets, Cakes, Pastries, Bread, Cookies, Snacks, Desserts, Chocolates" className={inputClass} /></div>
             <div className="col-span-2"><label className="text-sm text-ink/70">Special Services</label><textarea rows={3} value={form.specialServices} onChange={update('specialServices')} placeholder="Custom Cakes, Birthday Cakes, Bulk Orders, Gift Hampers, Home Delivery, Takeaway" className={inputClass} /></div>
+            <div className="col-span-2"><label className="text-sm text-ink/70">Bakery Services</label><textarea rows={3} value={form.typeFeatures} onChange={update('typeFeatures')} placeholder="Sweets, Cakes, Pastries, Bread, Cookies, Desserts, Chocolates, Custom Cakes, Birthday Cakes, Wedding Cakes, Bulk Orders, Gift Hampers, Online Orders, Delivery" className={inputClass} /></div>
           </>
         );
       case 'catering':
@@ -202,6 +208,7 @@ export default function CreateListing({ foodDiningOnly = false, restaurantOnly =
             <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Maximum Guests</label><input value={form.guestCapacityMax} onChange={update('guestCapacityMax')} className={inputClass} /></div>
             <div className="col-span-2"><label className="text-sm text-ink/70">Menu Types</label><input value={form.menuTypes} onChange={update('menuTypes')} placeholder="Veg / Non-Veg / Both" className={inputClass} /></div>
             <div className="col-span-2"><label className="text-sm text-ink/70">Package Details</label><textarea rows={3} value={form.packageDetails} onChange={update('packageDetails')} placeholder="Price per plate, custom menu, buffet packages, event-specific options" className={inputClass} /></div>
+            <div className="col-span-2"><label className="text-sm text-ink/70">Catering Features</label><textarea rows={3} value={form.typeFeatures} onChange={update('typeFeatures')} placeholder="Wedding, Birthday, Engagement, Corporate, Housewarming, Anniversary, Party, Buffet, Per Plate, Live Counters, Traditional Catering, Corporate Catering, Outdoor/Event Catering, Bulk Orders" className={inputClass} /></div>
           </>
         );
       case 'food-processing':
@@ -213,6 +220,7 @@ export default function CreateListing({ foodDiningOnly = false, restaurantOnly =
             <div className="col-span-2"><label className="text-sm text-ink/70">Business Operations</label><textarea rows={3} value={form.operations} onChange={update('operations')} placeholder="Manufacturing, Packaging, Wholesale, Distribution, Private Label, Bulk Orders" className={inputClass} /></div>
             <div className="col-span-2"><label className="text-sm text-ink/70">Facilities</label><textarea rows={3} value={form.facilities} onChange={update('facilities')} placeholder="Manufacturing Unit, Packaging Unit, Cold Storage, Warehouse, Quality Control, Delivery / Distribution" className={inputClass} /></div>
             <div className="col-span-2"><label className="text-sm text-ink/70">Certifications</label><textarea rows={3} value={form.certifications} onChange={update('certifications')} placeholder="FSSAI, ISO, Other Certifications" className={inputClass} /></div>
+            <div className="col-span-2"><label className="text-sm text-ink/70">Food Processing Features</label><textarea rows={3} value={form.typeFeatures} onChange={update('typeFeatures')} placeholder="Products, Manufacturing, Packaging, Wholesale, Distribution, Private Label, Bulk Orders, Facilities, FSSAI, ISO, Factory Gallery, Product Gallery, Manufacturing Videos" className={inputClass} /></div>
           </>
         );
       default:
@@ -275,12 +283,14 @@ export default function CreateListing({ foodDiningOnly = false, restaurantOnly =
         beverageCategories: splitList(form.beverageCategories),
         snacks: splitList(form.snacks),
         facilities: splitList(form.cafeFacilities),
+        features: splitList(form.typeFeatures),
       },
       bakery: {
         shopType: form.shopType,
         establishedYear: form.establishedYear,
         products: splitList(form.products),
         specialServices: splitList(form.specialServices),
+        features: splitList(form.typeFeatures),
       },
       catering: {
         experience: form.experience,
@@ -290,6 +300,7 @@ export default function CreateListing({ foodDiningOnly = false, restaurantOnly =
         guestCapacity: { min: form.guestCapacityMin, max: form.guestCapacityMax },
         menuTypes: form.menuTypes,
         packageDetails: form.packageDetails,
+        features: splitList(form.typeFeatures),
       },
       'food-processing': {
         industryType: form.industryType,
@@ -298,6 +309,7 @@ export default function CreateListing({ foodDiningOnly = false, restaurantOnly =
         operations: splitList(form.operations),
         facilities: splitList(form.facilities),
         certifications: splitList(form.certifications),
+        features: splitList(form.typeFeatures),
       },
     }[businessType] || {};
 
@@ -390,16 +402,16 @@ export default function CreateListing({ foodDiningOnly = false, restaurantOnly =
           <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Phone</label><input value={form.phone} onChange={update('phone')} className={inputClass} /></div>
           <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Email</label><input type="email" value={form.email} onChange={update('email')} className={inputClass} /></div>
           <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Website</label><input value={form.website} onChange={update('website')} placeholder="https://" className={inputClass} /></div>
-          <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Logo URL</label><input value={form.logo} onChange={update('logo')} placeholder="https://..." className={inputClass} /></div>
+          <div className="col-span-2"><BusinessMediaUploader label="Business Logo" value={form.logo} onChange={(value) => setForm((current) => ({ ...current, logo: value }))} previewClassName="h-32" /></div>
 
           <LocationCascadeFields value={location} onChange={setLocation} />
 
           <div className="col-span-2"><label className="text-sm text-ink/70">Address</label><input required value={form.address} onChange={update('address')} className={inputClass} /></div>
           <div className="col-span-2"><label className="text-sm text-ink/70">Google Maps Location</label><input value={form.googleMapsUrl} onChange={update('googleMapsUrl')} placeholder="https://maps.google.com/..." className={inputClass} /></div>
           <div className="col-span-2"><label className="text-sm text-ink/70">About</label><textarea required rows={4} value={form.description} onChange={update('description')} className={inputClass} /></div>
-          <div className="col-span-2"><label className="text-sm text-ink/70">Gallery image URLs</label><textarea rows={3} value={form.gallery} onChange={update('gallery')} placeholder="https://...\nhttps://..." className={inputClass} /></div>
+          <div className="col-span-2"><BusinessMediaUploader label="Gallery Images" helpText="Add up to 10 images." value={splitList(form.gallery)} onChange={(images) => setForm((current) => ({ ...current, gallery: images.join('\n') }))} multiple max={10} previewClassName="h-28" /></div>
           <div className="col-span-2"><label className="text-sm text-ink/70">Video URLs</label><textarea rows={3} value={form.videos} onChange={update('videos')} placeholder="https://youtube.com/..\nhttps://..." className={inputClass} /></div>
-          <div className="col-span-2"><label className="text-sm text-ink/70">Cover Image URL</label><input value={form.coverImage} onChange={update('coverImage')} placeholder="https://..." className={inputClass} /></div>
+          <div className="col-span-2"><BusinessMediaUploader label="Hero / Banner Image" value={form.coverImage} onChange={(value) => setForm((current) => ({ ...current, coverImage: value }))} previewClassName="h-48" /></div>
 
           <div className="col-span-2">
             <label className="text-sm text-ink/70">Social Media Links</label>

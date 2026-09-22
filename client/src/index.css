@@ -84,6 +84,10 @@
   .container-page {
     @apply mx-auto w-full max-w-7xl px-5 sm:px-8;
   }
+
+  .restaurant-profile [id] {
+    scroll-margin-top: 6rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

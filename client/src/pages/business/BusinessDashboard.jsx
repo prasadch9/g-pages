@@ -38,7 +38,7 @@ export default function BusinessDashboard() {
           to="/business/listings/new"
           className="rounded bg-ink px-5 py-2.5 text-sm font-medium text-paper hover:bg-ink-light"
         >
-          + Create new listing
+          + Add Business
         </Link>
       </div>
 
@@ -83,11 +83,11 @@ export default function BusinessDashboard() {
                   <div className="mt-1 text-xs text-vermilion">Reason: {place.rejectionReason}</div>
                 )}
               </div>
-              <span
-                className={`rounded-sm px-2.5 py-1 text-xs font-medium capitalize ${STATUS_STYLES[place.status]}`}
-              >
-                {place.status}
-              </span>
+              <div className="flex items-center gap-2">
+                {place.status === 'approved' && <Link to={`/business/${place._id}`} target="_blank" className="rounded border border-line px-3 py-1.5 text-xs font-semibold text-ink hover:border-ink/40">View profile</Link>}
+                <Link to={`/business/listings/${place._id}/edit`} className="rounded border border-line px-3 py-1.5 text-xs font-semibold text-ink hover:border-ink/40">Edit profile</Link>
+                <span className={`rounded-sm px-2.5 py-1 text-xs font-medium capitalize ${STATUS_STYLES[place.status]}`}>{place.status}</span>
+              </div>
             </div>
           ))}
         </div>

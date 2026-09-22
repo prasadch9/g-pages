@@ -24,6 +24,12 @@ const placeSchema = new mongoose.Schema(
       required: true,
     },
 
+    subcategory: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Category',
+      default: null,
+    },
+
     location: {
       state: {
         type: mongoose.Schema.Types.ObjectId,
