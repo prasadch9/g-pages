@@ -1,235 +1,170 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
 import LocationCascadeFields from '../../components/LocationCascadeFields';
-import BusinessMediaUploader from '../../components/business/BusinessMediaUploader';
+import { BUSINESS_PAGE_TYPES } from '../../data/businessPageConfig';
+import { CATEGORY_GROUPS } from '../../data/categoryGroups';
+import CollegeRegistrationFields from '../../components/CollegeRegistrationFields';
+import UniversityRegistrationFields from '../../components/UniversityRegistrationFields';
 
 const initialLocation = { state: '', district: '', city: '', area: '' };
-
-const defaultOpeningHours = {
-  mon: { open: '', close: '', closed: false },
-  tue: { open: '', close: '', closed: false },
-  wed: { open: '', close: '', closed: false },
-  thu: { open: '', close: '', closed: false },
-  fri: { open: '', close: '', closed: false },
-  sat: { open: '', close: '', closed: false },
-  sun: { open: '', close: '', closed: false },
+const initialForm = {
+  name: '',
+  mainCategory: '',
+  category: '',
+  subcategory: '',
+  pageType: 'static',
+  address: '',
+  description: '',
+  phone: '',
+  email: '',
+  website: '',
+  services: '',
+  facilities: '',
+  board: '',
+  curriculum: '',
+  classes: '',
+  type: '',
+  gender: '',
+  admission: '',
+  facebook: '',
+  instagram: '',
+  whatsapp: '',
+  tagline: '',
+  establishedYear: '',
+  medium: '',
+  studentCapacity: '',
+  studentTeacherRatio: '',
+  totalStudents: '',
+  landmark: '',
+  pincode: '',
+  youtube: '',
+  linkedin: '',
+  socialVisibility: { facebook: true, instagram: true, youtube: true, linkedin: true },
+  schoolHistory: '',
+  whyChooseUs: '',
+  teachingMethod: '',
+  languages: [],
+  academicActivities: '',
+  principalName: '',
+  principalDesignation: 'Principal',
+  principalQualification: '',
+  principalExperience: '',
+  admissionStatus: 'open',
+  admissionClasses: [],
+  ageCriteria: '',
+  requiredDocuments: [],
+  enquiryPhone: '',
+  showFees: true,
+  admissionFee: '',
+  tuitionFee: '',
+  transportFee: '',
+  otherCharges: '',
+  principalMessage: '',
+  vision: '',
+  mission: '',
+  faculty: '',
+  achievements: '',
+  events: '',
+  admissionProcess: '',
+  eligibility: '',
+  feeInformation: '',
+  studentName: '',
 };
 
-const splitList = (value = '') =>
-  String(value)
-    .split(/[\n,]/)
-    .map((item) => item.trim())
-    .filter(Boolean);
+const splitList = (value) => value.split(/[,\n]/).map((item) => item.trim()).filter(Boolean);
 
-const categoryTypeMap = {
-  restaurants: 'restaurant',
-  'coffee shops': 'coffee-shop',
-  'sweet shops & bakery': 'bakery',
-  'catering services': 'catering',
-  'food processing': 'food-processing',
-};
+function CheckboxGroup({ label, items, values, onChange }) {
+  const toggle = (item) => onChange(values.includes(item) ? values.filter((value) => value !== item) : [...values, item]);
+  return <fieldset className="col-span-2"><legend className="text-sm font-semibold text-ink/75">{label}</legend><div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{items.map((item) => <label key={item} className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#d9e2ec] bg-white px-3 py-2.5 text-sm text-ink/75 transition hover:border-[#168b9a] hover:bg-[#f1fbf8]"><input type="checkbox" checked={values.includes(item)} onChange={() => toggle(item)} className="h-4 w-4 accent-[#168b9a]" />{item}</label>)}</div></fieldset>;
+}
 
-const foodDiningSubcategoryNames = [
-  'Restaurants',
-  'Coffee Shops',
-  'Sweet Shops & Bakery',
-  'Catering Services',
-  'Food Processing',
-];
-
-const inputClass = 'mt-1 w-full rounded border border-line bg-white px-3 py-2.5 text-[15px] outline-none focus:border-ink/40';
-
-export default function CreateListing({ foodDiningOnly = false, restaurantOnly = false }) {
-  const isFoodDiningFlow = foodDiningOnly || restaurantOnly;
+export default function CreateListing() {
   const navigate = useNavigate();
+  const { id: editId } = useParams();
+  const isEditing = Boolean(editId);
   const [categories, setCategories] = useState([]);
   const [location, setLocation] = useState(initialLocation);
-  const [businessType, setBusinessType] = useState('restaurant');
-  const [form, setForm] = useState({
-    name: '',
-    category: '',
-    subcategory: '',
-    address: '',
-    description: '',
-    phone: '',
-    email: '',
-    website: '',
-    logo: '',
-    coverImage: '',
-    gallery: '',
-    videos: '',
-    googleMapsUrl: '',
-    facebook: '',
-    instagram: '',
-    youtube: '',
-    whatsapp: '',
-    openingHours: defaultOpeningHours,
-    cuisineType: 'Indian',
-    priceRange: '',
-    foodType: 'Both',
-    establishedYear: '',
-    services: 'Dine-in\nTakeaway\nDelivery\nOnline Ordering\nTable Reservation\nParty Hall\nBirthday Parties\nCatering\nParking\nAC\nWi-Fi\nFamily Dining\nOutdoor Dining\nPrivate Dining\nKids Area\nLive Kitchen',
-    menu: '',
-    coffeeType: '',
-    beverageCategories: '',
-    snacks: '',
-    cafeFacilities: '',
-    shopType: '',
-    products: '',
-    specialServices: '',
-    eventTypes: '',
-    cateringServices: '',
-    guestCapacityMin: '',
-    guestCapacityMax: '',
-    menuTypes: '',
-    packageDetails: '',
-    serviceArea: '',
-    experience: '',
-    industryType: '',
-    operations: '',
-    facilities: '',
-    certifications: '',
-    typeFeatures: '',
-  });
+  const [form, setForm] = useState(initialForm);
+  const [coverFile, setCoverFile] = useState(null);
+  const [logoFile, setLogoFile] = useState(null);
+  const [footerLogoFile, setFooterLogoFile] = useState(null);
+  const [principalImageFile, setPrincipalImageFile] = useState(null);
+  const [aboutImageFile, setAboutImageFile] = useState(null);
+  const [facilityImageFiles, setFacilityImageFiles] = useState([]);
+  const [galleryFiles, setGalleryFiles] = useState([]);
+  const [videoFiles, setVideoFiles] = useState([]);
+  const [principalGalleryFiles, setPrincipalGalleryFiles] = useState([]);
+  const [faculty, setFaculty] = useState([]);
+  const [infrastructure, setInfrastructure] = useState([]);
+  const [schoolFacilities, setSchoolFacilities] = useState([]);
+  const [galleryItems, setGalleryItems] = useState([]);
+  const [schoolVideos, setSchoolVideos] = useState([]);
+  const [achievements, setAchievements] = useState([]);
+  const [schoolEvents, setSchoolEvents] = useState([]);
+  const [existingMedia, setExistingMedia] = useState({ logo: '', cover: '', about: '', principal: '', images: [], videos: [], faculty: [], infrastructure: [], facilities: [], events: [], principalGallery: [] });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    api
-      .get('/categories')
-      .then(({ data }) => {
-        const all = Array.isArray(data?.data) ? data.data : [];
-        const foodParent = all.find((category) => category.name === 'Food & Dining');
-        const matchingFoodChildren = all.filter((category) => String(category.parent?._id || category.parent) === String(foodParent?._id)
-          || foodDiningSubcategoryNames.includes(category.name));
-        const foodChildren = foodDiningSubcategoryNames
-          .map((name) => matchingFoodChildren.find((category) => category.name === name
-            && String(category.parent?._id || category.parent) === String(foodParent?._id))
-            || matchingFoodChildren.find((category) => category.name === name))
-          .filter(Boolean);
-        const visible = isFoodDiningFlow ? [foodParent, ...foodChildren].filter(Boolean) : all;
-
-        setCategories(visible);
-
-        if (foodParent && isFoodDiningFlow) {
-          setForm((current) => ({ ...current, category: foodParent._id, subcategory: foodChildren[0]?._id || '' }));
-          setBusinessType(categoryTypeMap[(foodChildren[0]?.name || '').toLowerCase()] || 'restaurant');
-        }
-      })
-      .catch(() => setCategories([]));
-  }, [isFoodDiningFlow]);
-
-  const selectedCategory = useMemo(
-    () => categories.find((item) => item._id === form.category),
-    [categories, form.category]
-  );
-
-  const categoryName = selectedCategory?.name || '';
-  const selectedSubcategory = useMemo(
-    () => categories.find((item) => item._id === form.subcategory),
-    [categories, form.subcategory]
-  );
-  const subcategoryName = selectedSubcategory?.name || '';
-  const foodParent = useMemo(() => categories.find((item) => item.name === 'Food & Dining'), [categories]);
-  const foodSubcategories = useMemo(
-    () => categories.filter((item) => String(item.parent?._id || item.parent) === String(foodParent?._id)
-      || foodDiningSubcategoryNames.includes(item.name)),
-    [categories, foodParent]
-  );
+    api.get('/categories').then(({ data }) => setCategories(data.data)).catch(() => {});
+  }, []);
 
   useEffect(() => {
-    const resolvedType = categoryTypeMap[(subcategoryName || categoryName || '').toLowerCase()] || 'restaurant';
-    setBusinessType(resolvedType);
-  }, [categoryName, subcategoryName]);
+    if (!editId) return;
+    api.get('/places/mine').then(({ data }) => {
+      const place = data.data.find((item) => item._id === editId);
+      if (!place) throw new Error('Listing not found.');
+      const attributes = place.attributes || {};
+      const principal = attributes.principal || {};
+      const admissionDetails = attributes.admissionDetails || {};
+      const fees = attributes.fees || {};
+      setForm((current) => ({ ...current, name: place.name || '', category: place.category?._id || place.category || '', subcategory: place.subcategory || place.category?.name || '', mainCategory: place.categoryGroup || '', address: place.address || '', description: place.description || '', phone: place.phone || '', email: place.email || '', website: place.website || '', services: (place.services || []).join(', '), facilities: (place.facilities || []).join(', '), pageType: place.pageType || 'static', facebook: place.socialLinks?.facebook || '', instagram: place.socialLinks?.instagram || '', whatsapp: place.socialLinks?.whatsapp || '', youtube: place.socialLinks?.youtube || '', linkedin: place.socialLinks?.linkedin || '', ...place.attributes }));
+      setForm((current) => ({ ...current, principalName: principal.name || '', principalDesignation: principal.designation || 'Principal', principalQualification: principal.qualification || '', principalExperience: principal.experience || '', principalMessage: principal.message || attributes.principalMessage || '', admissionStatus: admissionDetails.status || 'open', admissionClasses: admissionDetails.classes || [], ageCriteria: admissionDetails.ageCriteria || '', requiredDocuments: admissionDetails.requiredDocuments || [], enquiryPhone: admissionDetails.enquiryPhone || '', admissionProcess: admissionDetails.process || attributes.admissionProcess || '', eligibility: admissionDetails.eligibility || attributes.eligibility || '', showFees: fees.show !== false, admissionFee: fees.admission || '', tuitionFee: fees.tuition || '', transportFee: fees.transport || '', otherCharges: fees.other || '', feeInformation: fees.description || attributes.feeInformation || '' }));
+      setLocation({ state: place.location?.state?._id || place.location?.state || '', district: place.location?.district?._id || place.location?.district || '', city: place.location?.city?._id || place.location?.city || '', area: place.location?.area?._id || place.location?.area || '' });
+      setFaculty(attributes.faculty || []);
+      setInfrastructure(attributes.infrastructure || []);
+      setSchoolFacilities(attributes.schoolFacilities || []);
+      setGalleryItems(attributes.galleryItems || []);
+      setSchoolVideos(attributes.schoolVideos || []);
+      setAchievements(attributes.achievements || []);
+      setSchoolEvents(attributes.schoolEvents || []);
+      setExistingMedia({ logo: place.logo || '', cover: place.coverImage || '', about: attributes.aboutImage || '', principal: attributes.principalImage || '', images: [...new Set([...(place.images || []), ...(attributes.galleryImages || [])])], videos: Array.isArray(place.video) ? place.video : place.video ? [place.video] : [], faculty: attributes.facultyImages || [], infrastructure: attributes.infrastructureImages || [], facilities: attributes.facilityImages || [], events: attributes.eventImages || [], principalGallery: attributes.principalGallery || [] });
+    }).catch((err) => setError(err.message));
+  }, [editId]);
 
-  const update = (field) => (event) => {
-    setForm((current) => ({ ...current, [field]: event.target.value }));
+  const update = (field) => (e) => setForm({ ...form, [field]: e.target.value });
+  const selectedCategory = categories.find((category) => category._id === form.category);
+  const selectedGroup = CATEGORY_GROUPS.find((group) => group.name === form.mainCategory);
+  const isSchool = selectedCategory?.name?.toLowerCase() === 'schools';
+  const isCollege = selectedCategory?.name?.toLowerCase() === 'colleges';
+  const categoryName = (selectedCategory?.name || form.subcategory || '').toLowerCase().trim();
+  const isUniversity = ['university', 'universities'].includes(categoryName);
+
+  const selectMainCategory = (e) => {
+    setForm({ ...form, mainCategory: e.target.value, category: '', subcategory: '' });
   };
 
-  const updateCategory = (event) => {
-    const category = event.target.value;
-    setForm((current) => ({ ...current, category, subcategory: category === foodParent?._id ? current.subcategory : '' }));
-  };
-
-  const updateOpeningHours = (day, field, value) => {
-    setForm((current) => ({
-      ...current,
-      openingHours: {
-        ...current.openingHours,
-        [day]: { ...(current.openingHours[day] || {}), [field]: value },
-      },
-    }));
-  };
-
-  const renderTypeSpecificFields = () => {
-    switch (businessType) {
-      case 'restaurant':
-        return (
-          <>
-            <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Cuisine Type</label><select value={form.cuisineType} onChange={update('cuisineType')} className={inputClass}><option>Indian</option><option>South Indian</option><option>North Indian</option><option>Chinese</option><option>Italian</option><option>Continental</option><option>Multi Cuisine</option></select></div>
-            <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Price Range</label><select value={form.priceRange} onChange={update('priceRange')} className={inputClass}><option value="">Select</option><option>₹</option><option>₹₹</option><option>₹₹₹</option><option>₹₹₹₹</option></select></div>
-            <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Food Type</label><select value={form.foodType} onChange={update('foodType')} className={inputClass}><option>Both</option><option>Veg</option><option>Non-Veg</option></select></div>
-            <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Established Year</label><input value={form.establishedYear} onChange={update('establishedYear')} className={inputClass} /></div>
-            <div className="col-span-2"><label className="text-sm text-ink/70">Restaurant Services & Facilities</label><textarea rows={5} value={form.services} onChange={update('services')} placeholder="Dine-in, Takeaway, Delivery, Online Ordering, Table Reservation, Party Hall, Birthday Parties, Catering, Parking, AC, Wi-Fi, Family Dining, Outdoor Dining, Private Dining, Kids Area, Live Kitchen" className={inputClass} /></div>
-            <div className="col-span-2"><label className="text-sm text-ink/70">Menu / Signature Dishes</label><textarea rows={3} value={form.menu} onChange={update('menu')} placeholder="Chef specials, menu highlights, signature dishes" className={inputClass} /></div>
-          </>
-        );
-      case 'coffee-shop':
-        return (
-          <>
-            <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Coffee Type</label><input value={form.coffeeType} onChange={update('coffeeType')} placeholder="Arabica / Cold Brew / Filter" className={inputClass} /></div>
-            <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Price Range</label><select value={form.priceRange} onChange={update('priceRange')} className={inputClass}><option value="">Select</option><option>₹</option><option>₹₹</option><option>₹₹₹</option></select></div>
-            <div className="col-span-2"><label className="text-sm text-ink/70">Coffee / Beverage Categories</label><textarea rows={3} value={form.beverageCategories} onChange={update('beverageCategories')} placeholder="Espresso, Cappuccino, Latte, Cold Coffee, Tea, Milkshakes, Smoothies, Juices" className={inputClass} /></div>
-            <div className="col-span-2"><label className="text-sm text-ink/70">Food / Snacks</label><textarea rows={3} value={form.snacks} onChange={update('snacks')} placeholder="Sandwiches, Pastries, Cookies, Cakes, Snacks" className={inputClass} /></div>
-            <div className="col-span-2"><label className="text-sm text-ink/70">Cafe Facilities</label><textarea rows={3} value={form.cafeFacilities} onChange={update('cafeFacilities')} placeholder="Indoor Seating, Outdoor Seating, Free Wi-Fi, Charging Points, AC, Parking, Work-Friendly, Pet-Friendly" className={inputClass} /></div>
-            <div className="col-span-2"><label className="text-sm text-ink/70">Coffee Shop Features</label><textarea rows={3} value={form.typeFeatures} onChange={update('typeFeatures')} placeholder="Indoor Seating, Outdoor Seating, Wi-Fi, Charging, AC, Parking, Work/Study Friendly, Pet Friendly, Takeaway, Delivery, Online Ordering" className={inputClass} /></div>
-          </>
-        );
-      case 'bakery':
-        return (
-          <>
-            <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Shop Type</label><input value={form.shopType} onChange={update('shopType')} placeholder="Bakery / Sweet Shop / Cake Studio" className={inputClass} /></div>
-            <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Established Year</label><input value={form.establishedYear} onChange={update('establishedYear')} className={inputClass} /></div>
-            <div className="col-span-2"><label className="text-sm text-ink/70">Products</label><textarea rows={3} value={form.products} onChange={update('products')} placeholder="Traditional Sweets, Cakes, Pastries, Bread, Cookies, Snacks, Desserts, Chocolates" className={inputClass} /></div>
-            <div className="col-span-2"><label className="text-sm text-ink/70">Special Services</label><textarea rows={3} value={form.specialServices} onChange={update('specialServices')} placeholder="Custom Cakes, Birthday Cakes, Bulk Orders, Gift Hampers, Home Delivery, Takeaway" className={inputClass} /></div>
-            <div className="col-span-2"><label className="text-sm text-ink/70">Bakery Services</label><textarea rows={3} value={form.typeFeatures} onChange={update('typeFeatures')} placeholder="Sweets, Cakes, Pastries, Bread, Cookies, Desserts, Chocolates, Custom Cakes, Birthday Cakes, Wedding Cakes, Bulk Orders, Gift Hampers, Online Orders, Delivery" className={inputClass} /></div>
-          </>
-        );
-      case 'catering':
-        return (
-          <>
-            <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Experience</label><input value={form.experience} onChange={update('experience')} placeholder="8+ years" className={inputClass} /></div>
-            <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Service Area</label><input value={form.serviceArea} onChange={update('serviceArea')} placeholder="Hyderabad, Vijayawada, etc." className={inputClass} /></div>
-            <div className="col-span-2"><label className="text-sm text-ink/70">Event Types</label><textarea rows={3} value={form.eventTypes} onChange={update('eventTypes')} placeholder="Wedding, Birthday, Corporate Events, Housewarming, Anniversary, Party" className={inputClass} /></div>
-            <div className="col-span-2"><label className="text-sm text-ink/70">Catering Services</label><textarea rows={3} value={form.cateringServices} onChange={update('cateringServices')} placeholder="Buffet, Per Plate Catering, Live Counters, Traditional Catering, Corporate Catering, Bulk Food Orders" className={inputClass} /></div>
-            <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Minimum Guests</label><input value={form.guestCapacityMin} onChange={update('guestCapacityMin')} className={inputClass} /></div>
-            <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Maximum Guests</label><input value={form.guestCapacityMax} onChange={update('guestCapacityMax')} className={inputClass} /></div>
-            <div className="col-span-2"><label className="text-sm text-ink/70">Menu Types</label><input value={form.menuTypes} onChange={update('menuTypes')} placeholder="Veg / Non-Veg / Both" className={inputClass} /></div>
-            <div className="col-span-2"><label className="text-sm text-ink/70">Package Details</label><textarea rows={3} value={form.packageDetails} onChange={update('packageDetails')} placeholder="Price per plate, custom menu, buffet packages, event-specific options" className={inputClass} /></div>
-            <div className="col-span-2"><label className="text-sm text-ink/70">Catering Features</label><textarea rows={3} value={form.typeFeatures} onChange={update('typeFeatures')} placeholder="Wedding, Birthday, Engagement, Corporate, Housewarming, Anniversary, Party, Buffet, Per Plate, Live Counters, Traditional Catering, Corporate Catering, Outdoor/Event Catering, Bulk Orders" className={inputClass} /></div>
-          </>
-        );
-      case 'food-processing':
-        return (
-          <>
-            <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Industry Type</label><input value={form.industryType} onChange={update('industryType')} placeholder="Food Processing / Packaged Foods" className={inputClass} /></div>
-            <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Established Year</label><input value={form.establishedYear} onChange={update('establishedYear')} className={inputClass} /></div>
-            <div className="col-span-2"><label className="text-sm text-ink/70">Products</label><textarea rows={3} value={form.products} onChange={update('products')} placeholder="Processed Foods, Packaged Foods, Spices, Pickles, Snacks, Frozen Foods, Ready-to-Eat, Beverages" className={inputClass} /></div>
-            <div className="col-span-2"><label className="text-sm text-ink/70">Business Operations</label><textarea rows={3} value={form.operations} onChange={update('operations')} placeholder="Manufacturing, Packaging, Wholesale, Distribution, Private Label, Bulk Orders" className={inputClass} /></div>
-            <div className="col-span-2"><label className="text-sm text-ink/70">Facilities</label><textarea rows={3} value={form.facilities} onChange={update('facilities')} placeholder="Manufacturing Unit, Packaging Unit, Cold Storage, Warehouse, Quality Control, Delivery / Distribution" className={inputClass} /></div>
-            <div className="col-span-2"><label className="text-sm text-ink/70">Certifications</label><textarea rows={3} value={form.certifications} onChange={update('certifications')} placeholder="FSSAI, ISO, Other Certifications" className={inputClass} /></div>
-            <div className="col-span-2"><label className="text-sm text-ink/70">Food Processing Features</label><textarea rows={3} value={form.typeFeatures} onChange={update('typeFeatures')} placeholder="Products, Manufacturing, Packaging, Wholesale, Distribution, Private Label, Bulk Orders, Facilities, FSSAI, ISO, Factory Gallery, Product Gallery, Manufacturing Videos" className={inputClass} /></div>
-          </>
-        );
-      default:
-        return null;
+  const selectSubcategory = (e) => {
+    const category = categories.find((item) => item.name.toLowerCase() === e.target.value.toLowerCase());
+    if (category?.name?.toLowerCase() === 'solar') {
+      navigate(`/business/listings/new/solar?category=${category._id}`);
+      return;
     }
+    setForm({ ...form, category: category?._id || '', subcategory: category?.name || e.target.value });
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const updateArrayField = (field) => (e) => setForm({ ...form, [field]: Array.from(e.target.selectedOptions).map((option) => option.value) });
+  const updateItem = (setter, index, field, value) => setter((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, [field]: value } : item));
+  const addItem = (setter, item) => setter((items) => [...items, item]);
+  const removeItem = (setter, index) => setter((items) => items.filter((_, itemIndex) => itemIndex !== index));
+  const schoolClasses = ['Nursery', 'LKG', 'UKG', 'Class 1–5', 'Class 6–8', 'Class 9–10', 'Class 11–12'];
+  const languages = ['English', 'Telugu', 'Hindi', 'Other'];
+  const documents = ['Birth Certificate', 'Previous School Records', 'Aadhaar / ID Proof', 'Passport Photos', 'Transfer Certificate'];
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setError('');
     setSuccess('');
 
@@ -238,219 +173,372 @@ export default function CreateListing({ foodDiningOnly = false, restaurantOnly =
       return;
     }
 
-    if (!form.name.trim() || !form.address.trim() || !form.description.trim()) {
-      setError('Business name, address and description are required.');
-      return;
-    }
-
-    const common = {
-      businessName: form.name,
-      logo: form.logo,
-      phone: form.phone,
-      email: form.email,
-      website: form.website,
-      address: form.address,
-      state: location.state,
-      district: location.district,
-      city: location.city,
-      area: location.area,
-      googleMapsUrl: form.googleMapsUrl,
-      about: form.description,
-      openingHours: Object.entries(form.openingHours).map(([day, values]) => ({ day, ...values })),
-      socialMedia: {
-        facebook: form.facebook,
-        instagram: form.instagram,
-        youtube: form.youtube,
-        whatsapp: form.whatsapp,
-      },
-      gallery: splitList(form.gallery).slice(0, 10),
-      videos: splitList(form.videos).slice(0, 10),
-      coverImage: form.coverImage,
-    };
-
-    const categorySpecific = {
-      restaurant: {
-        cuisineType: form.cuisineType,
-        priceRange: form.priceRange,
-        foodType: form.foodType,
-        establishedYear: form.establishedYear,
-        services: splitList(form.services),
-        menu: form.menu,
-      },
-      'coffee-shop': {
-        coffeeType: form.coffeeType,
-        priceRange: form.priceRange,
-        beverageCategories: splitList(form.beverageCategories),
-        snacks: splitList(form.snacks),
-        facilities: splitList(form.cafeFacilities),
-        features: splitList(form.typeFeatures),
-      },
-      bakery: {
-        shopType: form.shopType,
-        establishedYear: form.establishedYear,
-        products: splitList(form.products),
-        specialServices: splitList(form.specialServices),
-        features: splitList(form.typeFeatures),
-      },
-      catering: {
-        experience: form.experience,
-        serviceArea: form.serviceArea,
-        eventTypes: splitList(form.eventTypes),
-        cateringServices: splitList(form.cateringServices),
-        guestCapacity: { min: form.guestCapacityMin, max: form.guestCapacityMax },
-        menuTypes: form.menuTypes,
-        packageDetails: form.packageDetails,
-        features: splitList(form.typeFeatures),
-      },
-      'food-processing': {
-        industryType: form.industryType,
-        establishedYear: form.establishedYear,
-        products: splitList(form.products),
-        operations: splitList(form.operations),
-        facilities: splitList(form.facilities),
-        certifications: splitList(form.certifications),
-        features: splitList(form.typeFeatures),
-      },
-    }[businessType] || {};
-
     setSubmitting(true);
-
     try {
-      const payload = {
-        name: form.name,
-        category: form.category,
-        subcategory: form.subcategory || undefined,
-        address: form.address,
-        description: form.description,
-        phone: form.phone || undefined,
-        email: form.email || undefined,
-        website: form.website || undefined,
-        logo: form.logo || undefined,
-        coverImage: form.coverImage || undefined,
-        images: splitList(form.gallery).slice(0, 10),
-        services: splitList(form.services).slice(0, 20),
-        facilities: splitList(form.facilities || form.cafeFacilities || '').slice(0, 20),
-        socialLinks: {
-          facebook: form.facebook || undefined,
-          instagram: form.instagram || undefined,
-          youtube: form.youtube || undefined,
+      const payload = new FormData();
+      ['name', 'category', 'subcategory', 'address', 'description', 'phone', 'email', 'website'].forEach((field) => {
+        if (form[field]) payload.append(field, form[field]);
+      });
+      payload.append('pageType', form.pageType);
+      payload.append('services', JSON.stringify(splitList(form.services)));
+      payload.append('facilities', JSON.stringify(splitList(form.facilities)));
+      payload.append('socialLinks', JSON.stringify({
+          facebook: form.socialVisibility.facebook ? form.facebook || undefined : undefined,
+          instagram: form.socialVisibility.instagram ? form.instagram || undefined : undefined,
+          youtube: form.socialVisibility.youtube ? form.youtube || undefined : undefined,
+          linkedin: form.socialVisibility.linkedin ? form.linkedin || undefined : undefined,
           whatsapp: form.whatsapp || undefined,
-        },
-        attributes: {
-          businessProfile: {
-            businessType,
-            common,
-            categorySpecific,
-          },
-        },
-        location: {
+        }));
+      payload.append('attributes', JSON.stringify({
+          // Preserve category-specific form fields, including the college
+          // registration sections, in the public page data.
+          ...form,
+          courses: form.collegeType === 'Intermediate College' ? form.collegeGroups : form.collegePrograms,
+          admissions: form.admissionProcess,
+          placements: form.placementAvailable === 'Yes' ? [
+            form.placementOfficer && `Placement officer: ${form.placementOfficer}`,
+            form.averagePackage && `Average package: ${form.averagePackage}`,
+            form.highestPackage && `Highest package: ${form.highestPackage}`,
+            form.recruitingCompanies && `Recruiters: ${form.recruitingCompanies}`,
+          ].filter(Boolean) : [],
+          board: form.board || undefined,
+          curriculum: form.curriculum || undefined,
+          classes: form.classes || undefined,
+          type: form.type || undefined,
+          gender: form.gender || undefined,
+          admission: form.admission || undefined,
+          tagline: form.tagline || undefined,
+          establishedYear: form.establishedYear || undefined,
+          medium: form.medium || undefined,
+          studentCapacity: form.studentCapacity || undefined,
+          studentTeacherRatio: form.studentTeacherRatio || undefined,
+          principalMessage: form.principalMessage || undefined,
+          vision: form.vision || undefined,
+          mission: form.mission || undefined,
+          admissionProcess: form.admissionProcess || undefined,
+          eligibility: form.eligibility || undefined,
+          feeInformation: form.feeInformation || undefined,
+          studentName: form.studentName || undefined,
+          totalStudents: form.totalStudents || undefined,
+          landmark: form.landmark || undefined,
+          pincode: form.pincode || undefined,
+          schoolHistory: form.schoolHistory || undefined,
+          whyChooseUs: form.whyChooseUs || undefined,
+          teachingMethod: form.teachingMethod || undefined,
+          languages: form.languages,
+          academicActivities: form.academicActivities || undefined,
+          principal: { name: form.principalName, designation: form.principalDesignation, qualification: form.principalQualification, experience: form.principalExperience, message: form.principalMessage },
+          admissionDetails: { status: form.admissionStatus, classes: form.admissionClasses, eligibility: form.eligibility, ageCriteria: form.ageCriteria, requiredDocuments: form.requiredDocuments, process: form.admissionProcess, enquiryPhone: form.enquiryPhone },
+          fees: { show: form.showFees, admission: form.admissionFee, tuition: form.tuitionFee, transport: form.transportFee, other: form.otherCharges, description: form.feeInformation },
+          faculty: faculty.map(({ photoFiles, ...item }) => item),
+          infrastructure: infrastructure.map(({ imageFiles, ...item }) => item),
+          schoolFacilities: schoolFacilities.map(({ imageFiles, ...item }) => item),
+          galleryItems: galleryItems.map(({ files, ...item }) => item),
+          schoolVideos: schoolVideos.map(({ file, ...item }) => item),
+          achievements: achievements.map(({ imageFiles, ...item }) => item),
+          schoolEvents: schoolEvents.map(({ imageFiles, ...item }) => item),
+          ...(isUniversity ? {
+            university: form.university,
+            programs: form.university?.programs || [],
+            facilities: form.university?.facilities || [],
+            stats: form.university?.stats || [],
+            aboutTitle: form.university?.aboutTitle,
+            aboutDescription: form.university?.aboutDescription,
+            heroWelcome: form.heroWelcome,
+            heroHeading: form.heroHeading,
+            heroSubheading: form.heroSubheading,
+            rankingEnabled: form.university?.rankingEnabled,
+            rank: form.university?.rank,
+            rankingDescription: form.university?.rankingDescription,
+            rankingOrganization: form.university?.rankingOrganization,
+            rankingYear: form.university?.rankingYear,
+            campusTitle: form.university?.campusTitle,
+            campusDescription: form.university?.campusDescription,
+            showAdmission: form.university?.showAdmission,
+            admissionTitle: form.university?.admissionTitle,
+            admissionDescription: form.university?.admissionDescription,
+          } : {}),
+        }));
+      payload.append('location', JSON.stringify({
           state: location.state,
           district: location.district,
           city: location.city,
           area: location.area || undefined,
-        },
-      };
+        }));
+      if (coverFile) payload.append('coverImage', coverFile);
+      if (logoFile) payload.append('logo', logoFile);
+      if (footerLogoFile) payload.append('footerLogo', footerLogoFile);
+      if (principalImageFile) payload.append('principalImage', principalImageFile);
+      if (aboutImageFile) payload.append('aboutImage', aboutImageFile);
+      galleryFiles.forEach((file) => payload.append('images', file));
+      facilityImageFiles.forEach((file) => payload.append('facilityImages', file));
+      videoFiles.forEach((file) => payload.append('videos', file));
+      principalGalleryFiles.forEach((file) => payload.append('principalGallery', file));
+      faculty.forEach((item) => (item.photoFiles || []).forEach((file) => payload.append('facultyImages', file)));
+      infrastructure.forEach((item) => (item.imageFiles || []).forEach((file) => payload.append('infrastructureImages', file)));
+      schoolFacilities.forEach((item) => (item.imageFiles || []).forEach((file) => payload.append('facilityImages', file)));
+      galleryItems.forEach((item) => (item.files || []).forEach((file) => payload.append('galleryImages', file)));
+      schoolVideos.forEach((item) => (item.file ? payload.append('schoolVideoFiles', item.file) : null));
+      schoolEvents.forEach((item) => (item.imageFiles || []).forEach((file) => payload.append('eventImages', file)));
 
-      await api.post('/places', payload);
-      setSuccess('Listing submitted and sent for approval.');
-      setTimeout(() => navigate('/business/dashboard'), 1200);
+      const editableData = {
+        name: form.name,
+        category: form.category,
+        categoryGroup: form.mainCategory,
+        subcategory: form.subcategory,
+        pageType: form.pageType,
+        location: { ...location, area: location.area || null },
+        address: form.address,
+        description: form.description,
+        phone: form.phone,
+        email: form.email,
+        website: form.website,
+        services: splitList(form.services),
+        facilities: splitList(form.facilities),
+        socialLinks: { facebook: form.facebook, instagram: form.instagram, youtube: form.youtube, linkedin: form.linkedin, whatsapp: form.whatsapp },
+        attributes: { ...form, courses: form.collegeType === 'Intermediate College' ? form.collegeGroups : form.collegePrograms, admissions: form.admissionProcess, placements: form.placementAvailable === 'Yes' ? [form.placementOfficer && `Placement officer: ${form.placementOfficer}`, form.averagePackage && `Average package: ${form.averagePackage}`, form.highestPackage && `Highest package: ${form.highestPackage}`, form.recruitingCompanies && `Recruiters: ${form.recruitingCompanies}`].filter(Boolean) : [], socialVisibility: undefined, faculty, infrastructure, schoolFacilities, galleryItems, schoolVideos, achievements, schoolEvents, principalImage: existingMedia.principal || undefined, aboutImage: existingMedia.about || undefined, galleryImages: existingMedia.images, ...(isUniversity ? { university: form.university, programs: form.university?.programs || [], facilities: form.university?.facilities || [], stats: form.university?.stats || [], aboutTitle: form.university?.aboutTitle, aboutDescription: form.university?.aboutDescription, rankingEnabled: form.university?.rankingEnabled, rank: form.university?.rank, rankingDescription: form.university?.rankingDescription, campusTitle: form.university?.campusTitle, campusDescription: form.university?.campusDescription, showAdmission: form.university?.showAdmission, admissionTitle: form.university?.admissionTitle, admissionDescription: form.university?.admissionDescription } : {}) },
+      };
+      await (isEditing ? api.put(`/places/${editId}`, editableData) : api.post('/places', payload));
+      setSuccess(isEditing ? 'Changes updated successfully.' : 'Listing submitted! It will appear publicly once an admin approves it.');
+      setTimeout(() => navigate('/business/dashboard'), 1600);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Unable to create the listing.');
+      setError(err.message);
     } finally {
       setSubmitting(false);
     }
   };
 
+  const inputClass =
+    'mt-1 w-full rounded border border-line bg-white px-3 py-2.5 text-[15px] outline-none focus:border-ink/40';
+
   return (
-    <div className="container-page py-12">
-      <div className="mx-auto max-w-4xl">
-        <h1 className="font-display text-2xl font-semibold text-ink">{isFoodDiningFlow ? 'Add Food & Dining business' : 'List your business'}</h1>
-        <p className="mt-1 text-sm text-ink/55">Each Food & Dining subtype uses its own form and profile layout while sharing the same common business information.</p>
+    <div className="min-h-screen bg-[linear-gradient(135deg,#effaf8_0%,#fff8ec_48%,#f3f0ff_100%)] py-8 sm:py-12">
+      <div className="container-page">
+        <div className="mx-auto max-w-4xl">
+        <div className="relative overflow-hidden rounded-[1.5rem] bg-[#12395a] px-6 py-8 text-white shadow-[0_20px_55px_rgba(18,57,90,.22)] sm:px-10 sm:py-10">
+          <div className="absolute -right-12 -top-16 h-48 w-48 rounded-full border-[28px] border-[#f5d98d]/25" />
+          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#f5d98d]">Google Pages business studio</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#f5d98d]">Google Pages business studio</p>
+          <h1 className="mt-3 max-w-2xl font-display text-3xl font-semibold sm:text-5xl">{isEditing ? 'Edit your business page.' : 'Build a page people remember.'}</h1>
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/70">Choose your category first. We will shape the listing form around the kind of business you run.</p>
+          <div className="mt-6 flex flex-wrap gap-2 text-xs font-semibold"><span className="rounded-full bg-white/10 px-3 py-1.5">01 Category</span><span className="rounded-full bg-white/10 px-3 py-1.5">02 Story</span><span className="rounded-full bg-white/10 px-3 py-1.5">03 Publish</span></div>
+        </div>
+        <p className="mt-1 text-sm text-ink/55">
+          {isEditing ? 'Update your listing directly. Your current publication status will stay unchanged.' : 'Submitted listings go live after a quick admin review — usually within 24 hours.'}
+        </p>
 
-        {error && <div className="mt-4 rounded border border-vermilion/30 bg-vermilion/10 p-3 text-sm text-vermilion">{error}</div>}
-        {success && <div className="mt-4 rounded border border-moss/30 bg-moss/10 p-3 text-sm text-moss">{success}</div>}
+        <form noValidate={isEditing} onSubmit={handleSubmit} className="school-form mt-8 grid grid-cols-2 gap-4">
+          {isSchool && <div className="col-span-2 rounded-xl border border-[#d8c9f3] bg-[#faf8ff] p-5 sm:p-7"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#6950a8]">Social media display options</p><div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{[['facebook', 'Facebook'], ['instagram', 'Instagram'], ['youtube', 'YouTube'], ['linkedin', 'LinkedIn']].map(([field, label]) => <label key={field} className="flex items-center gap-2 rounded-lg border border-[#e5dcf7] bg-white px-3 py-2.5 text-sm text-ink/75"><input type="checkbox" checked={form.socialVisibility[field]} onChange={(e) => setForm({ ...form, socialVisibility: { ...form.socialVisibility, [field]: e.target.checked } })} className="h-4 w-4 accent-[#6950a8]" />Show {label} on public page</label>)}</div><p className="mt-2 text-xs text-ink/50">Add the corresponding URL in the Social media section below.</p></div>}
 
-        <form onSubmit={handleSubmit} className="mt-8 grid grid-cols-2 gap-4">
-          <div className="col-span-2 sm:col-span-1">
-            <label className="text-sm text-ink/70">Business category</label>
-            <select required value={form.category} onChange={updateCategory} className={inputClass}>
-              <option value="">Select category</option>
-              {categories.filter((category) => isFoodDiningFlow
-                ? category._id === foodParent?._id
-                : !category.parent).map((category) => (
-                <option key={category._id} value={category._id}>{category.name}</option>
-              ))}
-            </select>
+          <div className="col-span-2">
+            <label className="text-sm text-ink/70">Business name</label>
+            <input required value={form.name} onChange={update('name')} className={inputClass} />
           </div>
 
-          {form.category === foodParent?._id && <div className="col-span-2 sm:col-span-1">
-            <label className="text-sm text-ink/70">Business subcategory</label>
-            <select required value={form.subcategory} onChange={update('subcategory')} className={inputClass}>
-              <option value="">Select subcategory</option>
-              {foodSubcategories.map((subcategory) => (
-                <option key={subcategory._id} value={subcategory._id}>{subcategory.name}</option>
-              ))}
-            </select>
-          </div>}
-
           <div className="col-span-2 sm:col-span-1">
-            <label className="text-sm text-ink/70">Business type</label>
-            <input value={subcategoryName || categoryName || 'Business'} readOnly className={inputClass} />
+            <label className="text-sm font-semibold text-ink">Main category</label>
+            <select required value={form.mainCategory} onChange={selectMainCategory} className={inputClass}>
+              <option value="">Select main category</option>
+              {CATEGORY_GROUPS.map((group) => <option key={group.name} value={group.name}>{group.name}</option>)}
+            </select>
+          </div>
+          <div className="col-span-2 sm:col-span-1">
+            <label className="text-sm font-semibold text-ink">Subcategory</label>
+            <select required disabled={!selectedGroup} value={form.subcategory} onChange={selectSubcategory} className={`${inputClass} disabled:cursor-not-allowed disabled:bg-slate-50`}>
+              <option value="">{selectedGroup ? 'Select subcategory' : 'Choose main category first'}</option>
+              {selectedGroup?.children.filter((name) => categories.some((category) => category.name.toLowerCase() === name.toLowerCase())).map((name) => <option key={name} value={name}>{name}</option>)}
+            </select>
+            <p className="mt-1 text-xs text-ink/45">Your public page modules will follow this choice.</p>
+          </div>
+          <div className="col-span-2 sm:col-span-1">
+            <label className="text-sm text-ink/70">Phone</label>
+            <input value={form.phone} onChange={update('phone')} className={inputClass} />
           </div>
 
-          <div className="col-span-2"><label className="text-sm text-ink/70">Business Name</label><input required value={form.name} onChange={update('name')} className={inputClass} /></div>
-          <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Phone</label><input value={form.phone} onChange={update('phone')} className={inputClass} /></div>
-          <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Email</label><input type="email" value={form.email} onChange={update('email')} className={inputClass} /></div>
-          <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Website</label><input value={form.website} onChange={update('website')} placeholder="https://" className={inputClass} /></div>
-          <div className="col-span-2"><BusinessMediaUploader label="Business Logo" value={form.logo} onChange={(value) => setForm((current) => ({ ...current, logo: value }))} previewClassName="h-32" /></div>
+          <div className="col-span-2">
+            <fieldset>
+              <legend className="text-sm font-semibold text-ink">Choose your business page</legend>
+              <p className="mt-1 text-xs text-ink/50">You can select the presentation style {isEditing ? 'before updating your listing.' : 'before submitting for admin approval.'}</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                {Object.entries(BUSINESS_PAGE_TYPES).map(([value, option]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setForm({ ...form, pageType: value })}
+                    className={`rounded-xl border p-4 text-left transition ${form.pageType === value ? 'border-ink bg-[#eef5f7] shadow-md ring-2 ring-[#d6e9ed]' : 'border-line bg-white hover:border-[#a7cbd2]'}`}
+                  >
+                    <span className="flex items-center justify-between gap-3">
+                      <span className="font-display text-lg font-semibold text-ink">{option.label}</span>
+                      <span className={`h-4 w-4 rounded-full border-2 ${form.pageType === value ? 'border-[#17324d] bg-[#17324d] ring-2 ring-white ring-offset-1' : 'border-line'}`} />
+                    </span>
+                    <span className="mt-2 block text-xs leading-relaxed text-ink/55">{option.description}</span>
+                    <span className="mt-3 block text-[11px] font-semibold uppercase tracking-wide text-[#a47b2c]">{value === 'dynamic' ? 'Media + premium modules' : 'Essential business profile'}</span>
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          </div>
 
           <LocationCascadeFields value={location} onChange={setLocation} />
 
-          <div className="col-span-2"><label className="text-sm text-ink/70">Address</label><input required value={form.address} onChange={update('address')} className={inputClass} /></div>
-          <div className="col-span-2"><label className="text-sm text-ink/70">Google Maps Location</label><input value={form.googleMapsUrl} onChange={update('googleMapsUrl')} placeholder="https://maps.google.com/..." className={inputClass} /></div>
-          <div className="col-span-2"><label className="text-sm text-ink/70">About</label><textarea required rows={4} value={form.description} onChange={update('description')} className={inputClass} /></div>
-          <div className="col-span-2"><BusinessMediaUploader label="Gallery Images" helpText="Add up to 10 images." value={splitList(form.gallery)} onChange={(images) => setForm((current) => ({ ...current, gallery: images.join('\n') }))} multiple max={10} previewClassName="h-28" /></div>
-          <div className="col-span-2"><label className="text-sm text-ink/70">Video URLs</label><textarea rows={3} value={form.videos} onChange={update('videos')} placeholder="https://youtube.com/..\nhttps://..." className={inputClass} /></div>
-          <div className="col-span-2"><BusinessMediaUploader label="Hero / Banner Image" value={form.coverImage} onChange={(value) => setForm((current) => ({ ...current, coverImage: value }))} previewClassName="h-48" /></div>
-
           <div className="col-span-2">
-            <label className="text-sm text-ink/70">Social Media Links</label>
-            <div className="mt-2 grid gap-3 sm:grid-cols-2">
-              <input value={form.facebook} onChange={update('facebook')} placeholder="Facebook URL" className={inputClass} />
-              <input value={form.instagram} onChange={update('instagram')} placeholder="Instagram URL" className={inputClass} />
-              <input value={form.youtube} onChange={update('youtube')} placeholder="YouTube URL" className={inputClass} />
-              <input value={form.whatsapp} onChange={update('whatsapp')} placeholder="WhatsApp Number" className={inputClass} />
-            </div>
+            <label className="text-sm text-ink/70">Address</label>
+            <input required value={form.address} onChange={update('address')} className={inputClass} />
           </div>
 
           <div className="col-span-2">
-            <h2 className="font-display text-lg font-medium text-ink">Opening Hours</h2>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              {Object.keys(defaultOpeningHours).map((day) => (
-                <div key={day} className="rounded border border-line bg-white p-3">
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-sm font-medium capitalize text-ink">{day}</span>
-                    <label className="flex items-center gap-2 text-xs text-ink/60"><input type="checkbox" checked={Boolean(form.openingHours[day]?.closed)} onChange={(event) => updateOpeningHours(day, 'closed', event.target.checked)} />Closed</label>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input type="time" value={form.openingHours[day]?.open || ''} onChange={(event) => updateOpeningHours(day, 'open', event.target.value)} className={inputClass} />
-                    <input type="time" value={form.openingHours[day]?.close || ''} onChange={(event) => updateOpeningHours(day, 'close', event.target.value)} className={inputClass} />
-                  </div>
-                </div>
-              ))}
+            <label className="text-sm text-ink/70">Description</label>
+            <textarea required rows={4} value={form.description} onChange={update('description')} className={inputClass} />
+          </div>
+
+          <div className="col-span-2 sm:col-span-1">
+            <label className="text-sm text-ink/70">Email</label>
+            <input type="email" value={form.email} onChange={update('email')} className={inputClass} />
+          </div>
+          <div className="col-span-2 sm:col-span-1">
+            <label className="text-sm text-ink/70">Website</label>
+            <input value={form.website} onChange={update('website')} placeholder="https://" className={inputClass} />
+          </div>
+
+          <div className="col-span-2">
+            <label className="text-sm text-ink/70">Services (comma-separated)</label>
+            <input value={form.services} onChange={update('services')} placeholder="Home delivery, Dine-in, Takeaway" className={inputClass} />
+          </div>
+
+          {isEditing && isSchool && <div className="col-span-2 rounded-xl border border-[#d9e9f6] bg-white p-5 sm:p-7"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#1769a8]">Previously uploaded media</p><p className="mt-1 text-xs text-ink/55">Existing files are preserved automatically. Select new files only when you want to replace or add media.</p><div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{[['Logo', existingMedia.logo], ['Cover', existingMedia.cover], ['About photo', existingMedia.about], ['Principal photo', existingMedia.principal]].map(([label, url]) => url && <div key={label}><p className="text-xs font-semibold text-ink/70">{label}</p><img src={url} alt={label} className="mt-2 h-24 w-full rounded object-cover" /></div>)}</div>{existingMedia.images.length > 0 && <div className="mt-4"><p className="text-xs font-semibold text-ink/70">Gallery photos ({existingMedia.images.length})</p><div className="mt-2 flex gap-2 overflow-x-auto">{existingMedia.images.slice(0, 12).map((url, index) => <img key={`${url}-${index}`} src={url} alt={`Existing gallery ${index + 1}`} className="h-16 w-20 shrink-0 rounded object-cover" />)}</div></div>}{existingMedia.videos.length > 0 && <div className="mt-4"><p className="text-xs font-semibold text-ink/70">Videos ({existingMedia.videos.length})</p><div className="mt-2 flex flex-wrap gap-2">{existingMedia.videos.map((url, index) => <a key={`${url}-${index}`} href={url} target="_blank" rel="noreferrer" className="rounded bg-[#f3f9fe] px-3 py-2 text-xs font-semibold text-[#1769a8]">Video {index + 1} ↗</a>)}</div></div>}{(existingMedia.faculty.length || existingMedia.infrastructure.length || existingMedia.facilities.length || existingMedia.events.length || existingMedia.principalGallery.length) > 0 && <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-ink/60 sm:grid-cols-5"><span>Faculty: {existingMedia.faculty.length}</span><span>Infrastructure: {existingMedia.infrastructure.length}</span><span>Facilities: {existingMedia.facilities.length}</span><span>Event photos: {existingMedia.events.length}</span><span>Principal gallery: {existingMedia.principalGallery.length}</span></div>}</div>}
+
+          {isSchool && <div className="col-span-2 space-y-5">
+            <div className="rounded-[1.25rem] border border-[#b9e6df] bg-white/90 p-5 shadow-sm sm:p-7">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#168b9a]">1. Basic information</p>
+              <h2 className="mt-2 font-display text-2xl font-semibold text-[#17324d]">School identity and contact</h2>
+              <div className="mt-5 grid grid-cols-2 gap-4">
+                {[['tagline', 'Tagline', 'Learning today, leading tomorrow'], ['establishedYear', 'Established year', 'YYYY'], ['board', 'Board', 'CBSE / ICSE / State Board / IB'], ['type', 'School type', 'Private / Government / Aided'], ['gender', 'Gender', 'Co-Education / Boys / Girls'], ['medium', 'Medium', 'English / Telugu / Hindi'], ['studentTeacherRatio', 'Student-teacher ratio', '25:1'], ['totalStudents', 'Total students', '1200'], ['landmark', 'Landmark', 'Near Central Park'], ['pincode', 'Pincode', '533101']].map(([field, label, placeholder]) => <div key={field} className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">{label}</label><input value={form[field]} onChange={update(field)} placeholder={placeholder} className={inputClass} /></div>)}
+                <CheckboxGroup label="Classes offered" items={schoolClasses} values={form.classes ? form.classes.split(', ') : []} onChange={(values) => setForm({ ...form, classes: values.join(', ') })} />
+              </div>
+              <div className="mt-5 grid gap-4"><label className="text-sm text-ink/70">WhatsApp number<input value={form.whatsapp} onChange={update('whatsapp')} placeholder="+91 XXXXX XXXXX" className={inputClass} /></label><label className="text-sm text-ink/70">Enquiry phone<input value={form.enquiryPhone} onChange={update('enquiryPhone')} placeholder="+91 XXXXX XXXXX" className={inputClass} /></label></div>
             </div>
+
+            <div className="rounded-[1.25rem] border border-[#f2d6a1] bg-[#fffaf0]/95 p-5 shadow-sm sm:p-7"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a47b2c]">2. About school</p><div className="mt-4 grid gap-5 lg:grid-cols-[1fr_280px]"><div className="grid gap-4"><label className="text-sm text-ink/70">About school *<textarea required rows={5} value={form.description} onChange={update('description')} className={inputClass} /></label><label className="text-sm text-ink/70">Vision<textarea rows={3} value={form.vision} onChange={update('vision')} className={inputClass} /></label><label className="text-sm text-ink/70">Mission<textarea rows={3} value={form.mission} onChange={update('mission')} className={inputClass} /></label><label className="text-sm text-ink/70">School history<textarea rows={3} value={form.schoolHistory} onChange={update('schoolHistory')} className={inputClass} /></label><label className="text-sm text-ink/70">Why choose us?<textarea rows={3} value={form.whyChooseUs} onChange={update('whyChooseUs')} className={inputClass} /></label></div><div><label className="text-sm font-semibold text-ink/75">About school photo<input type="file" accept="image/*" onChange={(e) => setAboutImageFile(e.target.files?.[0] || null)} className={inputClass} /></label>{aboutImageFile && <p className="mt-2 text-xs text-[#168b9a]">About photo selected</p>}<p className="mt-2 text-xs leading-relaxed text-ink/50">This image will appear beside the About section on the public school page.</p></div></div></div>
+
+            <div className="rounded-[1.25rem] border border-[#d8c9f3] bg-[#faf8ff]/95 p-5 shadow-sm sm:p-7"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#6950a8]">3. Principal details</p><div className="mt-4 grid grid-cols-2 gap-4">{[['principalName', 'Principal name *', 'Dr. Anitha Reddy'], ['principalDesignation', 'Designation', 'Principal'], ['principalQualification', 'Qualification', 'M.Sc., B.Ed.'], ['principalExperience', 'Experience', '18 Years']].map(([field, label, placeholder]) => <label key={field} className="col-span-2 text-sm text-ink/70 sm:col-span-1">{label}<input value={form[field]} onChange={update(field)} placeholder={placeholder} className={inputClass} /></label>)}<label className="col-span-2 text-sm text-ink/70">Principal message<textarea rows={3} value={form.principalMessage} onChange={update('principalMessage')} className={inputClass} /></label></div></div>
+
+            <div className="rounded-[1.25rem] border border-[#b9e6df] bg-[#f1fbf8]/95 p-5 shadow-sm sm:p-7"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#168b9a]">4. Academics</p><div className="mt-4 grid gap-4"><label className="text-sm text-ink/70">Teaching method<textarea rows={3} value={form.teachingMethod} onChange={update('teachingMethod')} className={inputClass} /></label><CheckboxGroup label="Languages offered" items={languages} values={form.languages} onChange={(values) => setForm({ ...form, languages: values })} /><label className="text-sm text-ink/70">Academic activities<textarea rows={3} value={form.academicActivities} onChange={update('academicActivities')} className={inputClass} /></label></div></div>
+          </div>}
+
+          {isSchool && <div className="col-span-2 rounded-xl border border-[#b9e6df] bg-white p-5 sm:p-7"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#168b9a]">School selections</p><div className="mt-4 grid gap-5"><CheckboxGroup label="Classes available" items={schoolClasses} values={form.admissionClasses} onChange={(values) => setForm({ ...form, admissionClasses: values, classes: values.join(', ') })} /><CheckboxGroup label="Required documents" items={documents} values={form.requiredDocuments} onChange={(values) => setForm({ ...form, requiredDocuments: values })} /></div></div>}
+
+          <div className="col-span-2">
+            <h2 className="font-display text-lg font-medium text-ink">Photos and facilities</h2>
+            <p className="mt-1 text-xs text-ink/50">All of these are optional. Separate multiple values with commas or new lines.</p>
           </div>
 
-          <div className="col-span-2 mt-2 rounded border border-line bg-paper/70 p-4">
-            <h2 className="font-display text-lg font-medium text-ink">{subcategoryName || categoryName || 'Business'}-specific details</h2>
-            <div className="mt-4 grid grid-cols-2 gap-4">{renderTypeSpecificFields()}</div>
-          </div>
+          {isSchool && <div className="col-span-2 rounded-xl border border-[#cfe6e5] bg-[#f5fbff] p-5 sm:p-7">
+            <h2 className="font-display text-xl font-semibold text-[#17324d]">School branding and media</h2>
+            <p className="mt-1 text-xs text-ink/55">Upload the logo, banner, principal profile, and supporting photos. Multiple selection is supported wherever marked.</p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2"><label className="text-sm text-ink/70">School logo *<input required type="file" accept="image/*" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} className={inputClass} /></label><label className="text-sm text-ink/70">School cover / banner *<input required type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} className={inputClass} /></label><label className="text-sm text-ink/70">Principal photo *<input required type="file" accept="image/*" onChange={(e) => setPrincipalImageFile(e.target.files?.[0] || null)} className={inputClass} /></label><label className="text-sm text-ink/70">Principal profile gallery<input type="file" accept="image/*" multiple onChange={(e) => setPrincipalGalleryFiles(Array.from(e.target.files || []))} className={inputClass} /></label></div>
+          </div>}
 
-          <div className="col-span-2 flex justify-end gap-3 pt-3">
-            <button type="button" onClick={() => navigate('/business/dashboard')} className="rounded border border-line px-4 py-2 text-sm text-ink">Cancel</button>
-            <button type="submit" disabled={submitting} className="rounded bg-ink px-5 py-2.5 text-sm font-medium text-paper disabled:opacity-60">{submitting ? 'Submitting...' : 'Submit listing'}</button>
-          </div>
+          {isSchool && <div className="col-span-2 space-y-5">
+            <div className="rounded-xl border border-[#d8c9f3] bg-white p-5 sm:p-7"><div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#6950a8]">5. Faculty &amp; staff</p><h2 className="mt-1 font-display text-xl font-semibold text-[#17324d]">Add multiple faculty members</h2></div><button type="button" onClick={() => addItem(setFaculty, { name: '', designation: '', department: '', qualification: '', experience: '', bio: '', photoFiles: [] })} className="rounded-full bg-[#6950a8] px-4 py-2 text-xs font-bold text-white">+ Add Faculty</button></div>{faculty.map((item, index) => <div key={index} className="mt-4 grid grid-cols-2 gap-3 rounded-lg border border-[#e5dcf7] bg-[#faf8ff] p-4">{[['name', 'Name *'], ['designation', 'Designation *'], ['department', 'Department'], ['qualification', 'Qualification'], ['experience', 'Experience'], ['bio', 'Short bio']].map(([field, label]) => <label key={field} className="col-span-2 text-xs font-semibold text-ink/70 sm:col-span-1">{label}<input value={item[field]} onChange={(e) => updateItem(setFaculty, index, field, e.target.value)} className={inputClass} /></label>)}<label className="col-span-2 text-xs font-semibold text-ink/70">Faculty photo *<input required type="file" accept="image/*" multiple onChange={(e) => updateItem(setFaculty, index, 'photoFiles', Array.from(e.target.files || []))} className={inputClass} /></label><button type="button" onClick={() => removeItem(setFaculty, index)} className="col-span-2 text-left text-xs font-bold text-vermilion">Delete faculty</button></div>)}</div>
+
+            <div className="rounded-xl border border-[#f2d6a1] bg-[#fffaf0] p-5 sm:p-7"><div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a47b2c]">6. Campus &amp; infrastructure</p><h2 className="mt-1 font-display text-xl font-semibold text-[#17324d]">Add infrastructure categories and images</h2></div><button type="button" onClick={() => addItem(setInfrastructure, { name: '', description: '', imageFiles: [] })} className="rounded-full bg-[#e76f51] px-4 py-2 text-xs font-bold text-white">+ Add Infrastructure</button></div>{infrastructure.map((item, index) => <div key={index} className="mt-4 grid gap-3 rounded-lg border border-[#f0d8b0] bg-white p-4"><label className="text-xs font-semibold text-ink/70">Infrastructure name *<input value={item.name} onChange={(e) => updateItem(setInfrastructure, index, 'name', e.target.value)} className={inputClass} /></label><label className="text-xs font-semibold text-ink/70">Description<textarea rows={2} value={item.description} onChange={(e) => updateItem(setInfrastructure, index, 'description', e.target.value)} className={inputClass} /></label><label className="text-xs font-semibold text-ink/70">Images *<input required type="file" accept="image/*" multiple onChange={(e) => updateItem(setInfrastructure, index, 'imageFiles', Array.from(e.target.files || []))} className={inputClass} /></label><button type="button" onClick={() => removeItem(setInfrastructure, index)} className="text-left text-xs font-bold text-vermilion">Delete infrastructure</button></div>)}</div>
+
+            <div className="rounded-xl border border-[#b9e6df] bg-[#f1fbf8] p-5 sm:p-7"><div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#168b9a]">7. Facilities</p><h2 className="mt-1 font-display text-xl font-semibold text-[#17324d]">Dynamic facilities with images</h2></div><button type="button" onClick={() => addItem(setSchoolFacilities, { name: '', icon: '', description: '', available: true, imageFiles: [] })} className="rounded-full bg-[#168b9a] px-4 py-2 text-xs font-bold text-white">+ Add Facility</button></div>{schoolFacilities.map((item, index) => <div key={index} className="mt-4 grid grid-cols-2 gap-3 rounded-lg border border-[#cfe6e5] bg-white p-4"><label className="col-span-2 text-xs font-semibold text-ink/70 sm:col-span-1">Facility name *<input value={item.name} onChange={(e) => updateItem(setSchoolFacilities, index, 'name', e.target.value)} className={inputClass} /></label><label className="col-span-2 text-xs font-semibold text-ink/70 sm:col-span-1">Facility icon<input value={item.icon} onChange={(e) => updateItem(setSchoolFacilities, index, 'icon', e.target.value)} placeholder="🏫" className={inputClass} /></label><label className="col-span-2 text-xs font-semibold text-ink/70">Description<textarea rows={2} value={item.description} onChange={(e) => updateItem(setSchoolFacilities, index, 'description', e.target.value)} className={inputClass} /></label><label className="col-span-2 text-xs font-semibold text-ink/70">Facility images<input type="file" accept="image/*" multiple onChange={(e) => updateItem(setSchoolFacilities, index, 'imageFiles', Array.from(e.target.files || []))} className={inputClass} /></label><label className="col-span-2 flex items-center gap-2 text-xs font-semibold text-ink/70"><input type="checkbox" checked={item.available} onChange={(e) => updateItem(setSchoolFacilities, index, 'available', e.target.checked)} /> Available</label><button type="button" onClick={() => removeItem(setSchoolFacilities, index)} className="col-span-2 text-left text-xs font-bold text-vermilion">Delete facility</button></div>)}</div>
+          </div>}
+
+          {!isSchool && !isUniversity && <div className="col-span-2">
+            <label className="text-sm text-ink/70">Cover photo</label>
+            <input required={!isEditing && !coverFile} type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} className={inputClass} />
+          </div>}
+
+          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2">
+            <label className="text-sm text-ink/70">Gallery photos (select as many as needed)</label>
+            <input type="file" accept="image/*" multiple onChange={(e) => setGalleryFiles(Array.from(e.target.files || []))} className={inputClass} />
+            {galleryFiles.length > 0 && <p className="mt-1 text-xs text-ink/50">{galleryFiles.length} photos selected.</p>}
+          </div>}
+
+          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2">
+            <label className="text-sm text-ink/70">Facilities</label>
+            <textarea rows={2} value={form.facilities} onChange={update('facilities')} placeholder="School bus, Library, Science lab, Playground" className={inputClass} />
+          </div>}
+
+          {isSchool && <div className="col-span-2 space-y-5">
+            <div className="rounded-xl border border-[#b9e6df] bg-white p-5 sm:p-7"><div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#168b9a]">8. Photo gallery</p><h2 className="mt-1 font-display text-xl font-semibold text-[#17324d]">Upload unlimited gallery groups</h2></div><button type="button" onClick={() => addItem(setGalleryItems, { category: 'Campus', title: '', description: '', files: [] })} className="rounded-full bg-[#168b9a] px-4 py-2 text-xs font-bold text-white">+ Add Photos</button></div>{galleryItems.map((item, index) => <div key={index} className="mt-4 grid grid-cols-2 gap-3 rounded-lg border border-[#cfe6e5] bg-[#f5fbff] p-4"><label className="col-span-2 text-xs font-semibold text-ink/70 sm:col-span-1">Category<select value={item.category} onChange={(e) => updateItem(setGalleryItems, index, 'category', e.target.value)} className={inputClass}>{['Campus', 'Classrooms', 'Labs', 'Library', 'Sports', 'Events', 'Annual Day', 'Cultural Activities', 'School Trips', 'Students Activities', 'Other'].map((value) => <option key={value}>{value}</option>)}</select></label><label className="col-span-2 text-xs font-semibold text-ink/70 sm:col-span-1">Photo title<input value={item.title} onChange={(e) => updateItem(setGalleryItems, index, 'title', e.target.value)} className={inputClass} /></label><label className="col-span-2 text-xs font-semibold text-ink/70">Description<textarea rows={2} value={item.description} onChange={(e) => updateItem(setGalleryItems, index, 'description', e.target.value)} className={inputClass} /></label><label className="col-span-2 text-xs font-semibold text-ink/70">Choose multiple photos *<input required type="file" accept="image/*" multiple onChange={(e) => updateItem(setGalleryItems, index, 'files', Array.from(e.target.files || []))} className={inputClass} /></label><button type="button" onClick={() => removeItem(setGalleryItems, index)} className="col-span-2 text-left text-xs font-bold text-vermilion">Delete gallery group</button></div>)}</div>
+
+            <div className="rounded-xl border border-[#d8c9f3] bg-[#faf8ff] p-5 sm:p-7"><div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#6950a8]">9. Videos</p><h2 className="mt-1 font-display text-xl font-semibold text-[#17324d]">Add upload or URL videos</h2></div><button type="button" onClick={() => addItem(setSchoolVideos, { title: '', type: 'upload', url: '', description: '', file: null })} className="rounded-full bg-[#6950a8] px-4 py-2 text-xs font-bold text-white">+ Add Video</button></div>{schoolVideos.map((item, index) => <div key={index} className="mt-4 grid grid-cols-2 gap-3 rounded-lg border border-[#e5dcf7] bg-white p-4"><label className="col-span-2 text-xs font-semibold text-ink/70 sm:col-span-1">Video title *<input value={item.title} onChange={(e) => updateItem(setSchoolVideos, index, 'title', e.target.value)} className={inputClass} /></label><label className="col-span-2 text-xs font-semibold text-ink/70 sm:col-span-1">Video type<select value={item.type} onChange={(e) => updateItem(setSchoolVideos, index, 'type', e.target.value)} className={inputClass}><option value="upload">Upload video</option><option value="youtube">YouTube URL</option><option value="url">Video URL</option></select></label>{item.type === 'upload' ? <label className="col-span-2 text-xs font-semibold text-ink/70">Video file<input type="file" accept="video/*" onChange={(e) => updateItem(setSchoolVideos, index, 'file', e.target.files?.[0] || null)} className={inputClass} /></label> : <label className="col-span-2 text-xs font-semibold text-ink/70">Video URL<input value={item.url} onChange={(e) => updateItem(setSchoolVideos, index, 'url', e.target.value)} className={inputClass} /></label>}<label className="col-span-2 text-xs font-semibold text-ink/70">Description<textarea rows={2} value={item.description} onChange={(e) => updateItem(setSchoolVideos, index, 'description', e.target.value)} className={inputClass} /></label><button type="button" onClick={() => removeItem(setSchoolVideos, index)} className="col-span-2 text-left text-xs font-bold text-vermilion">Delete video</button></div>)}</div>
+
+            <div className="rounded-xl border border-[#f2d6a1] bg-[#fffaf0] p-5 sm:p-7"><div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a47b2c]">10. Achievements and events</p><h2 className="mt-1 font-display text-xl font-semibold text-[#17324d]">Celebrate school life</h2></div><div className="flex flex-wrap gap-2"><button type="button" onClick={() => addItem(setAchievements, { title: '', year: '', category: 'Academic', description: '', imageFiles: [] })} className="rounded-full bg-[#e76f51] px-3 py-2 text-xs font-bold text-white">+ Achievement</button><button type="button" onClick={() => addItem(setSchoolEvents, { name: '', date: '', startTime: '', endTime: '', category: 'Cultural', description: '', imageFiles: [] })} className="rounded-full bg-[#a47b2c] px-3 py-2 text-xs font-bold text-white">+ Event</button></div></div>{achievements.map((item, index) => <div key={`a-${index}`} className="mt-4 grid grid-cols-2 gap-3 rounded-lg border border-[#f0d8b0] bg-white p-4"><label className="col-span-2 text-xs font-semibold text-ink/70 sm:col-span-1">Achievement title *<input value={item.title} onChange={(e) => updateItem(setAchievements, index, 'title', e.target.value)} className={inputClass} /></label><label className="text-xs font-semibold text-ink/70">Year<input value={item.year} onChange={(e) => updateItem(setAchievements, index, 'year', e.target.value)} className={inputClass} /></label><label className="col-span-2 text-xs font-semibold text-ink/70">Category<select value={item.category} onChange={(e) => updateItem(setAchievements, index, 'category', e.target.value)} className={inputClass}><option>Academic</option><option>Sports</option><option>Cultural</option><option>Other</option></select></label><label className="col-span-2 text-xs font-semibold text-ink/70">Description<textarea rows={2} value={item.description} onChange={(e) => updateItem(setAchievements, index, 'description', e.target.value)} className={inputClass} /></label><label className="col-span-2 text-xs font-semibold text-ink/70">Achievement image<input type="file" accept="image/*" onChange={(e) => updateItem(setAchievements, index, 'imageFiles', Array.from(e.target.files || []))} className={inputClass} /></label><button type="button" onClick={() => removeItem(setAchievements, index)} className="col-span-2 text-left text-xs font-bold text-vermilion">Delete achievement</button></div>)}{schoolEvents.map((item, index) => <div key={`e-${index}`} className="mt-4 grid grid-cols-2 gap-3 rounded-lg border border-[#f0d8b0] bg-white p-4"><label className="col-span-2 text-xs font-semibold text-ink/70 sm:col-span-1">Event name *<input value={item.name} onChange={(e) => updateItem(setSchoolEvents, index, 'name', e.target.value)} className={inputClass} /></label><label className="text-xs font-semibold text-ink/70">Event date<input type="date" value={item.date} onChange={(e) => updateItem(setSchoolEvents, index, 'date', e.target.value)} className={inputClass} /></label><label className="text-xs font-semibold text-ink/70">Category<input value={item.category} onChange={(e) => updateItem(setSchoolEvents, index, 'category', e.target.value)} className={inputClass} /></label><label className="text-xs font-semibold text-ink/70">Start time<input type="time" value={item.startTime} onChange={(e) => updateItem(setSchoolEvents, index, 'startTime', e.target.value)} className={inputClass} /></label><label className="text-xs font-semibold text-ink/70">End time<input type="time" value={item.endTime} onChange={(e) => updateItem(setSchoolEvents, index, 'endTime', e.target.value)} className={inputClass} /></label><label className="col-span-2 text-xs font-semibold text-ink/70">Description<textarea rows={2} value={item.description} onChange={(e) => updateItem(setSchoolEvents, index, 'description', e.target.value)} className={inputClass} /></label><label className="col-span-2 text-xs font-semibold text-ink/70">Event images<input type="file" accept="image/*" multiple onChange={(e) => updateItem(setSchoolEvents, index, 'imageFiles', Array.from(e.target.files || []))} className={inputClass} /></label><button type="button" onClick={() => removeItem(setSchoolEvents, index)} className="col-span-2 text-left text-xs font-bold text-vermilion">Delete event</button></div>)}</div>
+
+            <div className="rounded-xl border border-[#b9e6df] bg-[#f1fbf8] p-5 sm:p-7"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#168b9a]">11. Admissions and fees</p><div className="mt-4 grid grid-cols-2 gap-4"><label className="col-span-2 text-sm text-ink/70 sm:col-span-1">Admission status<select value={form.admissionStatus} onChange={update('admissionStatus')} className={inputClass}><option value="open">Open</option><option value="closed">Closed</option></select></label><label className="col-span-2 text-sm text-ink/70 sm:col-span-1">Admission enquiry phone<input value={form.enquiryPhone} onChange={update('enquiryPhone')} className={inputClass} /></label><label className="col-span-2 text-sm text-ink/70">Classes available<select multiple value={form.admissionClasses} onChange={updateArrayField('admissionClasses')} className={`${inputClass} min-h-24`}>{schoolClasses.map((item) => <option key={item}>{item}</option>)}</select></label><label className="col-span-2 text-sm text-ink/70">Eligibility<textarea rows={2} value={form.eligibility} onChange={update('eligibility')} className={inputClass} /></label><label className="col-span-2 text-sm text-ink/70">Age criteria<input value={form.ageCriteria} onChange={update('ageCriteria')} className={inputClass} /></label><label className="col-span-2 text-sm text-ink/70">Required documents<select multiple value={form.requiredDocuments} onChange={updateArrayField('requiredDocuments')} className={`${inputClass} min-h-24`}>{documents.map((item) => <option key={item}>{item}</option>)}</select></label><label className="col-span-2 text-sm text-ink/70">Admission process<textarea rows={3} value={form.admissionProcess} onChange={update('admissionProcess')} className={inputClass} /></label><label className="col-span-2 flex items-center gap-2 text-sm text-ink/70"><input type="checkbox" checked={form.showFees} onChange={(e) => setForm({ ...form, showFees: e.target.checked })} /> Show fee information</label>{[['admissionFee', 'Admission fee'], ['tuitionFee', 'Tuition fee'], ['transportFee', 'Transport fee'], ['otherCharges', 'Other charges']].map(([field, label]) => <label key={field} className="col-span-2 text-sm text-ink/70 sm:col-span-1">{label}<input value={form[field]} onChange={update(field)} placeholder="₹" className={inputClass} /></label>)}<label className="col-span-2 text-sm text-ink/70">Fee description<textarea rows={2} value={form.feeInformation} onChange={update('feeInformation')} className={inputClass} /></label></div></div>
+
+            <div className="rounded-xl border border-[#d8c9f3] bg-[#faf8ff] p-5 sm:p-7"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#6950a8]">12. Social media</p><div className="mt-4 grid grid-cols-2 gap-4">{[['facebook', 'Facebook'], ['instagram', 'Instagram'], ['youtube', 'YouTube'], ['linkedin', 'LinkedIn']].map(([field, label]) => <label key={field} className="col-span-2 text-sm text-ink/70 sm:col-span-1">{label} URL<input value={form[field]} onChange={update(field)} placeholder="https://" className={inputClass} /></label>)}</div></div>
+          </div>}
+
+          {isCollege && <CollegeRegistrationFields form={form} setForm={setForm} inputClass={inputClass} faculty={faculty} setFaculty={setFaculty} achievements={achievements} setAchievements={setAchievements} principalImageFile={principalImageFile} setPrincipalImageFile={setPrincipalImageFile} logoFile={logoFile} setLogoFile={setLogoFile} footerLogoFile={footerLogoFile} setFooterLogoFile={setFooterLogoFile} galleryFiles={galleryFiles} setGalleryFiles={setGalleryFiles} schoolVideos={schoolVideos} setSchoolVideos={setSchoolVideos} />}
+          {isUniversity && <UniversityRegistrationFields form={form} setForm={setForm} inputClass={inputClass} logoFile={logoFile} setLogoFile={setLogoFile} coverFile={coverFile} setCoverFile={setCoverFile} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} galleryFiles={galleryFiles} setGalleryFiles={setGalleryFiles} schoolVideos={schoolVideos} setSchoolVideos={setSchoolVideos} />}
+
+          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2"><h2 className="font-display text-lg font-medium text-ink">Additional business details</h2><p className="mt-1 text-xs text-ink/50">Optional details for your selected category.</p></div>}
+
+          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2 sm:col-span-1">
+            <label className="text-sm text-ink/70">Curriculum / board</label>
+            <input value={form.board} onChange={update('board')} placeholder="CBSE, State Board, ICSE" className={inputClass} />
+          </div>}
+          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2 sm:col-span-1">
+            <label className="text-sm text-ink/70">Classes offered</label>
+            <input value={form.classes} onChange={update('classes')} placeholder="LKG to Class 10" className={inputClass} />
+          </div>}
+          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2 sm:col-span-1">
+            <label className="text-sm text-ink/70">Curriculum type</label>
+            <input value={form.curriculum} onChange={update('curriculum')} placeholder="English medium, Montessori" className={inputClass} />
+          </div>}
+          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2 sm:col-span-1">
+            <label className="text-sm text-ink/70">School type</label>
+            <input value={form.type} onChange={update('type')} placeholder="Private, Government" className={inputClass} />
+          </div>}
+          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2 sm:col-span-1">
+            <label className="text-sm text-ink/70">Student type</label>
+            <input value={form.gender} onChange={update('gender')} placeholder="Co-ed, Boys, Girls" className={inputClass} />
+          </div>}
+          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2">
+            <label className="text-sm text-ink/70">Admission details</label>
+            <input value={form.admission} onChange={update('admission')} placeholder="Open throughout the year" className={inputClass} />
+          </div>}
+
+          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2">
+            <h2 className="font-display text-lg font-medium text-ink">Videos and social links</h2>
+            <p className="mt-1 text-xs text-ink/50">Upload multiple videos for the school video gallery.</p>
+          </div>}
+
+          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2">
+            <label className="text-sm text-ink/70">School videos</label>
+            <input type="file" accept="video/*" multiple onChange={(e) => setVideoFiles(Array.from(e.target.files || []))} className={inputClass} />
+            <p className="mt-1 text-xs text-ink/50">Select multiple videos. Maximum 50 MB each.</p>
+          </div>}
+          {!isSchool && !isUniversity && <div className="col-span-2 sm:col-span-1">
+            <label className="text-sm text-ink/70">Facebook URL</label>
+            <input value={form.facebook} onChange={update('facebook')} placeholder="https://facebook.com/…" className={inputClass} />
+          </div>}
+          {!isSchool && !isUniversity && <div className="col-span-2 sm:col-span-1">
+            <label className="text-sm text-ink/70">Instagram URL</label>
+            <input value={form.instagram} onChange={update('instagram')} placeholder="https://instagram.com/…" className={inputClass} />
+          </div>}
+          {!isSchool && !isUniversity && <div className="col-span-2 sm:col-span-1">
+            <label className="text-sm text-ink/70">WhatsApp number or link</label>
+            <input value={form.whatsapp} onChange={update('whatsapp')} placeholder="https://wa.me/91…" className={inputClass} />
+          </div>}
+
+          {error && <p className="col-span-2 text-sm text-vermilion">{error}</p>}
+          {success && <p className="col-span-2 text-sm text-moss">{success}</p>}
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="col-span-2 mt-2 rounded bg-ink py-2.5 text-[15px] font-medium text-paper transition hover:bg-ink-light disabled:opacity-60"
+          >
+            {submitting ? (isEditing ? 'Updating…' : 'Submitting…') : (isEditing ? 'Update listing' : 'Submit for approval')}
+          </button>
         </form>
+        </div>
       </div>
     </div>
   );

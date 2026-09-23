@@ -1,92 +1,40 @@
 const Place = require('../models/Place');
 const Category = require('../models/Category');
 const Favorite = require('../models/Favorite');
+const slugify = require('slugify');
 const { AppError } = require('../middleware/errorHandler');
+const { getCategoryGroup } = require('../config/categoryModules');
 
-const foodBusinessTypes = {
-  Restaurants: 'restaurant',
-  'Coffee Shops': 'coffee-shop',
-  'Sweet Shops & Bakery': 'bakery',
-  'Catering Services': 'catering',
-  'Food Processing': 'food-processing',
+const PUBLIC_PLACE_FILTER = { status: 'approved', applicationStatus: 'approved', isPublished: true };
+
+const parseMultipartValue = (value, fallback) => {
+  if (value === undefined || value === '') return fallback;
+  try { return JSON.parse(value); } catch { return value; }
 };
 
-const validateBusinessTaxonomy = async (payload) => {
-  if (!payload.category) return;
+const publicUploadUrl = (req, file) => `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
 
-  const category = await Category.findById(payload.category).select('name parent');
-  if (!category) throw new AppError('Selected category was not found.', 400);
-
-  const subcategory = payload.subcategory
-    ? await Category.findById(payload.subcategory).select('name parent')
-    : null;
-  if (payload.subcategory && !subcategory) throw new AppError('Selected subcategory was not found.', 400);
-
-  if (category.name !== 'Food & Dining') {
-    if (subcategory && String(subcategory.parent) !== String(category._id)) {
-      throw new AppError('Selected subcategory does not belong to the selected category.', 400);
-    }
-    return;
+async function createUniqueSlug(name, city, excludeId = null) {
+  const base = slugify(name || 'place', { lower: true, strict: true, trim: true }) || 'place';
+  let slug = base;
+  let suffix = 2;
+  while (await Place.exists({ slug, 'location.city': city, ...(excludeId ? { _id: { $ne: excludeId } } : {}) })) {
+    slug = `${base}-${suffix}`;
+    suffix += 1;
   }
+  return slug;
+}
 
-  if (!subcategory || String(subcategory.parent) !== String(category._id) || !foodBusinessTypes[subcategory.name]) {
-    throw new AppError('Food & Dining requires a valid subcategory.', 400);
-  }
-
-  const businessType = payload.attributes?.businessProfile?.businessType;
-  if (businessType !== foodBusinessTypes[subcategory.name]) {
-    throw new AppError(`Business type must be ${foodBusinessTypes[subcategory.name]} for ${subcategory.name}.`, 400);
-  }
-};
-
-const normalizeAttributes = (attributes) => {
-  if (!attributes || typeof attributes !== 'object') return attributes;
-  const normalized = { ...attributes };
-  const profile = normalized.businessProfile;
-  if (profile && typeof profile === 'object') {
-    const common = { ...(profile.common || {}) };
-    common.gallery = Array.isArray(common.gallery) ? common.gallery.filter(Boolean).slice(0, 10) : [];
-    common.videos = Array.isArray(common.videos) ? common.videos.filter(Boolean).slice(0, 50) : [];
-    normalized.businessProfile = { ...profile, common };
-  }
-  // Legacy restaurantProfile data is intentionally preserved for backwards compatibility.
-  return normalized;
-};
-
-const normalizeGallery = (images) => Array.isArray(images) ? images.filter(Boolean).slice(0, 10) : images;
-
-const isSafeImageUrl = (value) => {
-  if (typeof value !== 'string' || !value.trim()) return false;
-  if (value.startsWith('/uploads/') || value.startsWith('/images/')) return true;
+async function geocodeAddress(address) {
+  if (!address || typeof fetch !== 'function') return null;
   try {
-    const url = new URL(value);
-    return url.protocol === 'https:' || url.protocol === 'http:';
-  } catch {
-    return false;
-  }
-};
-
-const validateBusinessMedia = (payload) => {
-  const common = payload.attributes?.businessProfile?.common;
-  const imageValues = [
-    payload.logo,
-    payload.coverImage,
-    ...(payload.images || []),
-    common?.logo,
-    common?.coverImage,
-    ...(common?.gallery || []),
-  ].filter(Boolean);
-
-  if (Array.isArray(payload.images) && payload.images.length > 10) {
-    throw new AppError('A gallery can contain at most 10 images.', 400);
-  }
-  if (Array.isArray(common?.gallery) && common.gallery.length > 10) {
-    throw new AppError('A gallery can contain at most 10 images.', 400);
-  }
-  if (imageValues.some((value) => !isSafeImageUrl(value))) {
-    throw new AppError('Image URLs must be valid HTTP(S) URLs or uploaded image paths.', 400);
-  }
-};
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(address)}`, {
+      headers: { 'User-Agent': 'GooglePages/1.0 contact@googlepages.local' },
+    });
+    const results = await response.json();
+    return results[0] ? { lat: Number(results[0].lat), lng: Number(results[0].lon) } : null;
+  } catch { return null; }
+}
 
 /**
  * GET /api/places
@@ -110,7 +58,7 @@ const getPlaces = async (req, res, next) => {
       limit = 12,
     } = req.query;
 
-    const filter = { status: 'approved' };
+    const filter = { ...PUBLIC_PLACE_FILTER };
     if (city) filter['location.city'] = city;
     if (area) filter['location.area'] = area;
     if (category) filter.category = category;
@@ -143,8 +91,7 @@ const getPlaces = async (req, res, next) => {
 
     const [places, total] = await Promise.all([
       Place.find(filter)
-        .populate('category', 'name slug icon parent')
-        .populate('subcategory', 'name slug parent')
+        .populate('category', 'name slug icon')
         .sort(sortMap[sort] || sortMap.rating)
         .skip(skip)
         .limit(Number(limit)),
@@ -178,12 +125,11 @@ const getPlaces = async (req, res, next) => {
 const getPlaceById = async (req, res, next) => {
   try {
     const place = await Place.findById(req.params.id)
-      .populate('category', 'name slug icon filters parent')
-      .populate('subcategory', 'name slug parent')
+      .populate('category', 'name slug icon filters')
       .populate('location.state location.district location.city location.area', 'name slug')
       .populate('owner', 'name email');
 
-    if (!place || place.status !== 'approved') {
+    if (!place || place.status !== 'approved' || place.applicationStatus !== 'approved' || !place.isPublished) {
       return next(new AppError('Listing not found.', 404));
     }
 
@@ -211,7 +157,7 @@ const getPlaceById = async (req, res, next) => {
 /** GET /api/places/trending?city=... */
 const getTrending = async (req, res, next) => {
   try {
-    const filter = { status: 'approved' };
+    const filter = { ...PUBLIC_PLACE_FILTER };
     if (req.query.city) filter['location.city'] = req.query.city;
 
     const places = await Place.find(filter)
@@ -228,17 +174,60 @@ const getTrending = async (req, res, next) => {
 /** POST /api/places — business owner submits a new listing (starts as 'pending'). */
 const createPlace = async (req, res, next) => {
   try {
-    await validateBusinessTaxonomy(req.body);
-    validateBusinessMedia(req.body);
-    if (req.body.attributes?.businessProfile?.businessType && req.body.attributes.restaurantProfile) {
-      throw new AppError('Food & Dining listings must use attributes.businessProfile; restaurantProfile is legacy-only.', 400);
-    }
+    const body = { ...req.body };
+    const category = await Category.findById(body.category).select('name group');
+    if (!category) return next(new AppError('Select a valid category.', 400));
+    const pageType = body.pageType === 'dynamic' ? 'dynamic' : 'static';
+    body.location = parseMultipartValue(body.location, body.location);
+    body.socialLinks = parseMultipartValue(body.socialLinks, {});
+    body.attributes = parseMultipartValue(body.attributes, {});
+    ['services', 'facilities', 'images'].forEach((field) => { body[field] = parseMultipartValue(body[field], []); });
+    const files = (Array.isArray(req.files) ? req.files : Object.entries(req.files || {}).flatMap(([fieldname, entries]) => entries.map((file) => ({ ...file, fieldname }))));
+    const filesFor = (fieldname) => files.filter((file) => file.fieldname === fieldname);
+    const logo = filesFor('logo')[0] ? publicUploadUrl(req, filesFor('logo')[0]) : body.logo;
+    const footerLogo = filesFor('footerLogo')[0] ? publicUploadUrl(req, filesFor('footerLogo')[0]) : body.attributes?.footerLogo;
+    const aboutImage = filesFor('aboutImage')[0] ? publicUploadUrl(req, filesFor('aboutImage')[0]) : body.aboutImage;
+    const coverImage = filesFor('coverImage')[0] ? publicUploadUrl(req, filesFor('coverImage')[0]) : body.coverImage;
+    const images = filesFor('images').map((file) => publicUploadUrl(req, file));
+    const uploadedVideos = [...filesFor('video'), ...filesFor('videos'), ...filesFor('schoolVideoFiles')].map((file) => publicUploadUrl(req, file));
+    const linkedVideos = (body.attributes?.schoolVideos || []).filter((item) => item?.type !== 'upload' && item?.url).map((item) => item.url);
+    const video = [...uploadedVideos, ...linkedVideos, ...(Array.isArray(body.video) ? body.video : body.video ? [body.video] : [])];
+    const facilityImages = filesFor('facilityImages').map((file) => publicUploadUrl(req, file));
+    const galleryImages = filesFor('galleryImages').map((file) => publicUploadUrl(req, file));
+    const principalImage = filesFor('principalImage')[0] ? publicUploadUrl(req, filesFor('principalImage')[0]) : body.principalImage;
+    const schoolMedia = {
+      principalGallery: filesFor('principalGallery').map((file) => publicUploadUrl(req, file)),
+      facultyImages: filesFor('facultyImages').map((file) => publicUploadUrl(req, file)),
+      infrastructureImages: filesFor('infrastructureImages').map((file) => publicUploadUrl(req, file)),
+      galleryImages,
+      facilityImages: facilityImages.length ? facilityImages : body.attributes?.facilityImages,
+      eventImages: filesFor('eventImages').map((file) => publicUploadUrl(req, file)),
+      videoFiles: filesFor('schoolVideoFiles').map((file) => publicUploadUrl(req, file)),
+    };
+    body.attributes = {
+      ...(body.attributes || {}),
+      ...schoolMedia,
+      principalImage,
+      aboutImage,
+      footerLogo,
+    };
+    body.slug = await createUniqueSlug(body.name, body.location?.city);
+    const coordinates = await geocodeAddress(body.address);
     const place = await Place.create({
-      ...req.body,
-      images: normalizeGallery(req.body.images),
-      attributes: normalizeAttributes(req.body.attributes),
+      ...body,
+      categoryGroup: category.group || getCategoryGroup(category.name),
+      subcategory: category.name,
+      pageType,
+      images: [...(Array.isArray(body.images) ? body.images : []), ...images, ...galleryImages],
+      logo,
+      coverImage,
+      video,
+      coordinates: coordinates || body.coordinates || undefined,
       owner: req.user._id,
       status: 'pending',
+      applicationStatus: 'submitted',
+      isPublished: false,
+      submittedAt: new Date(),
     });
 
     const BusinessRequest = require('../models/BusinessRequest');
@@ -246,6 +235,8 @@ const createPlace = async (req, res, next) => {
       owner: req.user._id,
       place: place._id,
       placeSnapshot: place.toObject(),
+      status: 'submitted',
+      submittedAt: place.submittedAt,
     });
 
     res.status(201).json({
@@ -258,7 +249,7 @@ const createPlace = async (req, res, next) => {
   }
 };
 
-/** PUT /api/places/:id — owner edits their own listing; edits re-enter pending review. */
+/** PUT /api/places/:id — owner edits their own listing directly. */
 const updatePlace = async (req, res, next) => {
   try {
     const place = await Place.findById(req.params.id);
@@ -269,24 +260,45 @@ const updatePlace = async (req, res, next) => {
       return next(new AppError('You do not have permission to edit this listing.', 403));
     }
 
-    await validateBusinessTaxonomy({
-      category: req.body.category || place.category,
-      subcategory: req.body.subcategory || place.subcategory,
-      attributes: req.body.attributes || place.attributes,
-    });
-    Object.assign(place, {
-      ...req.body,
-      images: req.body.images === undefined ? place.images : normalizeGallery(req.body.images),
-      attributes: req.body.attributes === undefined ? place.attributes : normalizeAttributes(req.body.attributes),
-    });
-    validateBusinessMedia(req.body);
-    if (isOwner && req.user.role !== 'admin') {
-      place.status = 'pending'; // owner edits require re-approval
-      place.rejectionReason = null;
+    const {
+      status: ignoredStatus,
+      applicationStatus: ignoredApplicationStatus,
+      isPublished: ignoredPublished,
+      reviewedBy: ignoredReviewedBy,
+      reviewedAt: ignoredReviewedAt,
+      approvedAt: ignoredApprovedAt,
+      publishedAt: ignoredPublishedAt,
+      owner: ignoredOwner,
+      name: requestedName,
+      ...ownerUpdates
+    } = req.body;
+    if (requestedName && requestedName !== place.name) {
+      ownerUpdates.name = requestedName;
     }
-    await place.save();
+    if (ownerUpdates.location) {
+      ownerUpdates.location = {
+        ...ownerUpdates.location,
+        // Area is optional; an empty string cannot be cast to its ObjectId.
+        area: ownerUpdates.location.area || null,
+      };
+    }
+    const updateFields = { ...ownerUpdates };
+    // Keep the listing's current publication and approval state when its owner
+    // edits it. The existing document is excluded from the slug lookup so an
+    // unchanged business name can never conflict with its own slug.
+    const targetCity = ownerUpdates.location?.city || place.location.city;
+    const nameChanged = requestedName && requestedName !== place.name;
+    const cityChanged = targetCity.toString() !== place.location.city.toString();
+    if (nameChanged || cityChanged) {
+      updateFields.slug = await createUniqueSlug(requestedName || place.name, targetCity, place._id);
+    }
+    const updatedPlace = await Place.findByIdAndUpdate(
+      place._id,
+      { $set: updateFields },
+      { new: true, runValidators: true }
+    );
 
-    res.status(200).json({ success: true, message: 'Listing updated.', data: place });
+    res.status(200).json({ success: true, message: 'Listing updated.', data: updatedPlace });
   } catch (error) {
     next(error);
   }
@@ -352,8 +364,7 @@ const getMyFavorites = async (req, res, next) => {
 const getMyPlaces = async (req, res, next) => {
   try {
     const places = await Place.find({ owner: req.user._id })
-      .populate('category', 'name slug parent')
-      .populate('subcategory', 'name slug parent')
+      .populate('category', 'name slug')
       .sort('-createdAt');
     res.status(200).json({ success: true, data: places });
   } catch (error) {

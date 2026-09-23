@@ -7,3 +7,5 @@ build/
 coverage/
 server/uploads/
 *.log
+server/uploads/*
+!server/uploads/.gitkeep

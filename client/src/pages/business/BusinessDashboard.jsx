@@ -13,6 +13,9 @@ export default function BusinessDashboard() {
   const [places, setPlaces] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [deletingId, setDeletingId] = useState(null);
+  const [chats, setChats] = useState([]);
+  const [reply, setReply] = useState({});
 
   useEffect(() => {
     api
@@ -20,7 +23,29 @@ export default function BusinessDashboard() {
       .then(({ data }) => setPlaces(data.data))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
+    api.get('/chat/business').then(({ data }) => setChats(data.data)).catch(() => setChats([]));
   }, []);
+
+  const sendReply = async (message) => {
+    const body = reply[message.user?._id] || '';
+    if (!body.trim()) return;
+    const { data } = await api.post(`/chat/business/${message.place?._id}`, { user: message.user?._id, body });
+    setChats((current) => [...current, data.data]);
+    setReply((current) => ({ ...current, [message.user?._id]: '' }));
+  };
+
+  const handleDelete = async (place) => {
+    if (!window.confirm(`Delete ${place.name}? This cannot be undone.`)) return;
+    setDeletingId(place._id);
+    try {
+      await api.delete(`/places/${place._id}`);
+      setPlaces((current) => current.filter((item) => item._id !== place._id));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const counts = places.reduce(
     (acc, p) => ({ ...acc, [p.status]: (acc[p.status] || 0) + 1 }),
@@ -77,7 +102,7 @@ export default function BusinessDashboard() {
               <div>
                 <div className="font-display text-[15px] font-medium text-ink">{place.name}</div>
                 <div className="text-xs text-ink/45">
-                  {place.category?.name} · {place.views} views · {place.favoritesCount} favorites
+                  {place.category?.name} · {place.pageType || 'static'} page · {place.views} views · {place.favoritesCount} favorites
                 </div>
                 {place.status === 'rejected' && place.rejectionReason && (
                   <div className="mt-1 text-xs text-vermilion">Reason: {place.rejectionReason}</div>
@@ -87,11 +112,20 @@ export default function BusinessDashboard() {
                 {place.status === 'approved' && <Link to={`/business/${place._id}`} target="_blank" className="rounded border border-line px-3 py-1.5 text-xs font-semibold text-ink hover:border-ink/40">View profile</Link>}
                 <Link to={`/business/listings/${place._id}/edit`} className="rounded border border-line px-3 py-1.5 text-xs font-semibold text-ink hover:border-ink/40">Edit profile</Link>
                 <span className={`rounded-sm px-2.5 py-1 text-xs font-medium capitalize ${STATUS_STYLES[place.status]}`}>{place.status}</span>
+                <button type="button" onClick={() => handleDelete(place)} disabled={deletingId === place._id} className="rounded border border-vermilion/30 px-3 py-1.5 text-xs font-semibold text-vermilion hover:bg-vermilion/10 disabled:opacity-50">{deletingId === place._id ? 'Deleting…' : 'Delete'}</button>
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      <section className="mt-10">
+        <h2 className="font-display text-lg font-medium text-ink">Chat messages</h2>
+        <div className="mt-4 flex flex-col divide-y divide-line rounded border border-line bg-white/40">
+          {chats.length === 0 && <p className="p-5 text-sm text-ink/50">No chat messages yet.</p>}
+          {chats.map((message) => <div key={message._id} className="p-4"><div className="text-sm font-semibold text-ink">{message.place?.name} · {message.user?.name || message.user?.email}</div><p className="mt-1 text-sm text-ink/70">{message.body}</p><div className="mt-2 flex gap-2"><input value={reply[message.user?._id] || ''} onChange={(event) => setReply((current) => ({ ...current, [message.user?._id]: event.target.value }))} placeholder="Reply to this user" className="min-w-0 flex-1 rounded border border-line px-3 py-2 text-sm" /><button type="button" onClick={() => sendReply(message)} className="rounded bg-ink px-3 py-2 text-xs font-semibold text-paper">Reply</button></div></div>)}
+        </div>
+      </section>
     </div>
   );
 }

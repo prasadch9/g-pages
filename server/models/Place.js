@@ -28,6 +28,23 @@ const placeSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Category',
       default: null,
+  },
+    categoryGroup: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+
+    subcategory: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+
+    pageType: {
+      type: String,
+      enum: ['static', 'dynamic'],
+      default: 'static',
     },
 
     location: {
@@ -131,7 +148,7 @@ const placeSchema = new mongoose.Schema(
     },
 
     video: {
-      type: String,
+      type: mongoose.Schema.Types.Mixed,
       default: null,
     },
 
@@ -226,6 +243,43 @@ const placeSchema = new mongoose.Schema(
       default: 'pending',
     },
 
+    applicationStatus: {
+      type: String,
+      enum: ['draft', 'submitted', 'under_review', 'approved', 'rejected', 'resubmitted'],
+      default: 'submitted',
+    },
+
+    isPublished: {
+      type: Boolean,
+      default: false,
+    },
+
+    submittedAt: {
+      type: Date,
+      default: Date.now,
+    },
+
+    reviewedAt: {
+      type: Date,
+      default: null,
+    },
+
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+
+    approvedAt: {
+      type: Date,
+      default: null,
+    },
+
+    publishedAt: {
+      type: Date,
+      default: null,
+    },
+
     rejectionReason: {
       type: String,
       default: null,
@@ -268,7 +322,7 @@ const placeSchema = new mongoose.Schema(
 // ============================================================
 
 placeSchema.pre('validate', function (next) {
-  if (this.name) {
+  if (this.name && !this.slug) {
     this.slug = slugify(this.name, {
       lower: true,
       strict: true,
@@ -325,6 +379,15 @@ placeSchema.index({
 placeSchema.index({
   category: 1,
   status: 1,
+});
+
+// Public pages are always filtered by lifecycle and publication state.
+placeSchema.index({
+  applicationStatus: 1,
+  isPublished: 1,
+  status: 1,
+  category: 1,
+  'location.city': 1,
 });
 
 module.exports = mongoose.model('Place', placeSchema);

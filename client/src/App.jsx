@@ -16,6 +16,7 @@ import ProtectedRoute from './routes/ProtectedRoute';
 import UserDashboard from './pages/UserDashboard';
 import BusinessDashboard from './pages/business/BusinessDashboard';
 import CreateListing from './pages/business/CreateListing';
+import SolarCreateListing from './pages/business/SolarCreateListing';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminOverview from './pages/admin/AdminOverview';
 import AdminBusinesses from './pages/admin/AdminBusinesses';
@@ -34,10 +35,10 @@ export default function App() {
   const location = useLocation();
   const isRestaurantProfile = /^\/business\/[^/]+$/.test(location.pathname);
   const isBusinessOwnerSurface = /^(\/business\/dashboard|\/business\/listings\/new(?:\/restaurant)?|\/business\/listings\/[^/]+\/edit)$/.test(location.pathname);
-
+  const isPlacePage = location.pathname.startsWith('/place/');
   return (
     <div className="flex min-h-screen flex-col bg-paper">
-      {!isRestaurantProfile && !isBusinessOwnerSurface && <Header />}
+      {!isRestaurantProfile && !isBusinessOwnerSurface && !isPlacePage && <Header />}
       <main className="flex-1 bg-[radial-gradient(circle_at_8%_8%,rgba(20,184,166,0.10),transparent_22rem),radial-gradient(circle_at_92%_35%,rgba(59,130,246,0.09),transparent_26rem)]">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -94,6 +95,30 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/business/listings/new/solar"
+            element={
+              <ProtectedRoute roles={['business']}>
+                <SolarCreateListing />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/business/listings/:id/edit"
+            element={
+              <ProtectedRoute roles={['business']}>
+                <CreateListing />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/business/listings/:id/edit/solar"
+            element={
+              <ProtectedRoute roles={['business']}>
+                <SolarCreateListing />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/business/register" element={<Register />} />
 
           {/* Admin area */}
@@ -120,8 +145,8 @@ export default function App() {
           <Route path="*" element={<ComingSoon title="This page" />} />
         </Routes>
       </main>
-      {!isRestaurantProfile && !isBusinessOwnerSurface && <Footer />}
-      {!isRestaurantProfile && !isBusinessOwnerSurface && <WhatsAppButton />}
+  {!isRestaurantProfile && !isBusinessOwnerSurface && !isPlacePage && <Footer />}
+  {!isRestaurantProfile && !isBusinessOwnerSurface && !isPlacePage && <WhatsAppButton />}
     </div>
   );
 }
