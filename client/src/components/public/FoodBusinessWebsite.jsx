@@ -1,23 +1,23 @@
 import React, { useMemo, useState } from 'react';
 import ReviewsSection from '../ReviewsSection';
-import { getProfileData, ImageFrame } from './PublicProfileShared';
+import { getProfileData, ImageFrame, PublicVideoCard } from './PublicProfileShared';
 import { getWhatsAppUrl } from '../../utils/healthcare';
 
 const variants = {
   restaurant: {
-    key: 'restaurant', label: 'Restaurant', eyebrow: 'Authentic taste. Unforgettable moments.', accent: '#a83f32', dark: '#2f1711', soft: '#fff8f3', nav: ['Home', 'About Us', 'Menu', 'Specials', 'Gallery', 'Reviews', 'Contact'], heroCta: 'View Our Menu', secondaryCta: 'Book a Table', sections: ['Our Popular Dishes', 'About Us', 'Our Services', 'Our Gallery'],
+    key: 'restaurant', label: 'Restaurant', eyebrow: 'Authentic taste. Unforgettable moments.', accent: '#a83f32', dark: '#2f1711', soft: '#fff8f3', nav: ['Home', 'About Us', 'Menu', 'Specials', 'Gallery', 'Videos', 'Reviews', 'Contact'], heroCta: 'View Our Menu', secondaryCta: 'Book a Table', sections: ['Our Popular Dishes', 'About Us', 'Our Services', 'Our Gallery'],
   },
   'coffee-shop': {
-    key: 'coffee-shop', label: 'Coffee Shop', eyebrow: 'Slow mornings. Better coffee.', accent: '#8b5e3c', dark: '#2d211b', soft: '#fbf7f0', nav: ['Home', 'About', 'Coffee', 'Menu', 'Gallery', 'Reviews', 'Contact'], heroCta: 'Explore Menu', secondaryCta: 'Visit Us', sections: ['Coffee Menu', 'About Café', 'Café Services', 'Gallery'],
+    key: 'coffee-shop', label: 'Coffee Shop', eyebrow: 'Slow mornings. Better coffee.', accent: '#8b5e3c', dark: '#2d211b', soft: '#fbf7f0', nav: ['Home', 'About', 'Coffee', 'Menu', 'Gallery', 'Videos', 'Reviews', 'Contact'], heroCta: 'Explore Menu', secondaryCta: 'Visit Us', sections: ['Coffee Menu', 'About Café', 'Café Services', 'Gallery'],
   },
   bakery: {
-    key: 'bakery', label: 'Sweet Shop & Bakery', eyebrow: 'Made fresh for meaningful moments.', accent: '#b66a55', dark: '#44231e', soft: '#fff8f7', nav: ['Home', 'About', 'Sweets', 'Cakes', 'Bakery', 'Gallery', 'Contact'], heroCta: 'View Products', secondaryCta: 'Order / Enquire', sections: ['Featured Products', 'About Us', 'Bakery Services', 'Our Gallery'],
+    key: 'bakery', label: 'Sweet Shop & Bakery', eyebrow: 'Made fresh for meaningful moments.', accent: '#b66a55', dark: '#44231e', soft: '#fff8f7', nav: ['Home', 'About', 'Sweets', 'Cakes', 'Bakery', 'Gallery', 'Videos', 'Contact'], heroCta: 'View Products', secondaryCta: 'Order / Enquire', sections: ['Featured Products', 'About Us', 'Bakery Services', 'Our Gallery'],
   },
   catering: {
-    key: 'catering', label: 'Catering Services', eyebrow: 'Thoughtful food for every gathering.', accent: '#b46b28', dark: '#2c2118', soft: '#fffaf2', nav: ['Home', 'About', 'Services', 'Menu', 'Packages', 'Gallery', 'Contact'], heroCta: 'View Packages', secondaryCta: 'Request Quote', sections: ['Our Services', 'About Catering', 'Event Menu', 'Our Gallery'],
+    key: 'catering', label: 'Catering Services', eyebrow: 'Thoughtful food for every gathering.', accent: '#b46b28', dark: '#2c2118', soft: '#fffaf2', nav: ['Home', 'About', 'Services', 'Menu', 'Packages', 'Gallery', 'Videos', 'Contact'], heroCta: 'View Packages', secondaryCta: 'Request Quote', sections: ['Our Services', 'About Catering', 'Event Menu', 'Our Gallery'],
   },
   'food-processing': {
-    key: 'food-processing', label: 'Food Processing', eyebrow: 'Quality products. Consistent processes.', accent: '#2d6a4f', dark: '#102d2a', soft: '#f4faf7', nav: ['Home', 'About', 'Products', 'Manufacturing', 'Certifications', 'Gallery', 'Contact'], heroCta: 'View Products', secondaryCta: 'Contact Us', sections: ['Our Products', 'About Company', 'Manufacturing', 'Product Gallery'],
+    key: 'food-processing', label: 'Food Processing', eyebrow: 'Quality products. Consistent processes.', accent: '#2d6a4f', dark: '#102d2a', soft: '#f4faf7', nav: ['Home', 'About', 'Products', 'Manufacturing', 'Certifications', 'Gallery', 'Videos', 'Contact'], heroCta: 'View Products', secondaryCta: 'Contact Us', sections: ['Our Products', 'About Company', 'Manufacturing', 'Product Gallery'],
   },
 };
 
@@ -53,6 +53,7 @@ export default function FoodBusinessWebsite({ place }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [lightbox, setLightbox] = useState(null);
   const gallery = (profile.gallery?.length ? profile.gallery : place.images || []).filter(Boolean).slice(0, 10);
+  const videos = (profile.videos || []).map((v) => (typeof v === 'string' ? { url: v } : v)).filter((v) => v && v.url);
   const services = toList(profile.services || place.services);
   const facilities = toList(profile.infrastructure || place.facilities);
   const structuredProducts = dataValues(profile, 'menuItems', 'productsList');
@@ -107,6 +108,22 @@ export default function FoodBusinessWebsite({ place }) {
       {facilities.length > 0 && <section id="facilities" className="bg-white px-5 py-14 sm:px-8"><div className="mx-auto max-w-7xl"><h2 className="font-display text-4xl font-bold" style={{ color: variant.dark }}>{variant.key === 'food-processing' ? 'Facilities & quality' : 'Services & facilities'}</h2><div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{facilities.map((item) => <div key={item} className="rounded-lg border border-black/10 p-4 text-sm font-bold">{item}</div>)}</div></div></section>}
 
       {gallery.length > 0 && <section id="gallery" className="px-5 py-14 sm:px-8" style={{ backgroundColor: variant.dark, color: 'white' }}><div className="mx-auto max-w-7xl"><p className="text-xs font-bold uppercase tracking-[0.25em] text-amber-200">{variant.sections[3]}</p><h2 className="mt-2 font-display text-4xl font-bold">Gallery</h2><div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">{gallery.map((image, index) => <button type="button" key={`${image}-${index}`} onClick={() => setLightbox(image)} className="aspect-square overflow-hidden rounded-lg text-left"><img src={image} alt={`${place.name} gallery ${index + 1}`} loading="lazy" className="h-full w-full object-cover transition hover:scale-105" /></button>)}</div></div></section>}
+
+      <section id="videos" className="mx-auto max-w-7xl px-5 py-14 sm:px-8">
+        <p className="text-xs font-bold uppercase tracking-[0.25em]" style={{ color: variant.accent }}>Videos</p>
+        <h2 className="mt-2 font-display text-4xl font-bold" style={{ color: variant.dark }}>Video Gallery</h2>
+        {videos.length > 0 ? (
+          <div className="mt-7 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {videos.map((video, index) => (
+              <PublicVideoCard key={`${video.url}-${index}`} video={video} />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-6 rounded-xl border border-dashed border-black/15 bg-black/[0.02] p-8 text-center">
+            <p className="text-sm font-medium text-black/55">No videos added yet.</p>
+          </div>
+        )}
+      </section>
 
       {hours.length > 0 && <section id="hours" className="mx-auto max-w-7xl px-5 py-14 sm:px-8"><h2 className="font-display text-4xl font-bold" style={{ color: variant.dark }}>Opening hours</h2><div className="mt-6 max-w-xl divide-y divide-black/10 rounded-lg border border-black/10 bg-white">{hours.map((hour) => <div key={hour.day} className="flex justify-between gap-4 px-5 py-3 text-sm"><span className="capitalize text-black/55">{hour.day}</span><strong>{hour.closed ? 'Closed' : `${hour.open || ''} - ${hour.close || ''}`}</strong></div>)}</div></section>}
 

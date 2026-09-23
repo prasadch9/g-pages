@@ -124,20 +124,21 @@ function VideoCard({ video, index, onRemove }) {
           </div>
         )}
       </div>
-      <div className="px-3 py-2">
-        <p className="truncate text-sm font-semibold text-[#2d2323]">
-          {video.title || video.originalName || 'Untitled video'}
-        </p>
-        <p className="mt-0.5 text-xs text-[#776763]">{sourceLabel}</p>
+      <div className="flex items-center justify-between border-t border-[#ebded8] bg-[#fffaf8] px-3.5 py-2.5">
+        <div className="min-w-0 flex-1 pr-2">
+          <p className="truncate text-sm font-semibold text-[#2d2323]">
+            {video.title || video.originalName || 'Watch video'}
+          </p>
+          <p className="text-xs text-[#776763]">{sourceLabel}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => onRemove(index)}
+          className="rounded-lg border border-red-200 bg-white px-3 py-1 text-xs font-semibold text-red-600 shadow-sm transition hover:bg-red-50"
+        >
+          Delete
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={() => onRemove(index)}
-        className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-bold text-red-600 shadow-sm opacity-0 transition group-hover:opacity-100"
-        aria-label="Remove video"
-      >
-        ✕
-      </button>
     </div>
   );
 }
@@ -468,37 +469,47 @@ export default function BusinessVideoUploader({ label = 'Video Gallery', value =
   };
 
   return (
-    <section className="rounded-2xl border border-dashed border-[#e7dcd7] bg-[#fffaf8] p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+    <section className="rounded-[24px] border border-[#ebded8] bg-white p-5 sm:p-7 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-[#2d2323]">{label}</h3>
-          <p className="mt-0.5 text-xs text-[#776763]">
-            Add via device upload, YouTube / Vimeo URL, or Google Drive link.
+          <div className="flex items-center gap-2">
+            <span className="text-2xl" role="img" aria-label="video camera">🎥</span>
+            <h2 className="font-display text-2xl font-semibold text-[#2d2323]">Video Gallery</h2>
+          </div>
+          <p className="mt-1 text-sm text-[#776763]">
+            Add videos to your business profile
           </p>
         </div>
-        <span className="text-xs font-semibold text-[#776763]">{videos.length}/{MAX_VIDEOS} Videos</span>
+        <span className="rounded-full bg-[#f4efed] px-3 py-1 text-xs font-bold text-[#776763]">
+          {videos.length}/{MAX_VIDEOS} Videos
+        </span>
       </div>
 
       {videos.length > 0 ? (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {videos.map((video, index) => (
             <VideoCard key={`${video.url}-${index}`} video={video} index={index} onRemove={removeVideo} />
           ))}
         </div>
       ) : (
-        <div className="mt-4 grid h-32 place-items-center rounded-xl border border-dashed border-[#e7dcd7] bg-white text-sm text-[#776763]">
-          No videos added yet
+        <div className="mt-6 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#e7dcd7] bg-[#fffaf8] py-10 text-center">
+          <span className="text-4xl">🎬</span>
+          <p className="mt-2 text-sm font-semibold text-[#776763]">No videos added yet</p>
+          <p className="mt-0.5 text-xs text-[#a39490]">Showcase your business with videos.</p>
         </div>
       )}
 
-      <button
-        type="button"
-        disabled={videos.length >= MAX_VIDEOS}
-        onClick={() => setModalOpen(true)}
-        className="mt-4 rounded-xl bg-[#a83f32] px-6 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#8f3128] disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        + Add Video
-      </button>
+      <div className="mt-6">
+        <button
+          type="button"
+          disabled={videos.length >= MAX_VIDEOS}
+          onClick={() => setModalOpen(true)}
+          className="inline-flex items-center gap-2 rounded-xl bg-[#a83f32] px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[#8f3128] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <span className="text-base font-bold">+</span>
+          <span>Add Video</span>
+        </button>
+      </div>
 
       {modalOpen && (
         <AddVideoModal onAdd={addVideo} onClose={() => setModalOpen(false)} placeId={placeId} />

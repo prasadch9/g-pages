@@ -1,6 +1,7 @@
 import React from 'react';
 import LocationCascadeFields from '../LocationCascadeFields';
 import BusinessMediaUploader from './BusinessMediaUploader';
+import BusinessVideoUploader from './BusinessVideoUploader';
 
 const inputClass = 'mt-1 w-full rounded border border-line bg-white px-3 py-2.5 text-[15px] outline-none focus:border-ink/40';
 
@@ -26,6 +27,7 @@ export default function CommonBusinessFields({ form, update, location, setLocati
       <div className="col-span-2"><label className="text-sm text-ink/70">Pincode<input value={form.pincode || ''} onChange={(event) => update('pincode')(event)} className={inputClass} /></label></div>
       <div className="col-span-2"><label className="text-sm text-ink/70">About / Description<textarea required rows={4} value={form.description || ''} onChange={(event) => update('description')(event)} className={inputClass} /></label></div>
       <div className="col-span-2"><BusinessMediaUploader label="Gallery" helpText="Add up to 10 images." value={form.gallery || []} onChange={updateValue('gallery', update)} placeId={placeId} multiple max={10} previewClassName="h-28" /></div>
+      <div className="col-span-2"><BusinessVideoUploader label="Video Gallery" value={form.videos || []} onChange={updateValue('videos', update)} placeId={placeId} /></div>
       <div className="col-span-2"><label className="text-sm text-ink/70">Social Links<textarea rows={3} value={form.socialLinks || ''} onChange={(event) => update('socialLinks')(event)} placeholder="Facebook, Instagram, YouTube URLs" className={inputClass} /></label></div>
       <div className="col-span-2"><BusinessHours form={form} setForm={setFormFromUpdate(update)} /></div>
     </>

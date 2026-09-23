@@ -1,11 +1,19 @@
 const HEALTHCARE_CATEGORY_NAMES = new Set([
+  'healthcare & medical',
+  'healthcare and medical',
+  'healthcare',
+  'healthcare medical',
   'hospitals',
+  'hospital',
   'multispeciality hospitals',
+  'multispeciality hospital',
   'cardiology',
   'ent',
   'dental',
   'hearing solutions',
   'fitness centres',
+  'fitness centre',
+  'fitness center',
 ]);
 
 const normalizeText = (value) => {
@@ -32,6 +40,10 @@ export function getHealthcareSubcategory(place) {
 
 export function isHealthcareBusiness(place) {
   if (!place) return false;
+
+  if (place.attributes?.businessProfile?.businessType === 'healthcare') {
+    return true;
+  }
 
   const taxonomyValues = [
     ...getTaxonomyValues(place.category),

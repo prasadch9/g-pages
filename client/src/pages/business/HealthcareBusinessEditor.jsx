@@ -3,20 +3,28 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import BusinessMediaUploader from '../../components/business/BusinessMediaUploader';
 import BusinessVideoUploader from '../../components/business/BusinessVideoUploader';
+import LocationCascadeFields from '../../components/LocationCascadeFields';
 
 const inputClass = 'mt-1 w-full rounded-xl border border-[#e7dcd7] bg-white px-3 py-2.5 text-sm text-[#2d2323] outline-none transition focus:border-[#0f6cbf] focus:ring-2 focus:ring-[#0f6cbf]/10';
 const splitList = (value = '') => String(value).split(/[,\n]/).map((item) => item.trim()).filter(Boolean);
 const asText = (value) => Array.isArray(value) ? value.filter(Boolean).join('\n') : value || '';
 
-export default function HealthcareBusinessEditor({ place }) {
+export default function HealthcareBusinessEditor({ place = {}, create = false, onBack, categoryId, subcategoryId }) {
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [location, setLocation] = useState({
+    state: place.location?.state?._id || place.location?.state || '',
+    district: place.location?.district?._id || place.location?.district || '',
+    city: place.location?.city?._id || place.location?.city || '',
+    area: place.location?.area?._id || place.location?.area || '',
+  });
+
   const [form, setForm] = useState({
     name: place.name || '',
-    category: place.category?._id || place.category || '',
-    subcategory: place.subcategory?._id || place.subcategory || '',
+    category: categoryId || place.category?._id || place.category || '',
+    subcategory: subcategoryId || place.subcategory?._id || place.subcategory || '',
     phone: place.phone || '',
     email: place.email || '',
     website: place.website || '',
@@ -25,7 +33,11 @@ export default function HealthcareBusinessEditor({ place }) {
     address: place.address || '',
     description: place.description || '',
     gallery: Array.isArray(place.images) ? place.images : [],
-    videos: place.attributes?.businessProfile?.common?.videos || place.attributes?.videos || [],
+    videos: Array.isArray(place.attributes?.businessProfile?.common?.videos)
+      ? place.attributes.businessProfile.common.videos
+      : Array.isArray(place.attributes?.videos)
+        ? place.attributes.videos
+        : [],
     services: asText(place.services || []),
     facilities: asText(place.facilities || []),
     departments: asText(place.attributes?.departments || []),
@@ -52,8 +64,9 @@ export default function HealthcareBusinessEditor({ place }) {
       const nextGallery = gallery.slice(0, 10);
       const payload = {
         name: form.name,
-        category: form.category || place.category?._id || place.category,
-        subcategory: form.subcategory || place.subcategory?._id || place.subcategory || undefined,
+        category: form.category || categoryId || place.category?._id || place.category,
+        subcategory: form.subcategory || subcategoryId || place.subcategory?._id || place.subcategory || undefined,
+        location,
         phone: form.phone || undefined,
         email: form.email || undefined,
         website: form.website || undefined,
@@ -95,8 +108,14 @@ export default function HealthcareBusinessEditor({ place }) {
         },
       };
 
-      await api.put(`/places/${place._id}`, payload);
-      setMessage('Healthcare profile updated successfully.');
+      if (create) {
+        await api.post('/places', payload);
+        setMessage('Healthcare listing submitted successfully.');
+        setTimeout(() => navigate('/business/dashboard'), 1000);
+      } else {
+        await api.put(`/places/${place._id}`, payload);
+        setMessage('Healthcare profile updated successfully.');
+      }
     } catch (saveError) {
       setError(saveError.response?.data?.message || saveError.message || 'Unable to save this healthcare profile.');
     } finally {
@@ -107,9 +126,19 @@ export default function HealthcareBusinessEditor({ place }) {
   return (
     <div className="min-h-screen bg-[#f4efed] px-5 py-10 text-[#2d2323] sm:px-8">
       <div className="mx-auto max-w-5xl">
-        <button type="button" onClick={() => navigate('/business/dashboard')} className="text-sm font-semibold text-[#0f6cbf]">← Back to Dashboard</button>
-        <h1 className="mt-4 font-display text-4xl font-semibold text-[#2d2323]">Healthcare Business Profile</h1>
-        <p className="mt-2 text-sm text-[#70615f]">Update your hospital logo, cover image, and gallery directly from the existing business profile flow.</p>
+        <button
+          type="button"
+          onClick={onBack || (() => navigate('/business/dashboard'))}
+          className="text-sm font-semibold text-[#0f6cbf]"
+        >
+          {onBack ? '← Back' : '← Back to Dashboard'}
+        </button>
+        <h1 className="mt-4 font-display text-4xl font-semibold text-[#2d2323]">
+          {create ? 'Add Healthcare Business' : 'Healthcare Business Profile'}
+        </h1>
+        <p className="mt-2 text-sm text-[#70615f]">
+          Manage your hospital logo, banner, information, photo gallery, and 3-method video gallery.
+        </p>
 
         {error && <p className="mt-4 rounded-xl bg-[#fff1f0] p-3 text-sm text-[#a83f32]">{error}</p>}
         {message && <p className="mt-4 rounded-xl bg-[#edf9f1] p-3 text-sm text-[#2f5a3f]">{message}</p>}
@@ -119,8 +148,8 @@ export default function HealthcareBusinessEditor({ place }) {
             <h2 className="font-display text-2xl font-semibold">Basic information</h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <label className="text-sm font-medium text-[#4b3d3b]">
-                Hospital Name
-                <input value={form.name} onChange={update('name')} className={inputClass} />
+                Hospital / Business Name
+                <input required value={form.name} onChange={update('name')} className={inputClass} />
               </label>
               <label className="text-sm font-medium text-[#4b3d3b]">
                 Phone
@@ -134,6 +163,10 @@ export default function HealthcareBusinessEditor({ place }) {
                 Website
                 <input value={form.website} onChange={update('website')} className={inputClass} />
               </label>
+            </div>
+
+            <div className="mt-5">
+              <LocationCascadeFields value={location} onChange={setLocation} />
             </div>
 
             <div className="mt-6 grid gap-4 lg:grid-cols-2">
@@ -161,7 +194,7 @@ export default function HealthcareBusinessEditor({ place }) {
 
             <label className="mt-6 block text-sm font-medium text-[#4b3d3b]">
               Address
-              <textarea rows={3} value={form.address} onChange={update('address')} className={inputClass} />
+              <textarea rows={3} required value={form.address} onChange={update('address')} className={inputClass} />
             </label>
 
             <label className="mt-6 block text-sm font-medium text-[#4b3d3b]">
@@ -224,9 +257,19 @@ export default function HealthcareBusinessEditor({ place }) {
           </section>
 
           <div className="flex justify-end gap-3">
-            <button type="button" onClick={() => navigate('/business/dashboard')} className="rounded-xl border border-[#e7dcd7] bg-white px-4 py-2.5 text-sm font-semibold text-[#4b3d3b]">Cancel</button>
-            <button type="submit" disabled={saving} className="rounded-xl bg-[#0f6cbf] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60">
-              {saving ? 'Saving...' : 'Save changes'}
+            <button
+              type="button"
+              onClick={onBack || (() => navigate('/business/dashboard'))}
+              className="rounded-xl border border-[#e7dcd7] bg-white px-4 py-2.5 text-sm font-semibold text-[#4b3d3b]"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded-xl bg-[#0f6cbf] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+            >
+              {saving ? 'Saving...' : create ? 'Submit listing' : 'Save changes'}
             </button>
           </div>
         </form>
