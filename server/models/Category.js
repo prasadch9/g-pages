@@ -18,6 +18,17 @@ const categorySchema = new mongoose.Schema(
       trim: true,
     },
 
+    group: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+
+    subcategories: [{
+      type: String,
+      trim: true,
+    }],
+
     icon: {
       type: String,
       default: null,

@@ -4,6 +4,11 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import FavoriteButton from '../components/FavoriteButton';
 import ReviewsSection from '../components/ReviewsSection';
+import BusinessPageLayouts from '../components/BusinessPageLayouts';
+import SunriseSchoolPage from '../components/SunriseSchoolPage';
+import CollegePage from '../components/CollegePage';
+import UniversityPage from '../components/UniversityPage';
+import SolarPage from './SolarPage';
 
 const DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
 const REPORT_REASONS = [
@@ -19,16 +24,20 @@ function EnquiryForm({ placeId }) {
   const { user } = useAuth();
   const [form, setForm] = useState({ name: user?.name || '', email: user?.email || '', phone: '', message: '' });
   const [status, setStatus] = useState('idle');
+  const [error, setError] = useState('');
 
   const submit = async (e) => {
     e.preventDefault();
     setStatus('sending');
+    setError('');
     try {
       await api.post('/enquiries', { place: placeId, ...form });
       setStatus('sent');
       setForm({ ...form, message: '' });
-    } catch {
+    } catch (err) {
+      console.error('Enquiry submission failed:', err);
       setStatus('error');
+      setError(err.message);
     }
   };
 
@@ -43,7 +52,7 @@ function EnquiryForm({ placeId }) {
       <input required type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="rounded border border-line bg-white px-3 py-2 text-[14px] outline-none focus:border-ink/40" />
       <input placeholder="Phone (optional)" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="rounded border border-line bg-white px-3 py-2 text-[14px] outline-none focus:border-ink/40" />
       <textarea required rows={3} placeholder="What would you like to ask?" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className="rounded border border-line bg-white px-3 py-2 text-[14px] outline-none focus:border-ink/40" />
-      {status === 'error' && <p className="text-sm text-vermilion">Something went wrong. Please try again.</p>}
+      {status === 'error' && <p className="text-sm text-vermilion">{error || 'We could not send the enquiry. Please try again.'}</p>}
       <button type="submit" disabled={status === 'sending'} className="rounded bg-ink px-4 py-2 text-sm font-medium text-paper hover:bg-ink-light disabled:opacity-60">
         {status === 'sending' ? 'Sending…' : 'Send enquiry'}
       </button>
@@ -135,78 +144,120 @@ function ContactLink({ href, icon, label, children }) {
 }
 
 function SchoolDetailLayout({ place, mapsUrl, socialLinks, academics, onShare, onReport, onDelete }) {
+  const [selectedImage, setSelectedImage] = useState(null);
   const website = place.website && (place.website.startsWith('http') ? place.website : `https://${place.website}`);
   const cover = place.coverImage || place.images?.[0];
   const highlights = place.attributes?.highlights || place.attributes?.keyHighlights || place.services || [];
   const admissions = academics.admission || academics.admissions || academics.admissionProcess || academics.eligibility;
-  const mapEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(place.address)}&output=embed`;
+  const videoUrl = place.video || place.attributes?.video;
+  const mapQuery = place.coordinates?.lat && place.coordinates?.lng
+    ? `${place.coordinates.lat},${place.coordinates.lng}`
+    : place.address;
+  const mapEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`;
   const whatsappUrl = socialLinks.whatsapp
     ? (socialLinks.whatsapp.startsWith('http') ? socialLinks.whatsapp : `https://wa.me/${socialLinks.whatsapp.replace(/\D/g, '')}`)
     : null;
 
   return (
-    <div className="container-page py-8 sm:py-10">
-      <section className="overflow-hidden rounded-[1.5rem] border border-[#b8e7e5] bg-white shadow-[0_18px_55px_rgba(16,42,67,0.12)]">
-        <div className="relative h-[330px] overflow-hidden bg-[#082f49] sm:h-[430px]">
-          {cover ? <img src={cover} alt={`${place.name} cover`} className="absolute inset-0 h-full w-full object-cover" /> : <div className="absolute inset-0 bg-[linear-gradient(135deg,#073b4c,#0b7285_55%,#14b8a6)]" />}
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,31,49,.08)_10%,rgba(4,31,49,.32)_44%,rgba(4,31,49,.96)_100%)]" />
-          <div className="absolute left-5 top-5 flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-white backdrop-blur-sm sm:left-8 sm:top-8">
-            <span className="h-2 w-2 rounded-full bg-cyan-300" /> {place.category?.name || 'School'}
+    <div className="school-page container-page py-6 sm:py-10">
+      <section className="school-hero overflow-hidden rounded-[1.25rem] border border-white/70 bg-white shadow-[0_22px_60px_rgba(16,42,67,0.16)]">
+        <div className="relative h-[280px] overflow-hidden bg-[#12395a] sm:h-[390px]">
+          {cover ? <img src={cover} alt={`${place.name} cover`} className="absolute inset-0 h-full w-full object-cover" /> : <div className="absolute inset-0 bg-[#dbeff3]" />}
+          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(6,32,58,.88),rgba(10,91,104,.38)_48%,rgba(244,114,73,.58))]" />
+          <div className="absolute left-5 top-5 rounded-full border border-[#ffd45a]/80 bg-[#062b4d]/80 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#ffe18a] shadow-lg backdrop-blur-sm sm:left-7 sm:top-7">{place.category?.name || 'School'} profile</div>
+          <div className="absolute inset-x-0 bottom-0 flex gap-2 overflow-x-auto bg-[#071d33]/45 px-4 py-3 backdrop-blur-sm sm:px-6">
+            {(place.images?.length ? place.images : cover ? [cover] : []).map((image, index) => (
+              <button key={`${image}-${index}`} type="button" onClick={() => setSelectedImage(image)} className="shrink-0 rounded-md focus:outline-none focus:ring-2 focus:ring-white">
+                <img src={image} alt={`${place.name} photo ${index + 1}`} className={`h-11 w-16 rounded-md border-2 object-cover sm:h-14 sm:w-20 ${index === 0 ? 'border-white' : 'border-white/60'}`} />
+              </button>
+            ))}
           </div>
-          <div className="absolute bottom-0 left-0 right-0 grid gap-5 p-5 text-white sm:p-8 lg:grid-cols-[1fr_auto] lg:items-end">
-            <div>
-              <h1 className="flex flex-wrap items-center gap-2 font-display text-3xl font-semibold leading-tight sm:text-5xl">
-                {place.name}
-                {place.verified && <span className="rounded-full bg-emerald-400 px-3 py-1 text-xs font-bold text-[#063047]">✓ Verified</span>}
-              </h1>
-              <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-white/85">
-                <span className="text-amber-300" aria-label={`${place.rating?.average || 0} out of 5 stars`}>{'★'.repeat(Math.round(place.rating?.average || 0))}{'☆'.repeat(5 - Math.round(place.rating?.average || 0))}</span>
-                <span className="font-semibold text-white">{place.rating?.average || 0}</span>
-                <span>({place.rating?.count || 0} reviews)</span>
-              </div>
-              <p className="mt-3 flex max-w-2xl items-start gap-2 text-sm leading-relaxed text-white/80"><span aria-hidden="true">⌖</span>{place.address}</p>
+        </div>
+        <div className="grid gap-5 px-5 py-5 sm:px-8 sm:py-7 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#e76f51]">Trusted learning community</p>
+            <h1 className="mt-2 flex flex-wrap items-center gap-2 font-display text-3xl font-semibold leading-tight text-[#17324d] sm:text-5xl">
+              {place.name}
+              {place.verified && <span className="rounded-sm bg-[#edf4ef] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#32724b]">✓ Verified</span>}
+            </h1>
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-ink/60">
+              <span className="rounded-sm bg-[#fff6df] px-2.5 py-1 text-[#a47b2c]" aria-label={`${place.rating?.average || 0} out of 5 stars`}>{'★'.repeat(Math.round(place.rating?.average || 0))}{'☆'.repeat(5 - Math.round(place.rating?.average || 0))}</span>
+              <span className="font-semibold text-[#17324d]">{place.rating?.average || 0}</span>
+              <span>({place.rating?.count || 0} reviews)</span>
+              <span className="hidden text-ink/35 sm:inline">•</span>
+              <span>⌖ {place.address}</span>
             </div>
+          </div>
+          <div className="[&>div]:gap-2 [&_button]:border-[#d8e4ec] [&_button]:bg-[#f8fbfd] [&_button]:px-3 [&_button]:py-2.5 [&_button]:text-xs [&_button]:font-semibold [&_button]:text-[#31536d] [&_a]:border-[#d8e4ec] [&_a]:bg-[#f8fbfd] [&_a]:px-3 [&_a]:py-2.5 [&_a]:text-xs [&_a]:font-semibold [&_a]:text-[#31536d]">
             <SchoolActionButtons place={place} onShare={onShare} onReport={onReport} onDelete={onDelete} />
           </div>
         </div>
-        <div className="grid divide-y divide-line bg-[#f5fbfb] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-          {[[place.rating?.count || 0, 'Parent reviews'], [place.facilities?.length || 0, 'Listed facilities'], [place.images?.length || 0, 'School photos']].map(([value, label]) => (
-            <div key={label} className="flex items-center gap-3 px-5 py-4 sm:justify-center sm:px-3">
-              <span className="font-display text-2xl font-semibold text-[#087f8c]">{value}</span>
-              <span className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/50">{label}</span>
-            </div>
-          ))}
+        <div className="flex flex-wrap gap-2 border-t border-[#edf1f3] bg-[#fbfdff] px-5 py-4 sm:px-8">
+          {['Walk-in service', 'Online enquiries', 'Verified information'].map((label, index) => <span key={label} className={`rounded-sm px-3 py-1.5 text-[10px] font-bold ${index === 0 ? 'bg-[#eef4f6] text-[#31536d]' : index === 1 ? 'bg-[#fff6df] text-[#a47b2c]' : 'bg-[#edf4ef] text-[#32724b]'}`}>{label}</span>)}
         </div>
       </section>
 
-      <nav aria-label="School detail sections" className="sticky top-0 z-20 -mx-5 mt-5 overflow-x-auto border-y border-line bg-paper/95 px-5 py-3 backdrop-blur sm:static sm:mx-0 sm:rounded-full sm:border sm:px-4">
-        <div className="flex min-w-max gap-2 text-sm font-semibold text-ink/60">
-          {[['#overview', 'Overview'], ['#facilities', 'Facilities'], ['#academics', 'Academics'], ['#reviews', 'Reviews'], ['#location', 'Location']].map(([href, label]) => <a key={href} href={href} className="rounded-full px-3 py-1.5 transition hover:bg-cyan-100 hover:text-cyan-800">{label}</a>)}
+      <div className="school-stats mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          [place.rating?.count || 0, 'Parent reviews', 'bg-[#dff8f1] text-[#087f73]'],
+          [place.facilities?.length || 0, 'Facilities', 'bg-[#fff0d0] text-[#a45d08]'],
+          [place.images?.length || 0, 'Campus photos', 'bg-[#eee5ff] text-[#7141b5]'],
+          [academics.classes || '1-12', 'Classes offered', 'bg-[#dff2ff] text-[#14628e]'],
+        ].map(([value, label, tone]) => (
+          <div key={label} className={`rounded-xl border border-white/80 px-4 py-4 shadow-[0_8px_20px_rgba(16,42,67,0.06)] ${tone}`}>
+            <div className="font-display text-2xl font-semibold">{value}</div>
+            <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] opacity-70">{label}</div>
+          </div>
+        ))}
+      </div>
+
+      <nav aria-label="School detail sections" className="sticky top-0 z-20 -mx-5 mt-6 overflow-x-auto border-y border-[#bde4df] bg-[#effcf9]/95 px-5 py-3 shadow-sm backdrop-blur sm:static sm:mx-0 sm:rounded-full sm:border sm:px-3">
+        <div className="flex min-w-max gap-1 text-sm font-semibold text-[#31536d]">
+          {[['#overview', 'Overview'], ['#facilities', 'Facilities'], ['#academics', 'Academics'], ['#reviews', 'Reviews'], ['#location', 'Location']].map(([href, label], index) => <a key={href} href={href} className={`rounded-sm px-4 py-2 transition ${index === 0 ? 'bg-[#17324d] text-white shadow-sm' : 'hover:bg-white hover:text-[#a47b2c]'}`}>{label}</a>)}
         </div>
       </nav>
 
       <div className="mt-6 flex flex-col gap-5">
-        <section id="overview" className="rounded-2xl border border-cyan-100 bg-white p-5 shadow-[0_8px_30px_rgba(16,42,67,0.05)] sm:p-7">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-700">Get to know the campus</p>
-          <h2 className="mt-2 font-display text-2xl font-semibold text-ink">Overview</h2>
+        <section id="overview" className="school-section rounded-[1rem] border border-[#cfe6e5] bg-[linear-gradient(135deg,#ffffff_0%,#f2fbfa_100%)] p-5 shadow-[0_10px_30px_rgba(16,42,67,0.06)] sm:p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a47b2c]">Get to know the campus</p>
+          <h2 className="mt-2 font-display text-3xl font-semibold text-ink">Overview</h2>
           <div className="mt-5 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-cyan-700">About the school</h3>
+              <h3 className="font-display text-xl font-semibold text-[#17324d]">A place to learn and grow</h3>
               <p className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-ink/65">{place.description || 'School information will be updated soon.'}</p>
               {website && <a href={website} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex text-sm font-medium text-cyan-700 hover:underline">Open official website ↗</a>}
             </div>
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-cyan-700">Key highlights</h3>
+              <h3 className="font-display text-xl font-semibold text-[#17324d]">Key Highlights</h3>
               {highlights.length > 0 ? (
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  {highlights.map((highlight) => <div key={highlight} className="rounded-xl border border-cyan-100 bg-[linear-gradient(135deg,#f0fdfa,#ecfeff)] px-3 py-3 text-sm font-medium text-ink/75"><span className="mr-2 text-cyan-700">✓</span>{highlight}</div>)}
+                  {highlights.map((highlight) => <div key={highlight} className="flex items-start gap-2 border-b border-[#e8dfcb] px-1 py-2.5 text-xs font-medium text-ink/70"><span className="mt-0.5 text-[#a47b2c]">●</span>{highlight}</div>)}
                 </div>
               ) : <p className="mt-3 text-sm text-ink/50">Highlights will be updated soon.</p>}
             </div>
           </div>
+          <div className="mt-7 rounded-[1rem] border border-[#f0d8b0] bg-[linear-gradient(135deg,#fff8e9,#fff1eb)] p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#7a50c9]">Watch video</p>
+                <h3 className="mt-1 font-display text-2xl font-semibold text-ink">Video Tour</h3>
+              </div>
+              <span className="text-[10px] text-ink/40">{place.name}</span>
+            </div>
+            <div className="relative mt-3 h-44 overflow-hidden rounded-xl bg-[#dbeff3] shadow-inner sm:h-56">
+              {videoUrl?.match(/\.(mp4|webm|ogg)(\?.*)?$/i) ? <video src={videoUrl} controls className="h-full w-full object-cover" /> : cover && <img src={cover} alt={`${place.name} video preview`} className="h-full w-full object-cover" />}
+              <div className="absolute inset-0 bg-[#17324d]/20" />
+              {videoUrl ? (
+                <a href={videoUrl} target="_blank" rel="noopener noreferrer" aria-label={`Watch ${place.name} video`} className="absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[#7a3fd0] text-xl text-white shadow-lg transition hover:scale-105 hover:bg-[#6733b5]">▶</a>
+              ) : (
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/90 px-4 py-2 text-xs font-medium text-ink/55">Video coming soon</span>
+              )}
+            </div>
+            {videoUrl && <a href={videoUrl} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex text-xs font-semibold text-[#6941af] hover:underline">Watch video ↗</a>}
+          </div>
           {(place.phone || place.email || whatsappUrl || socialLinks.instagram || socialLinks.facebook || website) && (
-            <div className="mt-7 border-t border-line pt-5">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-cyan-700">Contact</h3>
+            <div className="mt-8 border-t border-line pt-6">
+              <h3 className="font-display text-xl font-semibold text-ink">Contact the school</h3>
               <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {place.phone && <ContactLink href={`tel:${place.phone}`} icon="☎" label="Call">{place.phone}</ContactLink>}
                 {whatsappUrl && <ContactLink href={whatsappUrl} icon="◉" label="WhatsApp" />}
@@ -218,24 +269,53 @@ function SchoolDetailLayout({ place, mapsUrl, socialLinks, academics, onShare, o
           )}
         </section>
 
-        <section id="facilities" className="rounded-2xl border border-line bg-white p-5 shadow-sm sm:p-7">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-700">Built for everyday learning</p>
-          <h2 className="mt-2 font-display text-2xl font-semibold text-ink">Facilities &amp; Infrastructure</h2>
-          {place.facilities?.length > 0 ? <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{place.facilities.map((facility) => <div key={facility} className="group rounded-xl border border-line bg-paper/60 px-4 py-4 text-sm font-medium text-ink/75 transition hover:-translate-y-0.5 hover:border-cyan-200 hover:bg-cyan-50"><span className="mr-2 text-cyan-700">◆</span>{facility}</div>)}</div> : <p className="mt-4 text-sm text-ink/50">Facility details will be updated soon.</p>}
-        </section>
-
-        <section id="academics" className="rounded-2xl border border-line bg-white p-5 shadow-sm sm:p-7">
-          <h2 className="font-display text-2xl font-semibold text-ink">Academics &amp; Admission</h2>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {[['Board', academics.board], ['Curriculum', academics.curriculum], ['Classes', academics.classes], ['Admission', admissions]].filter(([, value]) => value).map(([label, value]) => <div key={label} className="rounded-lg bg-cyan-50/70 p-4"><div className="text-xs font-semibold uppercase tracking-wide text-cyan-700">{label}</div><div className="mt-2 text-sm leading-relaxed text-ink/75">{Array.isArray(value) ? value.join(', ') : value}</div></div>)}
+        <section className="school-section rounded-[1rem] border border-[#ddd2f2] bg-[linear-gradient(135deg,#faf8ff,#f1f8ff)] p-5 shadow-[0_10px_30px_rgba(16,42,67,0.05)] sm:p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6950a8]">At a glance</p>
+          <h2 className="mt-2 font-display text-3xl font-semibold text-ink">School Quick Facts</h2>
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {[
+              ['Board', academics.board], ['Established', academics.establishedYear], ['Classes', academics.classes], ['Gender', academics.gender],
+              ['Medium', academics.medium], ['Type', academics.type], ['Capacity', academics.studentCapacity], ['Ratio', academics.studentTeacherRatio],
+            ].filter(([, value]) => value).map(([label, value]) => <div key={label} className="rounded-xl border border-white bg-white/80 p-4 shadow-sm"><div className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#6950a8]">{label}</div><div className="mt-2 text-sm font-semibold text-[#17324d]">{value}</div></div>)}
           </div>
-          {!academics.board && !academics.curriculum && !academics.classes && !admissions && <p className="mt-4 text-sm text-ink/50">Academic and admission details will be updated soon.</p>}
         </section>
 
-        <section id="reviews" className="rounded-2xl border border-line bg-white p-5 shadow-sm sm:p-7"><ReviewsSection placeId={place._id} /></section>
+        {(academics.principalMessage || academics.vision || academics.mission) && <section className="school-section rounded-[1rem] border border-[#cfe6e5] bg-[linear-gradient(135deg,#f1fbf8,#ffffff)] p-5 shadow-[0_10px_30px_rgba(16,42,67,0.05)] sm:p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#168b9a]">The people and purpose behind the campus</p>
+          <h2 className="mt-2 font-display text-3xl font-semibold text-ink">Our story</h2>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {[["Principal's message", academics.principalMessage], ['Vision', academics.vision], ['Mission', academics.mission]].filter(([, value]) => value).map(([label, value]) => <div key={label} className="rounded-xl border border-[#d6ebe8] bg-white p-5"><h3 className="font-display text-xl font-semibold text-[#17324d]">{label}</h3><p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-ink/65">{value}</p></div>)}
+          </div>
+        </section>}
 
-        <section id="location" className="rounded-2xl border border-line bg-white p-5 shadow-sm sm:p-7">
-          <h2 className="font-display text-2xl font-semibold text-ink">Location</h2>
+        {academics.faculty?.length > 0 && <section className="school-section rounded-[1rem] border border-[#cbdde9] bg-[#f1f8fc] p-5 shadow-[0_10px_30px_rgba(16,42,67,0.05)] sm:p-8"><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#31536d]">The people who make learning happen</p><h2 className="mt-2 font-display text-3xl font-semibold text-ink">Faculty &amp; Staff</h2><div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{academics.faculty.map((member) => <div key={member} className="rounded-xl border border-white bg-white p-4 text-sm font-semibold text-ink/75 shadow-sm"><span className="mr-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#e8f2f8] text-[#31536d]">✦</span>{member}</div>)}</div></section>}
+
+        {academics.achievements?.length > 0 && <section className="school-section rounded-[1rem] border border-[#f0d8b0] bg-[linear-gradient(135deg,#fffaf2,#fff1eb)] p-5 shadow-[0_10px_30px_rgba(16,42,67,0.05)] sm:p-8"><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a47b2c]">Moments worth celebrating</p><h2 className="mt-2 font-display text-3xl font-semibold text-ink">Achievements</h2><div className="mt-6 grid gap-3 sm:grid-cols-2">{academics.achievements.map((item) => <div key={item} className="rounded-xl border border-[#f0d8b0] bg-white/80 p-4 text-sm font-semibold text-ink/75"><span className="mr-2 text-xl text-[#c58a22]">★</span>{item}</div>)}</div></section>}
+
+        {academics.events?.length > 0 && <section className="school-section rounded-[1rem] border border-[#cfe6e5] bg-[#f1fbf8] p-5 shadow-[0_10px_30px_rgba(16,42,67,0.05)] sm:p-8"><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#168b9a]">Life beyond the classroom</p><h2 className="mt-2 font-display text-3xl font-semibold text-ink">Events &amp; Activities</h2><div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{academics.events.map((event) => <div key={event} className="rounded-xl border border-[#d6ebe8] bg-white p-4 text-sm font-semibold text-ink/75"><div className="mb-3 text-xs font-bold uppercase tracking-wide text-[#168b9a]">Campus calendar</div>{event}</div>)}</div></section>}
+
+        {(academics.admissionProcess || academics.eligibility || academics.feeInformation) && <section className="school-section rounded-[1rem] border border-[#e8dfcb] bg-[#fffaf2] p-5 shadow-[0_10px_30px_rgba(16,42,67,0.05)] sm:p-8"><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a47b2c]">Plan the next step</p><h2 className="mt-2 font-display text-3xl font-semibold text-ink">Admissions</h2><div className="mt-6 grid gap-4 md:grid-cols-3">{[['Admission process', academics.admissionProcess], ['Eligibility', academics.eligibility], ['Fee information', academics.feeInformation]].filter(([, value]) => value).map(([label, value]) => <div key={label} className="rounded-xl border border-[#f0d8b0] bg-white p-5"><h3 className="font-display text-xl font-semibold text-[#17324d]">{label}</h3><p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-ink/65">{value}</p></div>)}</div></section>}
+
+        <section id="facilities" className="school-section rounded-[1rem] border border-[#f0d8b0] bg-[linear-gradient(135deg,#fffaf2,#fff3ed)] p-5 shadow-[0_10px_30px_rgba(16,42,67,0.05)] sm:p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a47b2c]">Built for everyday learning</p>
+          <h2 className="mt-2 font-display text-3xl font-semibold text-ink">Facilities &amp; Infrastructure</h2>
+          {place.facilities?.length > 0 ? <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{place.facilities.map((facility) => <div key={facility} className="group rounded-md border border-[#e8dfcb] bg-white px-4 py-4 text-sm font-semibold text-ink/75 transition hover:-translate-y-1 hover:border-[#c9a95e] hover:shadow-md"><span className="mr-2 text-[#a47b2c]">✦</span>{facility}</div>)}</div> : <p className="mt-4 text-sm text-ink/50">Facility details will be updated soon.</p>}
+        </section>
+
+        <section id="academics" className="school-section rounded-[1rem] border border-[#cbdde9] bg-[linear-gradient(135deg,#f1f8fc,#eef7f5)] p-5 shadow-[0_10px_30px_rgba(16,42,67,0.05)] sm:p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a47b2c]">The learning journey</p>
+          <h2 className="mt-2 font-display text-3xl font-semibold text-ink">Academics &amp; Admission</h2>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {[['Board', academics.board], ['Curriculum', academics.curriculum], ['Classes', academics.classes], ['School Type', academics.type], ['Student Type', academics.gender], ['Admission', admissions]].filter(([, value]) => value).map(([label, value]) => <div key={label} className="rounded-md border border-[#e8dfcb] bg-white p-4"><div className="text-xs font-bold uppercase tracking-wide text-[#a47b2c]">{label}</div><div className="mt-2 text-sm font-semibold leading-relaxed text-ink/75">{Array.isArray(value) ? value.join(', ') : value}</div></div>)}
+          </div>
+          {!academics.board && !academics.curriculum && !academics.classes && !academics.type && !academics.gender && !admissions && <p className="mt-4 text-sm text-ink/50">Academic and admission details will be updated soon.</p>}
+        </section>
+
+        <section id="reviews" className="school-section rounded-[1rem] border border-[#ddd2f2] bg-[linear-gradient(135deg,#faf8ff,#f4f1ff)] p-5 shadow-[0_10px_30px_rgba(16,42,67,0.05)] sm:p-8"><ReviewsSection placeId={place._id} /></section>
+
+        <section id="location" className="school-section rounded-[1rem] border border-[#cfe6e5] bg-[linear-gradient(135deg,#f1fbf8,#edf7fc)] p-5 shadow-[0_10px_30px_rgba(16,42,67,0.05)] sm:p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#168b9a]">Find the campus</p>
+          <h2 className="mt-2 font-display text-3xl font-semibold text-ink">Location</h2>
           <p className="mt-3 flex items-start gap-2 text-[15px] leading-relaxed text-ink/65"><span aria-hidden="true">⌖</span>{place.address}</p>
           <div className="mt-5 overflow-hidden rounded-xl border border-line bg-ink/5">
             <iframe title={`Map showing ${place.name}`} src={mapEmbedUrl} className="h-72 w-full border-0 sm:h-96" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
@@ -243,6 +323,12 @@ function SchoolDetailLayout({ place, mapsUrl, socialLinks, academics, onShare, o
           <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex text-sm font-medium text-cyan-700 hover:underline">Open in Google Maps ↗</a>
         </section>
       </div>
+      {selectedImage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#071d33]/90 p-4" role="dialog" aria-modal="true" onClick={() => setSelectedImage(null)}>
+          <button type="button" onClick={() => setSelectedImage(null)} className="absolute right-5 top-5 text-3xl text-white" aria-label="Close image">×</button>
+          <img src={selectedImage} alt={`${place.name} enlarged`} className="max-h-[90vh] max-w-full rounded-md object-contain" onClick={(event) => event.stopPropagation()} />
+        </div>
+      )}
     </div>
   );
 }
@@ -300,14 +386,32 @@ export default function PlaceDetailPage() {
     ? `https://www.google.com/maps/search/?api=1&query=${place.coordinates.lat},${place.coordinates.lng}`
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.address)}`;
   const socialLinks = place.socialLinks || {};
-  const academics = place.attributes || {};
+  const rawAcademics = place.attributes || {};
+  const academics = {
+    ...rawAcademics,
+    principalMessage: rawAcademics.principalMessage || rawAcademics.principal?.message,
+    // Keep the complete entries. The school layout uses their descriptions,
+    // dates and uploaded images in addition to their names.
+    faculty: (rawAcademics.faculty || []).filter((member) => typeof member === 'string' || member?.name),
+    achievements: (rawAcademics.achievements || []).filter((item) => typeof item === 'string' || item?.title || item?.name),
+    events: (rawAcademics.events || rawAcademics.schoolEvents || []).filter((item) => typeof item === 'string' || item?.name || item?.title),
+  };
+  if ((!place.facilities || place.facilities.length === 0) && rawAcademics.schoolFacilities?.length) {
+    place.facilities = rawAcademics.schoolFacilities.map((facility) => facility.name).filter(Boolean);
+  }
   const gallery = place.images || [];
+  const pageType = place.pageType === 'dynamic' ? 'dynamic' : 'static';
   const isSchoolCategory = ['school', 'schools'].includes((place.category?.slug || '').toLowerCase()) || ['school', 'schools'].includes((place.category?.name || '').toLowerCase());
+  const isCollegeCategory = ['college', 'colleges'].includes((place.category?.slug || '').toLowerCase()) || ['college', 'colleges'].includes((place.category?.name || '').toLowerCase());
+  const isUniversityCategory = ['university', 'universities'].includes((place.category?.slug || '').toLowerCase()) || ['university', 'universities'].includes((place.category?.name || '').toLowerCase());
+  const isSolarCategory = ['solar'].includes((place.category?.slug || '').toLowerCase()) || ['solar'].includes((place.category?.name || '').toLowerCase());
 
+  // School listings always use the full school website layout so their
+  // submitted academic, media, admissions, and campus sections are visible.
   if (isSchoolCategory) {
     return (
       <>
-        <SchoolDetailLayout
+        <SunriseSchoolPage
           place={place}
           mapsUrl={mapsUrl}
           socialLinks={socialLinks}
@@ -315,6 +419,33 @@ export default function PlaceDetailPage() {
           onShare={handleShare}
           onReport={() => setShowReport(true)}
           onDelete={user?.role === 'admin' ? handleAdminDelete : null}
+        />
+        {showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}
+      </>
+    );
+  }
+
+  if (isCollegeCategory) {
+    return <CollegePage place={place} mapsUrl={mapsUrl} onShare={handleShare} onReport={() => setShowReport(true)} />;
+  }
+
+  if (isUniversityCategory) {
+    return <UniversityPage place={place} mapsUrl={mapsUrl} onShare={handleShare} onReport={() => setShowReport(true)} />;
+  }
+
+  if (isSolarCategory) {
+    return <SolarPage place={place} />;
+  }
+
+  if (pageType === 'dynamic') {
+    return (
+      <>
+        <BusinessPageLayouts
+          place={place}
+          mapsUrl={mapsUrl}
+          onShare={handleShare}
+          onReport={() => setShowReport(true)}
+          pageType={pageType}
         />
         {showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}
       </>

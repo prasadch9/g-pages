@@ -29,6 +29,7 @@ const Location = require('../models/Location');
 const Category = require('../models/Category');
 const Place = require('../models/Place');
 const User = require('../models/User');
+const { getCategoryGroup } = require('../config/categoryModules');
 
 
 // ============================================================
@@ -241,7 +242,7 @@ const REQUESTED_CATEGORY_NAMES = [
   'Restaurants', 'Coffee Shops', 'Sweet Shops & Bakery', 'Food Processing',
   'Shopping Malls', 'Boutique', 'Home Appliances', 'Mattress Shops', 'Nurseries',
   'Car Showrooms',
-  'Small Scale Industries', 'Trading Businesses',
+  'Small Scale Industries', 'Trading Businesses', 'Solar',
   'Consultancies', 'Agencies', 'Manpower Agencies', 'Professions',
   'Packers & Movers',
   'Sculptures (Arts)',
@@ -253,6 +254,7 @@ const LEGACY_FILTERS = Object.fromEntries(
 
 const CATEGORIES = REQUESTED_CATEGORY_NAMES.map((name, index) => ({
   name,
+  group: getCategoryGroup(name),
   order: index + 1,
   ...(LEGACY_FILTERS[name] ? { filters: LEGACY_FILTERS[name] } : {}),
 }));
@@ -359,6 +361,7 @@ const run = async () => {
           $set: {
             name: category.name,
             slug: slug,
+            group: category.group,
             order: category.order,
             filters: category.filters || [],
           },
@@ -563,6 +566,9 @@ const run = async () => {
           {
             $set: {
               name, slug: createSlug(name), category: category._id,
+              categoryGroup: category.group || getCategoryGroup(category.name),
+              subcategory: category.name,
+              pageType: 'static', applicationStatus: 'approved', isPublished: true,
               location: { state: state._id, district: city.parent._id, city: city._id, area: area?._id || null },
               address: `${area?.name || city.name} Main Road, ${city.name}, Andhra Pradesh`,
               description: `A trusted, locally loved ${category.name.toLowerCase()} serving families and visitors across ${city.name}.`,

@@ -51,7 +51,7 @@ const createReview = async (req, res, next) => {
       title: 'New review received',
       message: `${req.user.name} left a ${rating}-star review on ${placeDoc.name}.`,
       type: 'review_activity',
-      link: `/places/${placeDoc._id}`,
+      link: `/place/${placeDoc._id}`,
     });
 
     res.status(201).json({ success: true, message: 'Review submitted.', data: review });

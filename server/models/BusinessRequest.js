@@ -23,8 +23,8 @@ const businessRequestSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected'],
-      default: 'pending',
+      enum: ['draft', 'submitted', 'under_review', 'approved', 'rejected', 'resubmitted'],
+      default: 'submitted',
     },
 
     rejectionReason: {
@@ -40,6 +40,21 @@ const businessRequestSchema = new mongoose.Schema(
     },
 
     reviewedAt: {
+      type: Date,
+      default: null,
+    },
+
+    submittedAt: {
+      type: Date,
+      default: Date.now,
+    },
+
+    approvedAt: {
+      type: Date,
+      default: null,
+    },
+
+    publishedAt: {
       type: Date,
       default: null,
     },
