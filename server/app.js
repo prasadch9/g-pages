@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -16,12 +17,24 @@ const reportRoutes = require('./routes/reportRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const enquiryRoutes = require('./routes/enquiryRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
+const publicApiOrigin = (process.env.PUBLIC_API_URL || '').replace(/\/$/, '');
+const imageSources = ["'self'", 'data:', 'blob:', 'https:', ...(publicApiOrigin ? [publicApiOrigin] : ['http://localhost:5000'])];
 
 // --- Security & core middleware ---
-app.use(helmet()); // sensible secure HTTP headers
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: {
+      directives: {
+        'img-src': imageSources,
+      },
+    },
+  })
+); // sensible secure HTTP headers
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -39,10 +52,11 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json({ limit: '10kb' })); // small limit — this API doesn't need large JSON bodies
+app.use(express.json({ limit: '15mb' })); // listings may contain compressed upload-only image data
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(mongoSanitize()); // strips $ and . operators from user input to prevent NoSQL injection
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
@@ -72,6 +86,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/enquiries', enquiryRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/uploads', uploadRoutes);
 
 // --- Error handling (must be last) ---
 app.use(notFound);

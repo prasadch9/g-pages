@@ -4,6 +4,11 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import FavoriteButton from '../components/FavoriteButton';
 import ReviewsSection from '../components/ReviewsSection';
+import AutomotiveBusinessPage from '../components/AutomotiveBusinessPage';
+import ShoppingBusinessPage from '../components/ShoppingBusinessPage';
+import ShoppingMallBusinessPage from '../components/ShoppingMallBusinessPage';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 const DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
 const REPORT_REASONS = [
@@ -14,6 +19,12 @@ const REPORT_REASONS = [
   ['inappropriate_content', 'Inappropriate content'],
   ['other', 'Other'],
 ];
+
+const toInstagramUrl = (value) => {
+  if (!value) return null;
+  if (value.startsWith('http')) return value;
+  return `https://instagram.com/${value.replace(/^@/, '').trim()}`;
+};
 
 function EnquiryForm({ placeId }) {
   const { user } = useAuth();
@@ -143,12 +154,13 @@ function SchoolDetailLayout({ place, mapsUrl, socialLinks, academics, onShare, o
   const whatsappUrl = socialLinks.whatsapp
     ? (socialLinks.whatsapp.startsWith('http') ? socialLinks.whatsapp : `https://wa.me/${socialLinks.whatsapp.replace(/\D/g, '')}`)
     : null;
+  const instagramUrl = toInstagramUrl(socialLinks.instagram);
 
   return (
     <div className="container-page py-8 sm:py-10">
       <section className="overflow-hidden rounded-[1.5rem] border border-[#b8e7e5] bg-white shadow-[0_18px_55px_rgba(16,42,67,0.12)]">
         <div className="relative h-[330px] overflow-hidden bg-[#082f49] sm:h-[430px]">
-          {cover ? <img src={cover} alt={`${place.name} cover`} className="absolute inset-0 h-full w-full object-cover" /> : <div className="absolute inset-0 bg-[linear-gradient(135deg,#073b4c,#0b7285_55%,#14b8a6)]" />}
+          {cover ? <img src={cover} alt={`${place.name} cover`} className="absolute inset-0 h-full w-full object-contain" /> : <div className="absolute inset-0 bg-[linear-gradient(135deg,#073b4c,#0b7285_55%,#14b8a6)]" />}
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,31,49,.08)_10%,rgba(4,31,49,.32)_44%,rgba(4,31,49,.96)_100%)]" />
           <div className="absolute left-5 top-5 flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-white backdrop-blur-sm sm:left-8 sm:top-8">
             <span className="h-2 w-2 rounded-full bg-cyan-300" /> {place.category?.name || 'School'}
@@ -204,13 +216,13 @@ function SchoolDetailLayout({ place, mapsUrl, socialLinks, academics, onShare, o
               ) : <p className="mt-3 text-sm text-ink/50">Highlights will be updated soon.</p>}
             </div>
           </div>
-          {(place.phone || place.email || whatsappUrl || socialLinks.instagram || socialLinks.facebook || website) && (
+          {(place.phone || place.email || whatsappUrl || instagramUrl || socialLinks.facebook || website) && (
             <div className="mt-7 border-t border-line pt-5">
               <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-cyan-700">Contact</h3>
               <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {place.phone && <ContactLink href={`tel:${place.phone}`} icon="☎" label="Call">{place.phone}</ContactLink>}
                 {whatsappUrl && <ContactLink href={whatsappUrl} icon="◉" label="WhatsApp" />}
-                {socialLinks.instagram && <ContactLink href={socialLinks.instagram} icon="◎" label="Instagram" />}
+                {instagramUrl && <ContactLink href={instagramUrl} icon="◎" label="Instagram" />}
                 {socialLinks.facebook && <ContactLink href={socialLinks.facebook} icon="f" label="Facebook" />}
                 {website && <ContactLink href={website} icon="↗" label="Website" />}
               </div>
@@ -255,6 +267,27 @@ export default function PlaceDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showReport, setShowReport] = useState(false);
+
+  const handleReviewPosted = (change) => {
+    setPlace((current) => {
+      if (!current) return current;
+      const previousCount = current.rating?.count || 0;
+      const previousAverage = current.rating?.average || 0;
+      let count = previousCount;
+      let total = previousAverage * previousCount;
+      if (change.type === 'create') {
+        count += 1;
+        total += change.rating;
+      } else if (change.type === 'edit') {
+        total += change.newRating - change.oldRating;
+      } else if (change.type === 'delete') {
+        count = Math.max(0, count - 1);
+        total -= change.oldRating;
+      }
+      const average = count ? Math.round((total / count) * 10) / 10 : 0;
+      return { ...current, rating: { average, count } };
+    });
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -303,10 +336,14 @@ export default function PlaceDetailPage() {
   const academics = place.attributes || {};
   const gallery = place.images || [];
   const isSchoolCategory = ['school', 'schools'].includes((place.category?.slug || '').toLowerCase()) || ['school', 'schools'].includes((place.category?.name || '').toLowerCase());
+  const isAutomotiveCategory = ['automotive', 'automotive-dealers', 'car-showrooms', 'automobile-dealers'].includes((place.category?.slug || '').toLowerCase()) || ['automotive', 'car showrooms', 'automobile dealers'].includes((place.category?.name || '').toLowerCase());
+  const isShoppingCategory = ['shopping-retail', 'shopping-malls', 'boutique', 'home-appliances', 'furniture-shops', 'mattress-shops', 'nurseries', 'fashion-stores', 'gift-stationery', 'groceries-essentials'].includes((place.category?.slug || '').toLowerCase()) || ['shopping & retail', 'shopping malls', 'boutique', 'home appliances', 'furniture shops', 'mattress shops', 'nurseries', 'fashion stores', 'gift & stationery', 'groceries & essentials'].includes((place.category?.name || '').toLowerCase());
+  const isShoppingMall = (place.attributes?.subCategory || '').toLowerCase() === 'shopping malls' || ((place.category?.slug || '').toLowerCase() === 'shopping-malls' && !(place.attributes?.subCategory));
 
   if (isSchoolCategory) {
     return (
       <>
+        <Header />
         <SchoolDetailLayout
           place={place}
           mapsUrl={mapsUrl}
@@ -315,13 +352,58 @@ export default function PlaceDetailPage() {
           onShare={handleShare}
           onReport={() => setShowReport(true)}
           onDelete={user?.role === 'admin' ? handleAdminDelete : null}
+          onReviewPosted={handleReviewPosted}
+        />
+        <Footer />
+        {showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}
+      </>
+    );
+  }
+
+  if (isAutomotiveCategory) {
+    return (
+      <>
+        <AutomotiveBusinessPage
+          place={place}
+          mapsUrl={mapsUrl}
+          socialLinks={socialLinks}
+          onShare={handleShare}
+          onReport={() => setShowReport(true)}
+          onDelete={user?.role === 'admin' ? handleAdminDelete : null}
+          onReviewPosted={handleReviewPosted}
         />
         {showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}
       </>
     );
   }
 
+  if (isShoppingCategory) {
+    return (
+      <>
+        {isShoppingMall ? <ShoppingMallBusinessPage
+          place={place}
+          mapsUrl={mapsUrl}
+          socialLinks={socialLinks}
+          onShare={handleShare}
+          onReport={() => setShowReport(true)}
+          onReviewPosted={handleReviewPosted}
+        /> : <ShoppingBusinessPage
+          place={place}
+          mapsUrl={mapsUrl}
+          socialLinks={socialLinks}
+          onShare={handleShare}
+          onReport={() => setShowReport(true)}
+          onDelete={user?.role === 'admin' ? handleAdminDelete : null}
+          onReviewPosted={handleReviewPosted}
+        />}
+        {showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}
+      </>
+    );
+  }
+
   return (
+    <>
+    <Header />
     <div className="container-page py-10">
       {/* Header */}
       <div className="flex flex-col gap-4 border-b border-line pb-6 sm:flex-row sm:items-start sm:justify-between">
@@ -359,7 +441,7 @@ export default function PlaceDetailPage() {
 
       {place.coverImage && (
         <div className="mt-8 overflow-hidden rounded-xl border border-line bg-ink/5 shadow-sm">
-          <img src={place.coverImage} alt={`${place.name} cover`} className="h-56 w-full object-cover sm:h-80" />
+          <img src={place.coverImage} alt={`${place.name} cover`} className="h-56 w-full object-contain sm:h-80" />
         </div>
       )}
 
@@ -369,7 +451,7 @@ export default function PlaceDetailPage() {
           {gallery.length > 0 && (
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {gallery.map((img, i) => (
-                <img key={i} src={img} alt={`${place.name} photo ${i + 1}`} className="h-32 w-full rounded-lg object-cover transition hover:scale-[1.02] sm:h-36" />
+                <img key={i} src={img} alt={`${place.name} photo ${i + 1}`} className="h-32 w-full rounded-lg object-contain transition sm:h-36" />
               ))}
             </div>
           )}
@@ -461,7 +543,7 @@ export default function PlaceDetailPage() {
                 </a>
               )}
               {socialLinks.whatsapp && <a href={socialLinks.whatsapp.startsWith('http') ? socialLinks.whatsapp : `https://wa.me/${socialLinks.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-vermilion hover:underline">WhatsApp</a>}
-              {socialLinks.instagram && <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-vermilion hover:underline">Instagram</a>}
+              {toInstagramUrl(socialLinks.instagram) && <a href={toInstagramUrl(socialLinks.instagram)} target="_blank" rel="noopener noreferrer" className="text-vermilion hover:underline">Instagram</a>}
               {socialLinks.facebook && <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="text-vermilion hover:underline">Facebook</a>}
             </div>
           </div>
@@ -472,5 +554,7 @@ export default function PlaceDetailPage() {
 
       {showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}
     </div>
+    <Footer />
+    </>
   );
 }

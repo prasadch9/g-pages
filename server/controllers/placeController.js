@@ -95,7 +95,8 @@ const getPlaceById = async (req, res, next) => {
       .populate('location.state location.district location.city location.area', 'name slug')
       .populate('owner', 'name email');
 
-    if (!place || place.status !== 'approved') {
+    const isOwner = place && req.user && place.owner?._id?.toString() === req.user._id.toString();
+    if (!place || (place.status !== 'approved' && !isOwner)) {
       return next(new AppError('Listing not found.', 404));
     }
 
@@ -159,7 +160,7 @@ const createPlace = async (req, res, next) => {
   }
 };
 
-/** PUT /api/places/:id — owner edits their own listing; edits re-enter pending review. */
+/** PUT /api/places/:id — approved listings stay live when their owner edits them. */
 const updatePlace = async (req, res, next) => {
   try {
     const place = await Place.findById(req.params.id);
@@ -170,10 +171,21 @@ const updatePlace = async (req, res, next) => {
       return next(new AppError('You do not have permission to edit this listing.', 403));
     }
 
-    Object.assign(place, req.body);
+    const updates = { ...req.body };
+    delete updates.owner;
+    delete updates.status;
+    delete updates.reviewedBy;
+    delete updates.reviewedAt;
+    Object.assign(place, updates);
     if (isOwner && req.user.role !== 'admin') {
-      place.status = 'pending'; // owner edits require re-approval
-      place.rejectionReason = null;
+      const wasPreviouslyApproved = place.status === 'pending' && place.reviewedAt && !place.rejectionReason;
+      if (place.status === 'approved' || wasPreviouslyApproved) {
+        place.status = 'approved';
+        place.rejectionReason = null;
+      } else {
+        place.status = 'pending';
+        place.rejectionReason = null;
+      }
     }
     await place.save();
 
@@ -244,6 +256,7 @@ const getMyPlaces = async (req, res, next) => {
   try {
     const places = await Place.find({ owner: req.user._id })
       .populate('category', 'name slug')
+      .populate('location.state location.district location.city location.area', 'name slug')
       .sort('-createdAt');
     res.status(200).json({ success: true, data: places });
   } catch (error) {

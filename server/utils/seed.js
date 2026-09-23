@@ -568,6 +568,11 @@ const run = async () => {
               description: `A trusted, locally loved ${category.name.toLowerCase()} serving families and visitors across ${city.name}.`,
               phone: '9876543210', email: 'hello@googlepages.local', website: 'https://www.google.com',
               images: [image, IMAGE_SETS[(categoryIndex + 3) % IMAGE_SETS.length]], coverImage: image,
+              videos: category.name === 'Car Showrooms' ? [
+                'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                'https://www.youtube.com/watch?v=ysz5S6PUM-U',
+                'https://www.youtube.com/watch?v=jNQXAC9IVRw',
+              ] : [],
               services: ['Walk-in service', 'Online enquiries', 'Verified information'],
               facilities: ['Easy access', 'Customer support', 'Digital payments'],
               coordinates: { lat: 16.98 + (categoryIndex % 5) * 0.006, lng: 81.78 + (categoryIndex % 4) * 0.006 },

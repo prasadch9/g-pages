@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -28,9 +28,12 @@ import SearchResultsPage from './pages/SearchResultsPage';
 import WhatsAppButton from './components/WhatsAppButton';
 
 export default function App() {
+  const location = useLocation();
+  const isPlaceRoute = location.pathname.startsWith('/place/');
+
   return (
     <div className="flex min-h-screen flex-col bg-paper">
-      <Header />
+      {!isPlaceRoute && <Header />}
       <main className="flex-1 bg-[radial-gradient(circle_at_8%_8%,rgba(20,184,166,0.10),transparent_22rem),radial-gradient(circle_at_92%_35%,rgba(59,130,246,0.09),transparent_26rem)]">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -70,6 +73,14 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/business/listings/:id/edit"
+            element={
+              <ProtectedRoute roles={['business']}>
+                <CreateListing />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/business/register" element={<Register />} />
 
           {/* Admin area */}
@@ -96,8 +107,8 @@ export default function App() {
           <Route path="*" element={<ComingSoon title="This page" />} />
         </Routes>
       </main>
-      <Footer />
-      <WhatsAppButton />
+      {!isPlaceRoute && <Footer />}
+      {!isPlaceRoute && <WhatsAppButton />}
     </div>
   );
 }

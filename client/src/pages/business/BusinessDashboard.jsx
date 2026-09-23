@@ -27,6 +27,16 @@ export default function BusinessDashboard() {
     {}
   );
 
+  const deleteListing = async (place) => {
+    if (!window.confirm(`Delete ${place.name}? This cannot be undone.`)) return;
+    try {
+      await api.delete(`/places/${place._id}`);
+      setPlaces((current) => current.filter((item) => item._id !== place._id));
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   return (
     <div className="container-page py-12">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -88,6 +98,14 @@ export default function BusinessDashboard() {
               >
                 {place.status}
               </span>
+              <div className="flex gap-2">
+                <Link to={`/business/listings/${place._id}/edit`} className="rounded border border-line px-3 py-1.5 text-xs font-medium text-ink hover:border-ink/40">
+                  Edit
+                </Link>
+                <button type="button" onClick={() => deleteListing(place)} className="rounded border border-vermilion/40 px-3 py-1.5 text-xs font-medium text-vermilion hover:bg-vermilion/10">
+                  Delete
+                </button>
+              </div>
             </div>
           ))}
         </div>

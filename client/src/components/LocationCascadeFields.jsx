@@ -19,7 +19,6 @@ export default function LocationCascadeFields({ value, onChange }) {
   const [states, setStates] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [cities, setCities] = useState([]);
-  const [areas, setAreas] = useState([]);
 
   useEffect(() => {
     api
@@ -53,22 +52,11 @@ export default function LocationCascadeFields({ value, onChange }) {
       });
   }, [value.district]);
 
-  useEffect(() => {
-    if (!value.city) return setAreas([]);
-    api
-      .get(`/locations/areas/${value.city}`)
-      .then((res) => setAreas(extractList(res)))
-      .catch((err) => {
-        console.error('[LocationCascadeFields] Failed to fetch areas:', err);
-        setAreas([]);
-      });
-  }, [value.city]);
-
   const set = (field) => (e) => {
     const next = { ...value, [field]: e.target.value };
-    if (field === 'state') { next.district = ''; next.city = ''; next.area = ''; }
-    if (field === 'district') { next.city = ''; next.area = ''; }
-    if (field === 'city') { next.area = ''; }
+    if (field === 'state') { next.district = ''; next.city = ''; next.areaText = ''; }
+    if (field === 'district') { next.city = ''; next.areaText = ''; }
+    if (field === 'city') { next.areaText = ''; }
     onChange(next);
   };
 
@@ -99,11 +87,8 @@ export default function LocationCascadeFields({ value, onChange }) {
         </select>
       </div>
       <div>
-        <label className="text-sm text-ink/70">Area (optional)</label>
-        <select className={selectClass} value={value.area} onChange={set('area')} disabled={!value.city}>
-          <option value="">Select area</option>
-          {areas.map((a) => (<option key={a._id} value={a._id}>{a.name}</option>))}
-        </select>
+        <label className="text-sm text-ink/70">Area</label>
+        <input className={selectClass} value={value.areaText || ''} onChange={set('areaText')} disabled={!value.city} required placeholder="Enter area or locality" />
       </div>
     </>
   );

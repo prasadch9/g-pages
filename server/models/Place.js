@@ -48,6 +48,12 @@ const placeSchema = new mongoose.Schema(
         ref: 'Location',
         default: null,
       },
+
+      areaText: {
+        type: String,
+        default: '',
+        trim: true,
+      },
     },
 
     address: {
@@ -106,6 +112,11 @@ const placeSchema = new mongoose.Schema(
         type: String,
         default: null,
       },
+
+      chatSupport: {
+        type: String,
+        default: null,
+      },
     },
 
     images: [
@@ -124,10 +135,21 @@ const placeSchema = new mongoose.Schema(
       default: null,
     },
 
+    aboutImage: {
+      type: String,
+      default: null,
+    },
+
     video: {
       type: String,
       default: null,
     },
+
+    videos: [
+      {
+        type: String,
+      },
+    ],
 
     services: [
       {

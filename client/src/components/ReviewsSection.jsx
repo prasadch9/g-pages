@@ -21,7 +21,7 @@ function Stars({ value, onChange }) {
   );
 }
 
-export default function ReviewsSection({ placeId }) {
+export default function ReviewsSection({ placeId, onReviewPosted }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,6 +30,7 @@ export default function ReviewsSection({ placeId }) {
   const [loading, setLoading] = useState(true);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [editingReview, setEditingReview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -56,7 +57,14 @@ export default function ReviewsSection({ placeId }) {
     setError('');
     setSubmitting(true);
     try {
-      await api.post('/reviews', { place: placeId, rating, comment });
+      if (editingReview) {
+        await api.put(`/reviews/${editingReview._id}`, { rating, comment });
+        onReviewPosted?.({ type: 'edit', oldRating: editingReview.rating, newRating: rating });
+        setEditingReview(null);
+      } else {
+        await api.post('/reviews', { place: placeId, rating, comment });
+        onReviewPosted?.({ type: 'create', rating });
+      }
       setRating(0);
       setComment('');
       loadReviews();
@@ -64,6 +72,31 @@ export default function ReviewsSection({ placeId }) {
       setError(err.message);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const startEditing = (review) => {
+    setEditingReview(review);
+    setRating(review.rating);
+    setComment(review.comment);
+    setError('');
+  };
+
+  const cancelEditing = () => {
+    setEditingReview(null);
+    setRating(0);
+    setComment('');
+    setError('');
+  };
+
+  const deleteReview = async (review) => {
+    if (!window.confirm('Delete this review? This cannot be undone.')) return;
+    try {
+      await api.delete(`/reviews/${review._id}`);
+      setReviews((current) => current.filter((item) => item._id !== review._id));
+      onReviewPosted?.({ type: 'delete', oldRating: review.rating });
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -90,8 +123,9 @@ export default function ReviewsSection({ placeId }) {
           disabled={submitting}
           className="mt-3 rounded bg-ink px-5 py-2 text-sm font-medium text-paper hover:bg-ink-light disabled:opacity-60"
         >
-          {submitting ? 'Posting…' : 'Post review'}
+          {submitting ? (editingReview ? 'Saving…' : 'Posting…') : (editingReview ? 'Save changes' : 'Post review')}
         </button>
+        {editingReview && <button type="button" onClick={cancelEditing} className="ml-2 mt-3 rounded border border-line px-5 py-2 text-sm text-ink/70 hover:border-ink/40">Cancel</button>}
       </form>
 
       <div className="mt-6 flex flex-col divide-y divide-line">
@@ -102,11 +136,21 @@ export default function ReviewsSection({ placeId }) {
         {reviews.map((r) => (
           <div key={r._id} className="py-4">
             <div className="flex items-center justify-between">
-              <span className="font-medium text-ink">{r.user?.name || 'Anonymous'}</span>
+              <div>
+                <p className="font-medium text-ink">{r.user?.name || 'Anonymous'}</p>
+                <p className="mt-1 text-xs text-ink/45">
+                  Reviewed by {r.user?.name || 'Anonymous'} on {new Date(r.createdAt).toLocaleDateString()}
+                </p>
+              </div>
               <span className="text-marigold-dark">{'★'.repeat(r.rating)}</span>
             </div>
             <p className="mt-1 text-[14px] text-ink/65">{r.comment}</p>
-            <p className="mt-1 text-xs text-ink/35">{new Date(r.createdAt).toLocaleDateString()}</p>
+            {user?._id === r.user?._id && (
+              <div className="mt-3 flex gap-3 text-xs font-medium">
+                <button type="button" onClick={() => startEditing(r)} className="text-ink/60 hover:text-ink">Edit review</button>
+                <button type="button" onClick={() => deleteReview(r)} className="text-vermilion hover:underline">Delete review</button>
+              </div>
+            )}
             {r.ownerReply?.text && (
               <div className="mt-2 rounded bg-ink/5 p-3 text-[13px] text-ink/70">
                 <span className="font-medium">Owner reply: </span>

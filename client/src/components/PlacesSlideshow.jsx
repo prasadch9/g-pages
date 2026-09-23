@@ -44,7 +44,7 @@ export default function PlacesSlideshow({ places = [] }) {
       onTouchEnd={onTouchEnd}
     >
       <div className="relative flex h-64 items-end sm:h-[300px]">
-        <img src={cover} alt={place.name} className="absolute inset-0 h-full w-full object-cover" />
+        <img src={cover} alt={place.name} className="absolute inset-0 h-full w-full object-contain" />
         <div className="relative z-10 w-full bg-gradient-to-t from-slate-950/90 via-slate-950/25 to-transparent p-5 pt-16">
           <p className="text-xs uppercase tracking-wide text-marigold">{place.category?.name}</p>
           <h3 className="mt-1 font-display text-2xl font-bold text-white">{place.name}</h3>

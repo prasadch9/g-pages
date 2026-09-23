@@ -28,7 +28,7 @@ export default function PlaceCard({ place }) {
       className="group flex flex-col overflow-hidden rounded-lg border border-line bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
     >
       <div className="relative flex h-36 items-center justify-center overflow-hidden bg-ink/5">
-        <img src={cover} alt={`${place.name} image`} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+        <img src={cover} alt={`${place.name} image`} loading="lazy" className="h-full w-full object-contain transition duration-500" />
         {place.verified && (
           <span className="absolute left-2 top-2 rounded bg-moss px-2 py-0.5 text-[11px] font-medium text-paper">
             Verified
