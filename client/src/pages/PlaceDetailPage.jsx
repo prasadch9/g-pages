@@ -4,7 +4,16 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import FavoriteButton from '../components/FavoriteButton';
 import ReviewsSection from '../components/ReviewsSection';
-import { resolveFoodBusinessType } from '../components/public/PublicProfileShared';
+import WeddingBusinessWebsite from '../components/public/WeddingBusinessWebsite';
+import PropertyBusinessWebsite from '../components/public/PropertyBusinessWebsite';
+import { resolveFoodBusinessType, resolvePropertyBusinessType, resolveWeddingBusinessType } from '../components/public/PublicProfileShared';
+import {
+  getLocationText,
+  getWebsiteUrl,
+  getWhatsAppUrl,
+  isHealthcareBusiness,
+  normalizeList,
+} from '../utils/healthcare';
 
 const DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
 const REPORT_REASONS = [
@@ -248,6 +257,368 @@ function SchoolDetailLayout({ place, mapsUrl, socialLinks, academics, onShare, o
   );
 }
 
+function HealthcareDetailLayout({ place, mapsUrl, onShare, onReport, onDelete }) {
+  const logo = place.logo || null;
+  const cover = place.coverImage || place.images?.[0] || null;
+  const gallery = (place.images || []).slice(0, 10);
+  const socialLinks = place.socialLinks || {};
+  const website = getWebsiteUrl(place.website);
+  const whatsappUrl = getWhatsAppUrl(socialLinks.whatsapp || place.phone);
+  const services = normalizeList(place.services || []);
+  const departments = normalizeList(place.attributes?.departments || place.departments || []);
+  const facilities = normalizeList(place.facilities || []);
+  const description = place.description || '';
+  const siteLinks = [
+    { label: 'Home', href: '#' },
+    { label: 'About', href: '#about' },
+    { label: 'Gallery', href: '#gallery' },
+    { label: 'Services', href: '#services' },
+    { label: 'Contact', href: '#contact' },
+  ];
+  const businessHours = Array.isArray(place.workingHours) ? place.workingHours : [];
+  const today = new Date().getDay();
+  const weekdayMap = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  const todayKey = weekdayMap[today];
+  const todayHours = businessHours.find((rule) => rule.day === todayKey);
+  const isOpen = todayHours ? !todayHours.closed && todayHours.open && todayHours.close : false;
+  const ratingValue = typeof place.rating?.average === 'number' ? place.rating.average : null;
+  const reviewsCount = typeof place.rating?.count === 'number' ? place.rating.count : 0;
+  const emergencyAvailable = Boolean(place.attributes?.emergencyAvailable ?? place.emergencyAvailable);
+  const emergencyPhone = place.attributes?.emergencyPhone || place.emergencyPhone || null;
+  const profileDescription = description.length > 260 ? `${description.slice(0, 260).trim()}…` : description;
+  const locationText = getLocationText(place.address || place.location?.city?.name || '');
+
+  return (
+    <div className="bg-white text-slate-900">
+      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
+              {logo ? (
+                <img src={logo} alt={`${place.name} logo`} className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-xl text-sky-700">✚</span>
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-lg font-semibold text-slate-900">{place.name}</p>
+            </div>
+          </div>
+
+          <nav className="hidden items-center gap-6 lg:flex">
+            {siteLinks.map((link) => (
+              <a key={link.label} href={link.href} className="text-sm font-medium text-slate-600 transition hover:text-sky-700">{link.label}</a>
+            ))}
+          </nav>
+
+          <div className="hidden items-center gap-3 md:flex">
+            <button type="button" aria-label="Search hospital" className="rounded-full border border-slate-200 p-2 text-slate-600 hover:border-sky-200 hover:text-sky-700">⌕</button>
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600">{getLocationText(place.location?.city?.name || place.city || place.location?.district?.name || '') || getLocationText(place.address)}</span>
+            <button type="button" className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700">Book Appointment</button>
+          </div>
+        </div>
+      </header>
+
+      <main className="pb-24">
+        <section className="mx-auto max-w-7xl px-4 pb-8 pt-6 sm:px-6 lg:px-8">
+          <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+            <div className="relative h-[420px] sm:h-[500px]">
+              {cover ? (
+                <img src={cover} alt={`${place.name} cover`} className="absolute inset-0 h-full w-full object-cover" />
+              ) : (
+                <div className="absolute inset-0 bg-[linear-gradient(135deg,#e0f2fe,#dbeafe,#eff6ff)]" />
+              )}
+              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,47,73,0.78),rgba(8,47,73,0.25),rgba(15,23,42,0.15))]" />
+              <div className="absolute inset-0 flex items-end">
+                <div className="grid w-full gap-6 px-5 pb-6 sm:px-8 sm:pb-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+                  <div className="max-w-2xl text-white">
+                    <div className="mb-4 flex items-center gap-3">
+                      <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-white/60 bg-white/10 backdrop-blur-sm">
+                        {logo ? <img src={logo} alt={`${place.name} logo`} className="h-full w-full object-cover" /> : <span className="text-2xl">✚</span>}
+                      </div>
+                      <div>
+                        <p className="text-sm uppercase tracking-[0.18em] text-sky-100">{place.category?.name || place.subcategory?.name || 'Healthcare'}</p>
+                        <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">{place.name}</h1>
+                      </div>
+                    </div>
+
+                    <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-slate-100">
+                      {ratingValue !== null && (
+                        <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 backdrop-blur-sm">
+                          <span className="text-yellow-300">★</span>
+                          <span>{ratingValue.toFixed(1)}</span>
+                          <span>({reviewsCount} reviews)</span>
+                        </span>
+                      )}
+                      {todayHours && (
+                        <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 ${isOpen ? 'border-emerald-300/60 bg-emerald-500/20 text-emerald-100' : 'border-red-300/60 bg-red-500/20 text-red-100'}`}>
+                          <span className="h-2 w-2 rounded-full bg-current" />
+                          {isOpen ? 'Open now' : 'Closed'}
+                        </span>
+                      )}
+                    </div>
+
+                    {(description || locationText) && (
+                      <div className="space-y-3 text-sm leading-relaxed text-slate-100/90">
+                        {description && <p>{profileDescription || description}</p>}
+                        {locationText && <p className="flex items-start gap-2"><span>📍</span><span>{locationText}</span></p>}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid gap-3">
+                    {gallery.slice(0, 2).map((image, index) => (
+                      <div key={`${image}-${index}`} className="h-28 overflow-hidden rounded-2xl border border-white/20 bg-white/5 shadow-lg sm:h-36">
+                        <img src={image} alt={`${place.name} ${index + 1}`} className="h-full w-full object-cover" loading="lazy" />
+                      </div>
+                    ))}
+                    {gallery.length === 0 && (
+                      <div className="flex h-28 items-center justify-center rounded-2xl border border-dashed border-white/40 bg-white/5 text-sm text-slate-100/80 sm:h-36">
+                        Hospital gallery will appear here when added.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-6 flex flex-wrap gap-2">
+            {place.phone && (
+              <a href={`tel:${place.phone}`} className="rounded-full bg-sky-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sky-800">Call</a>
+            )}
+            {whatsappUrl && (
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="rounded-full bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-600">WhatsApp</a>
+            )}
+            {place.address && (
+              <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="rounded-full bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-900">Directions</a>
+            )}
+            {website && (
+              <a href={website} target="_blank" rel="noopener noreferrer" className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:border-sky-200 hover:text-sky-700">Website</a>
+            )}
+            <button type="button" onClick={onShare} className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:border-sky-200 hover:text-sky-700">Share</button>
+            <div className="inline-flex rounded-full border border-slate-200 bg-white shadow-sm">
+              <FavoriteButton placeId={place._id} />
+            </div>
+            <button type="button" onClick={onReport} className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:border-red-200 hover:text-red-700">Report</button>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-5">
+            {place.name && <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-xs uppercase tracking-[0.12em] text-slate-500">Hospital Name</p><p className="mt-3 text-base font-semibold text-slate-900">{place.name}</p></div>}
+            {place.category?.name || place.subcategory?.name ? <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-xs uppercase tracking-[0.12em] text-slate-500">Category</p><p className="mt-3 text-base font-semibold text-slate-900">{place.subcategory?.name || place.category?.name}</p></div> : null}
+            {locationText ? <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-xs uppercase tracking-[0.12em] text-slate-500">Location</p><p className="mt-3 text-base font-semibold text-slate-900">{locationText}</p></div> : null}
+            {ratingValue !== null ? <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-xs uppercase tracking-[0.12em] text-slate-500">Rating</p><p className="mt-3 text-base font-semibold text-slate-900">{ratingValue.toFixed(1)} / 5</p></div> : null}
+            {reviewsCount > 0 ? <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-xs uppercase tracking-[0.12em] text-slate-500">Reviews</p><p className="mt-3 text-base font-semibold text-slate-900">{reviewsCount}</p></div> : null}
+            {todayHours && <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-xs uppercase tracking-[0.12em] text-slate-500">Status</p><p className={`mt-3 text-base font-semibold ${isOpen ? 'text-emerald-600' : 'text-red-600'}`}>{isOpen ? 'Open' : 'Closed'}</p></div>}
+            {emergencyAvailable && (
+              <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+                <p className="text-xs uppercase tracking-[0.12em] text-red-600">Emergency</p>
+                <p className="mt-3 text-base font-semibold text-red-700">Available {emergencyPhone ? `• ${emergencyPhone}` : ''}</p>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section id="about" className="mx-auto max-w-7xl px-4 pb-4 pt-8 sm:px-6 lg:px-8">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)] sm:p-8">
+            <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">About Us</p>
+                <h2 className="mt-2 text-3xl font-semibold text-slate-900">Trusted care, built around your wellbeing</h2>
+                <p className="mt-4 whitespace-pre-line text-base leading-relaxed text-slate-600">{description || 'Hospital information will be updated soon.'}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-50 p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">Contact</p>
+                <div className="mt-4 space-y-3 text-sm text-slate-600">
+                  {place.phone && <p>📞 {place.phone}</p>}
+                  {place.email && <p>✉️ {place.email}</p>}
+                  {place.address && <p>📍 {place.address}</p>}
+                  {website && <p>🌐 {website}</p>}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {services.length > 0 && (
+          <section id="services" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <div className="mb-5 flex items-end justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Specialised Care</p>
+                <h2 className="mt-2 text-3xl font-semibold text-slate-900">Medical Services</h2>
+              </div>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {services.map((service, index) => (
+                <div key={`${service}-${index}`} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-sky-200 hover:shadow-md">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-50 text-xl text-sky-700">{['🚑', '🩺', 'ICU', '🧪', '💊', '🧬', '🔪', '🤰'][index % 8]}</div>
+                  <h3 className="mt-4 text-lg font-semibold text-slate-900">{service}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">Available at this hospital with patient-focused care and expert support.</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {departments.length > 0 && (
+          <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Clinical Expertise</p>
+            <h2 className="mt-2 text-3xl font-semibold text-slate-900">Departments &amp; Specialities</h2>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {departments.map((department, index) => (
+                <div key={`${department}-${index}`} className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+                  <p className="text-base font-semibold text-slate-900">{department}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {gallery.length > 0 && (
+          <section id="gallery" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Hospital Gallery</p>
+                <h2 className="mt-2 text-3xl font-semibold text-slate-900">Hospital Gallery</h2>
+              </div>
+              {gallery.length > 0 && <button type="button" className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">View All Photos</button>}
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {gallery.slice(0, 10).map((image, index) => (
+                <div key={`${image}-${index}`} className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
+                  <img src={image} alt={`${place.name} photo ${index + 1}`} className="h-56 w-full object-cover transition duration-300 hover:scale-[1.02]" loading="lazy" />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {facilities.length > 0 && (
+          <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Infrastructure</p>
+            <h2 className="mt-2 text-3xl font-semibold text-slate-900">Facilities &amp; Infrastructure</h2>
+            <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {facilities.map((facility, index) => (
+                <div key={`${facility}-${index}`} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-xl text-emerald-700">{['🚑', 'ICU', '🏥', '🚐', '🅿️', '♿', '🪑', '☕'][index % 8]}</div>
+                  <h3 className="text-lg font-semibold text-slate-900">{facility}</h3>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <ReviewsSection placeId={place._id} />
+            </div>
+            <div id="contact" className="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm sm:p-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Location &amp; Contact</p>
+              <h2 className="mt-2 text-3xl font-semibold text-slate-900">Location &amp; Contact</h2>
+              <div className="mt-5 space-y-3 text-sm text-slate-600">
+                {place.address && <p>📍 {place.address}</p>}
+                {place.phone && <p>📞 {place.phone}</p>}
+                {place.email && <p>✉️ {place.email}</p>}
+                {website && <p>🌐 {website}</p>}
+                {businessHours.length > 0 && <p>🕒 {businessHours.map((hour) => `${hour.day?.toUpperCase()}: ${hour.closed ? 'Closed' : `${hour.open}–${hour.close}`}`).join(' | ')}</p>}
+              </div>
+              {place.address && (
+                <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                  <iframe title={`${place.name} map`} src={`https://www.google.com/maps?q=${encodeURIComponent(place.address)}&output=embed`} className="h-64 w-full border-0" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+                </div>
+              )}
+              <div className="mt-5 flex flex-wrap gap-3">
+                {place.address && <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="rounded-full bg-sky-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sky-800">View on Google Maps</a>}
+                {place.address && <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:border-sky-200 hover:text-sky-700">Get Directions</a>}
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-slate-200 bg-slate-900 text-slate-200">
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-4 lg:px-8">
+          <div>
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-slate-700 bg-slate-800">
+                {logo ? <img src={logo} alt={`${place.name} logo`} className="h-full w-full object-cover" /> : <span className="text-xl text-sky-300">✚</span>}
+              </div>
+              <div>
+                <p className="text-lg font-semibold text-white">{place.name}</p>
+              </div>
+            </div>
+            <p className="mt-4 text-sm leading-relaxed text-slate-300">{description || 'Healthcare services and patient support.'}</p>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">Quick Links</h3>
+            <div className="mt-4 flex flex-col gap-2 text-sm text-slate-300">
+              {siteLinks.map((link) => (
+                <a key={link.label} href={link.href} className="hover:text-white">{link.label}</a>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">Contact</h3>
+            <div className="mt-4 flex flex-col gap-2 text-sm text-slate-300">
+              {place.phone && <a href={`tel:${place.phone}`} className="hover:text-white">{place.phone}</a>}
+              {place.email && <a href={`mailto:${place.email}`} className="hover:text-white">{place.email}</a>}
+              {website && <a href={website} target="_blank" rel="noopener noreferrer" className="hover:text-white">{website}</a>}
+              {businessHours.length > 0 && <span>{businessHours.filter((hour) => hour.day).slice(0, 2).map((hour) => `${hour.day.toUpperCase()}: ${hour.closed ? 'Closed' : `${hour.open}–${hour.close}`}`).join(' • ')}</span>}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">Follow Us</h3>
+            <div className="mt-4 flex flex-wrap gap-2 text-sm text-slate-300">
+              {socialLinks.facebook && <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="rounded-full border border-slate-700 px-3 py-2 hover:border-sky-500 hover:text-white">Facebook</a>}
+              {socialLinks.instagram && <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="rounded-full border border-slate-700 px-3 py-2 hover:border-sky-500 hover:text-white">Instagram</a>}
+              {socialLinks.youtube && <a href={socialLinks.youtube} target="_blank" rel="noopener noreferrer" className="rounded-full border border-slate-700 px-3 py-2 hover:border-sky-500 hover:text-white">YouTube</a>}
+              {socialLinks.linkedin && <a href={socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="rounded-full border border-slate-700 px-3 py-2 hover:border-sky-500 hover:text-white">LinkedIn</a>}
+              {socialLinks.twitter && <a href={socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="rounded-full border border-slate-700 px-3 py-2 hover:border-sky-500 hover:text-white">X/Twitter</a>}
+            </div>
+          </div>
+        </div>
+        <div className="border-t border-slate-800">
+          <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 text-xs text-slate-400 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+            <p>© {new Date().getFullYear()} {place.name}. All rights reserved.</p>
+            <div className="flex flex-wrap gap-4">
+              <a href="#" className="hover:text-white">Privacy Policy</a>
+              <a href="#" className="hover:text-white">Terms &amp; Conditions</a>
+              <a href="#" className="hover:text-white">Sitemap</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-3 py-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:px-4 lg:hidden">
+        <div className="mx-auto flex max-w-md items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+              {logo ? <img src={logo} alt={`${place.name} logo`} className="h-full w-full object-cover" /> : <span className="text-xs text-sky-700">✚</span>}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-xs font-semibold text-slate-900">{place.name}</p>
+              {ratingValue !== null && <p className="text-[10px] text-slate-500">★ {ratingValue.toFixed(1)}</p>}
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            {place.phone && <a href={`tel:${place.phone}`} className="rounded-full bg-sky-600 px-3 py-2 text-xs font-semibold text-white">Call</a>}
+            {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="rounded-full bg-emerald-500 px-3 py-2 text-xs font-semibold text-white">WhatsApp</a>}
+            {place.address && <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="rounded-full bg-slate-800 px-3 py-2 text-xs font-semibold text-white">Map</a>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function PlaceDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -265,6 +636,14 @@ export default function PlaceDetailPage() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    const active = Boolean(place && (isHealthcareBusiness(place) || resolveWeddingBusinessType(place) || resolvePropertyBusinessType(place)));
+    window.dispatchEvent(new CustomEvent('gpages:healthcare-detail', { detail: { active } }));
+    return () => {
+      window.dispatchEvent(new CustomEvent('gpages:healthcare-detail', { detail: { active: false } }));
+    };
+  }, [place]);
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -305,11 +684,36 @@ export default function PlaceDetailPage() {
   const gallery = place.images || [];
   const isSchoolCategory = ['school', 'schools'].includes((place.category?.slug || '').toLowerCase()) || ['school', 'schools'].includes((place.category?.name || '').toLowerCase());
   const foodBusinessType = resolveFoodBusinessType(place);
+  const weddingBusinessType = resolveWeddingBusinessType(place);
+  const propertyBusinessType = resolvePropertyBusinessType(place);
   const businessType = place.attributes?.businessProfile?.businessType;
   const isRestaurant = businessType === 'restaurant'
     || (!businessType && !place.attributes?.businessProfile && Boolean(place.attributes?.restaurantProfile))
     || ['restaurant', 'restaurants'].includes((place.subcategory?.slug || place.category?.slug || '').toLowerCase())
     || ['restaurant', 'restaurants'].includes((place.subcategory?.name || place.category?.name || '').toLowerCase());
+
+  if (isHealthcareBusiness(place)) {
+    return (
+      <>
+        <HealthcareDetailLayout
+          place={place}
+          mapsUrl={mapsUrl}
+          onShare={handleShare}
+          onReport={() => setShowReport(true)}
+          onDelete={user?.role === 'admin' ? handleAdminDelete : null}
+        />
+        {showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}
+      </>
+    );
+  }
+
+  if (weddingBusinessType) {
+    return <WeddingBusinessWebsite place={place} weddingType={weddingBusinessType} />;
+  }
+
+  if (propertyBusinessType) {
+    return <PropertyBusinessWebsite place={place} propertyType={propertyBusinessType} />;
+  }
 
   if (isSchoolCategory) {
     return (

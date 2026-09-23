@@ -8,8 +8,14 @@ const { AppError } = require('../middleware/errorHandler');
 const uploadDirectory = path.join(__dirname, '..', 'uploads');
 fs.mkdirSync(uploadDirectory, { recursive: true });
 
+// ---- Image config ----
 const allowedMimeTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const allowedExtensions = new Set(['.jpg', '.jpeg', '.png', '.webp']);
+
+// ---- Video config ----
+const allowedVideoMimeTypes = new Set(['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska']);
+const allowedVideoExtensions = new Set(['.mp4', '.webm', '.mov', '.avi', '.mkv']);
+const MAX_VIDEO_SIZE = 200 * 1024 * 1024; // 200 MB
 
 const storage = multer.diskStorage({
   destination: uploadDirectory,
@@ -62,4 +68,32 @@ const uploadImage = (req, res, next) => {
   });
 };
 
-module.exports = { imageUpload, ensureMediaOwner, uploadImage, uploadDirectory };
+// ---- Video upload ----
+const videoFileFilter = (req, file, callback) => {
+  const extension = path.extname(file.originalname).toLowerCase();
+  if (!allowedVideoMimeTypes.has(file.mimetype) || !allowedVideoExtensions.has(extension)) {
+    return callback(new AppError('Only MP4, WebM, MOV, AVI, and MKV videos are allowed.', 400));
+  }
+  callback(null, true);
+};
+
+const videoUpload = multer({
+  storage,
+  fileFilter: videoFileFilter,
+  limits: { fileSize: MAX_VIDEO_SIZE, files: 1 },
+});
+
+const uploadVideo = (req, res, next) => {
+  if (!req.file) return next(new AppError('A video file is required.', 400));
+  const baseUrl = process.env.PUBLIC_API_URL?.replace(/\/+$/, '') || (req.protocol + '://' + req.get('host'));
+  res.status(201).json({
+    success: true,
+    data: {
+      url: baseUrl + '/uploads/' + req.file.filename,
+      filename: req.file.originalname,
+      size: req.file.size,
+    },
+  });
+};
+
+module.exports = { imageUpload, ensureMediaOwner, uploadImage, videoUpload, uploadVideo, uploadDirectory };

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { resolveFoodBusinessType } from './public/PublicProfileShared';
+import { resolveFoodBusinessType, resolvePropertyBusinessType, resolveWeddingBusinessType } from './public/PublicProfileShared';
 
 const FALLBACK_IMAGES = {
   schools: 'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=900&q=80',
@@ -22,7 +22,7 @@ export default function PlaceCard({ place }) {
   const categoryKey = place.category?.slug || place.category?.name?.toLowerCase();
   const fallbackImage = FALLBACK_IMAGES[categoryKey] || FALLBACK_IMAGES.default;
   const cover = place.coverImage || place.images?.[0] || fallbackImage;
-  const profileUrl = resolveFoodBusinessType(place) ? `/business/${place._id}` : `/place/${place._id}`;
+  const profileUrl = resolveFoodBusinessType(place) || resolveWeddingBusinessType(place) || resolvePropertyBusinessType(place) ? `/business/${place._id}` : `/place/${place._id}`;
 
   return (
     <Link

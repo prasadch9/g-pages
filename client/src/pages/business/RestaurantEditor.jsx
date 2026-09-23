@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
 import LocationCascadeFields from '../../components/LocationCascadeFields';
 import BusinessMediaUploader from '../../components/business/BusinessMediaUploader';
+import FoodBusinessEditor from './FoodBusinessEditor';
 
 const initialLocation = { state: '', district: '', city: '', area: '' };
 const defaultHours = {
@@ -48,6 +49,10 @@ function Field({ label, value, onChange, placeholder, type = 'text' }) {
   );
 }
 
+export default function RestaurantEditor({ place }) {
+  return place ? <FoodBusinessEditor place={place} businessType="restaurant" /> : <LegacyRestaurantEditor />;
+}
+
 function TextAreaField({ label, value, onChange, placeholder, rows = 4 }) {
   return (
     <label className="block text-sm font-medium text-[#4b3d3b]">
@@ -78,7 +83,7 @@ function DashboardCard({ title, subtitle, action, children }) {
   );
 }
 
-export default function RestaurantEditor() {
+function LegacyRestaurantEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -103,6 +108,7 @@ export default function RestaurantEditor() {
     foodType: 'Both',
     banner: '',
     aboutImage: '',
+    menu: '',
     specialOffers: '',
     openingHours: defaultHours,
     services: servicePresets,
@@ -161,6 +167,7 @@ export default function RestaurantEditor() {
           foodType: categorySpecific.foodType || profile.details?.foodType || 'Both',
           banner: common.coverImage || profile.details?.bannerImage || found.coverImage || '',
           aboutImage: common.aboutImage || profile.details?.aboutImage || '',
+          menu: categorySpecific.menu || profile.menu || profile.details?.menu || '',
           specialOffers: profile.specialOffers || '',
           openingHours: common.openingHours?.length ? common.openingHours.reduce((acc, item) => ({ ...acc, [item.day]: { open: item.open || '', close: item.close || '', closed: Boolean(item.closed) } }), { ...defaultHours }) : openingHours,
           services: Array.isArray(categorySpecific.services) && categorySpecific.services.length ? categorySpecific.services.map((service, index) => typeof service === 'string' ? { id: `${index + 1}`, name: service, icon: servicePresets[index % servicePresets.length].icon, description: 'Available at this restaurant.' } : service) : (Array.isArray(profile.services) && profile.services.length ? profile.services : (found.services || []).map((service, index) => ({ id: `${index + 1}`, name: service, icon: servicePresets[index % servicePresets.length].icon, description: 'Available at this restaurant.' }))),
@@ -272,6 +279,7 @@ export default function RestaurantEditor() {
                 foodType: restaurant.foodType,
                 services: restaurant.services,
                 infrastructure: restaurant.facilities,
+                menu: restaurant.menu,
                 specialOffers: restaurant.specialOffers,
               },
             },
@@ -635,6 +643,10 @@ export default function RestaurantEditor() {
 
               <DashboardCard title="Special Offers" subtitle="Optional. Add ongoing discounts, happy hours, or chef specials.">
                 <TextAreaField label="Special Offers" value={restaurant.specialOffers} onChange={(value) => updateField('specialOffers', value)} placeholder="Add ongoing offers, discounts, happy hours, or special dishes." rows={4} />
+              </DashboardCard>
+
+              <DashboardCard title="Daily Menu" subtitle="Update menu items, categories, descriptions, or prices whenever they change.">
+                <TextAreaField label="Menu" value={restaurant.menu} onChange={(value) => updateField('menu', value)} placeholder="Add today's menu, dishes, categories, and prices." rows={7} />
               </DashboardCard>
             </div>
 

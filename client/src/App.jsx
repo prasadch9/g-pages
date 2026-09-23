@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -32,12 +32,23 @@ import WhatsAppButton from './components/WhatsAppButton';
 
 export default function App() {
   const location = useLocation();
+  const [hideGlobalBranding, setHideGlobalBranding] = useState(false);
   const isRestaurantProfile = /^\/business\/[^/]+$/.test(location.pathname);
   const isBusinessOwnerSurface = /^(\/business\/dashboard|\/business\/listings\/new(?:\/restaurant)?|\/business\/listings\/[^/]+\/edit)$/.test(location.pathname);
 
+  useEffect(() => {
+    const handleHealthcareDetail = (event) => {
+      setHideGlobalBranding(Boolean(event.detail?.active));
+    };
+    window.addEventListener('gpages:healthcare-detail', handleHealthcareDetail);
+    return () => {
+      window.removeEventListener('gpages:healthcare-detail', handleHealthcareDetail);
+    };
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col bg-paper">
-      {!isRestaurantProfile && !isBusinessOwnerSurface && <Header />}
+      {!hideGlobalBranding && !isRestaurantProfile && !isBusinessOwnerSurface && <Header />}
       <main className="flex-1 bg-[radial-gradient(circle_at_8%_8%,rgba(20,184,166,0.10),transparent_22rem),radial-gradient(circle_at_92%_35%,rgba(59,130,246,0.09),transparent_26rem)]">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -74,7 +85,7 @@ export default function App() {
             path="/business/listings/new"
             element={
               <ProtectedRoute roles={['business']}>
-                <CreateListing foodDiningOnly />
+                <CreateListing />
               </ProtectedRoute>
             }
           />
@@ -82,7 +93,7 @@ export default function App() {
             path="/business/listings/new/restaurant"
             element={
               <ProtectedRoute roles={['business']}>
-                <CreateListing foodDiningOnly />
+                <CreateListing />
               </ProtectedRoute>
             }
           />
@@ -120,8 +131,8 @@ export default function App() {
           <Route path="*" element={<ComingSoon title="This page" />} />
         </Routes>
       </main>
-      {!isRestaurantProfile && !isBusinessOwnerSurface && <Footer />}
-      {!isRestaurantProfile && !isBusinessOwnerSurface && <WhatsAppButton />}
+      {!hideGlobalBranding && !isRestaurantProfile && !isBusinessOwnerSurface && <Footer />}
+      {!hideGlobalBranding && !isRestaurantProfile && !isBusinessOwnerSurface && <WhatsAppButton />}
     </div>
   );
 }

@@ -42,7 +42,7 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json({ limit: '10kb' })); // small limit — this API doesn't need large JSON bodies
+app.use(express.json({ limit: '50kb' })); // increased for video metadata payloads
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(mongoSanitize()); // strips $ and . operators from user input to prevent NoSQL injection

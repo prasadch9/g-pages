@@ -6,6 +6,13 @@ import CoffeeShopEditor from './CoffeeShopEditor';
 import BakeryEditor from './BakeryEditor';
 import CateringEditor from './CateringEditor';
 import FoodProcessingEditor from './FoodProcessingEditor';
+import HealthcareBusinessEditor from './HealthcareBusinessEditor';
+import BusinessCategoryForm from './BusinessCategoryForm';
+import WeddingBusinessForm from './WeddingBusinessForm';
+import PropertyBusinessForm from './PropertyBusinessForm';
+import { isHealthcareBusiness } from '../../utils/healthcare';
+import { resolveWeddingBusinessType } from '../../components/public/PublicProfileShared';
+import { resolvePropertyBusinessType } from '../../components/public/PublicProfileShared';
 
 const typeByName = {
   restaurants: 'restaurant',
@@ -44,10 +51,15 @@ export default function BusinessEditorPage() {
   if (!place) return <div className="container-page py-20 text-center text-ink/50">Loading business editor...</div>;
 
   const type = resolveType(place);
+  if (isHealthcareBusiness(place)) return <HealthcareBusinessEditor place={place} />;
+  const weddingType = resolveWeddingBusinessType(place);
+  if (weddingType) return <WeddingBusinessForm place={place} businessType={weddingType} />;
+  const propertyType = resolvePropertyBusinessType(place);
+  if (propertyType) return <PropertyBusinessForm place={place} propertyType={propertyType} />;
   if (type === 'restaurant') return <RestaurantEditor />;
   if (type === 'coffee-shop') return <CoffeeShopEditor place={place} />;
   if (type === 'bakery') return <BakeryEditor place={place} />;
   if (type === 'catering') return <CateringEditor place={place} />;
   if (type === 'food-processing') return <FoodProcessingEditor place={place} />;
-  return <RestaurantEditor />;
+  return <BusinessCategoryForm place={place} />;
 }

@@ -1,12 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 import api from '../services/api';
 import RestaurantProfilePage from './RestaurantProfilePage';
 import CoffeeShopProfilePage from './CoffeeShopProfilePage';
 import BakeryProfilePage from './BakeryProfilePage';
 import CateringProfilePage from './CateringProfilePage';
 import FoodProcessingProfilePage from './FoodProcessingProfilePage';
-import { ProfileLoading, resolveFoodBusinessType } from '../components/public/PublicProfileShared';
+import FoodBusinessWebsite from '../components/public/FoodBusinessWebsite';
+import WeddingBusinessWebsite from '../components/public/WeddingBusinessWebsite';
+import PropertyBusinessWebsite from '../components/public/PropertyBusinessWebsite';
+import { ProfileLoading, resolveFoodBusinessType, resolvePropertyBusinessType, resolveWeddingBusinessType } from '../components/public/PublicProfileShared';
+import { isHealthcareBusiness } from '../utils/healthcare';
 
 export default function PublicBusinessProfilePage() {
   const { businessId } = useParams();
@@ -23,8 +27,14 @@ export default function PublicBusinessProfilePage() {
   }, [businessId]);
 
   const type = useMemo(() => resolveFoodBusinessType(place), [place]);
+  const weddingType = useMemo(() => resolveWeddingBusinessType(place), [place]);
+  const propertyType = useMemo(() => resolvePropertyBusinessType(place), [place]);
   if (loading) return <ProfileLoading />;
   if (error || !place) return <ProfileLoading error={error || 'The business could not be found.'} />;
+  if (isHealthcareBusiness(place)) return <Navigate to={`/place/${place._id}`} replace />;
+  if (weddingType) return <WeddingBusinessWebsite place={place} weddingType={weddingType} />;
+  if (propertyType) return <PropertyBusinessWebsite place={place} propertyType={propertyType} />;
+  if (type) return <FoodBusinessWebsite place={place} />;
 
   if (type === 'restaurant') return <RestaurantProfilePage place={place} />;
   if (type === 'coffee-shop') return <CoffeeShopProfilePage place={place} />;
