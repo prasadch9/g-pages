@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import ReviewsSection from '../ReviewsSection';
 import FavoriteButton from '../FavoriteButton';
+import { PublicVideoCard } from './PublicProfileShared';
 import { getHealthcareSubcategory, getLocationText, getWebsiteUrl, getWhatsAppUrl, normalizeList } from '../../utils/healthcare';
 
 const navItems = [
@@ -44,6 +45,7 @@ export default function HealthcareWebsite({ place, mapsUrl, onShare, onReport, o
   const logo = place.logo || '';
   const cover = place.coverImage || '';
   const gallery = (place.images || []).filter(Boolean).slice(0, 10);
+  const videos = (place.attributes?.businessProfile?.common?.videos || place.attributes?.videos || []).filter(Boolean);
   const services = normalizeList(place.services || getValue(place, 'services', 'medicalServices', 'programs') || []);
   const departments = normalizeList(getValue(place, 'departments', 'specialities', 'specialties') || []);
   const facilities = normalizeList(place.facilities || getValue(place, 'facilities', 'equipment', 'amenities') || []);
@@ -70,6 +72,10 @@ export default function HealthcareWebsite({ place, mapsUrl, onShare, onReport, o
     appointmentUrl && ['Appointment', appointmentUrl, 'bg-teal-600'],
   ].filter(Boolean);
 
+  const currentNavItems = videos.length > 0
+    ? [...navItems.slice(0, 7), ['Videos', '#videos'], ...navItems.slice(7)]
+    : navItems;
+
   return <div className={isFitness ? 'min-h-screen bg-[#f2fbf7] text-slate-900' : 'min-h-screen bg-white text-slate-900'}>
     <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
@@ -77,11 +83,11 @@ export default function HealthcareWebsite({ place, mapsUrl, onShare, onReport, o
           <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50">{logo ? <img src={logo} alt={`${place.name} logo`} className="h-full w-full object-contain" /> : <span className="text-xl font-semibold text-teal-700">✚</span>}</div>
           <div className="min-w-0"><p className="truncate text-lg font-bold text-slate-900">{place.name}</p><p className="truncate text-xs text-slate-500">{place.attributes?.tagline || content.eyebrow}</p></div>
         </a>
-        <nav className="hidden items-center gap-5 xl:flex">{navItems.map(([label, href]) => <a key={label} href={href} className="text-xs font-semibold text-slate-600 hover:text-sky-700">{label}</a>)}</nav>
+        <nav className="hidden items-center gap-5 xl:flex">{currentNavItems.map(([label, href]) => <a key={label} href={href} className="text-xs font-semibold text-slate-600 hover:text-sky-700">{label}</a>)}</nav>
         <div className="hidden items-center gap-2 md:flex">{place.phone && <a href={`tel:${place.phone}`} className="text-sm font-semibold text-slate-700">{place.phone}</a>}{appointmentUrl && <a href={appointmentUrl} target="_blank" rel="noreferrer" className="rounded-lg bg-teal-600 px-3 py-2 text-xs font-bold text-white">Appointment</a>}</div>
         <button type="button" onClick={() => setMenuOpen((open) => !open)} className="rounded-lg border border-slate-200 px-3 py-2 text-sm md:hidden" aria-label="Open navigation">☰</button>
       </div>
-      {menuOpen && <nav className="border-t border-slate-200 bg-white px-4 py-3 md:hidden">{navItems.map(([label, href]) => <a key={label} href={href} onClick={() => setMenuOpen(false)} className="block py-2 text-sm font-semibold text-slate-700">{label}</a>)}</nav>}
+      {menuOpen && <nav className="border-t border-slate-200 bg-white px-4 py-3 md:hidden">{currentNavItems.map(([label, href]) => <a key={label} href={href} onClick={() => setMenuOpen(false)} className="block py-2 text-sm font-semibold text-slate-700">{label}</a>)}</nav>}
     </header>
 
     <main>
@@ -110,6 +116,18 @@ export default function HealthcareWebsite({ place, mapsUrl, onShare, onReport, o
       {facilities.length > 0 && <section id="facilities" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8"><p className="text-xs font-bold uppercase tracking-[0.2em] text-teal-700">{content.facilities}</p><div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{facilities.map((facility) => <div key={facility} className="rounded-2xl border border-slate-200 bg-white p-5 font-semibold shadow-sm">{facility}</div>)}</div></section>}
 
       {gallery.length > 0 && <section id="gallery" className="bg-slate-50"><div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8"><p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-700">{content.gallery}</p><div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{gallery.map((image, index) => <button key={`${image}-${index}`} type="button" onClick={() => setLightboxImage(image)} className="overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-sm"><img src={image} alt={`${place.name} gallery ${index + 1}`} loading="lazy" className="h-56 w-full object-cover transition hover:scale-[1.02]" /></button>)}</div></div></section>}
+
+      {videos.length > 0 && (
+        <section id="videos" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-teal-700">Video Gallery</p>
+          <h2 className="mt-2 text-3xl font-bold text-slate-900">Hospital &amp; Healthcare Videos</h2>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {videos.map((video, index) => (
+              <PublicVideoCard key={`${video.url || video}-${index}`} video={typeof video === 'string' ? { url: video } : video} />
+            ))}
+          </div>
+        </section>
+      )}
 
       <section id="contact" className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:px-8"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-teal-700">Contact</p><h2 className="mt-2 text-3xl font-bold text-slate-900">Visit or contact {place.name}</h2><div className="mt-5 space-y-3 text-sm text-slate-600">{location && <p>📍 {location}</p>}{place.phone && <p>📞 {place.phone}</p>}{place.email && <p>✉️ {place.email}</p>}{website && <p>🌐 {website}</p>}</div><div className="mt-6 flex flex-wrap gap-2">{actionLinks.map(([label, href, style]) => <a key={label} href={href} target={href.startsWith('http') ? '_blank' : undefined} rel="noreferrer" className={`rounded-lg px-4 py-2.5 text-sm font-bold ${style}`}>{label}</a>)}</div></div>{place.address && <iframe title={`${place.name} location`} src={`https://www.google.com/maps?q=${encodeURIComponent(place.address)}&output=embed`} className="h-72 w-full rounded-2xl border border-slate-200" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />}</section>
 

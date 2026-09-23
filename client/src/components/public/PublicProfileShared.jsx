@@ -183,7 +183,7 @@ const detectVideoSrcType = (video) => {
   return 'url';
 };
 
-function PublicVideoCard({ video }) {
+export function PublicVideoCard({ video }) {
   const [failed, setFailed] = useState(false);
   const srcType = detectVideoSrcType(video);
   let embedUrl = null;

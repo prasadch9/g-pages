@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import BusinessMediaUploader from '../../components/business/BusinessMediaUploader';
+import BusinessVideoUploader from '../../components/business/BusinessVideoUploader';
 
 const inputClass = 'mt-1 w-full rounded-xl border border-[#e7dcd7] bg-white px-3 py-2.5 text-sm text-[#2d2323] outline-none transition focus:border-[#0f6cbf] focus:ring-2 focus:ring-[#0f6cbf]/10';
 const splitList = (value = '') => String(value).split(/[,\n]/).map((item) => item.trim()).filter(Boolean);
@@ -24,6 +25,7 @@ export default function HealthcareBusinessEditor({ place }) {
     address: place.address || '',
     description: place.description || '',
     gallery: Array.isArray(place.images) ? place.images : [],
+    videos: place.attributes?.businessProfile?.common?.videos || place.attributes?.videos || [],
     services: asText(place.services || []),
     facilities: asText(place.facilities || []),
     departments: asText(place.attributes?.departments || []),
@@ -76,6 +78,7 @@ export default function HealthcareBusinessEditor({ place }) {
               logo: form.logo,
               coverImage: form.coverImage,
               gallery: nextGallery,
+              videos: form.videos || [],
               phone: form.phone,
               email: form.email,
               website: form.website,
@@ -206,6 +209,18 @@ export default function HealthcareBusinessEditor({ place }) {
               max={10}
               previewClassName="h-28"
             />
+          </section>
+
+          <section className="rounded-[24px] border border-[#ebded8] bg-white p-5 sm:p-7">
+            <h2 className="font-display text-2xl font-semibold">Video Gallery</h2>
+            <div className="mt-5">
+              <BusinessVideoUploader
+                label="Hospital Videos"
+                value={form.videos}
+                onChange={(videos) => setForm((current) => ({ ...current, videos }))}
+                placeId={place._id}
+              />
+            </div>
           </section>
 
           <div className="flex justify-end gap-3">

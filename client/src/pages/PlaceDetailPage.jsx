@@ -6,7 +6,7 @@ import FavoriteButton from '../components/FavoriteButton';
 import ReviewsSection from '../components/ReviewsSection';
 import WeddingBusinessWebsite from '../components/public/WeddingBusinessWebsite';
 import PropertyBusinessWebsite from '../components/public/PropertyBusinessWebsite';
-import { resolveFoodBusinessType, resolvePropertyBusinessType, resolveWeddingBusinessType } from '../components/public/PublicProfileShared';
+import { resolveFoodBusinessType, resolvePropertyBusinessType, resolveWeddingBusinessType, PublicVideoCard } from '../components/public/PublicProfileShared';
 import {
   getLocationText,
   getWebsiteUrl,
@@ -261,6 +261,7 @@ function HealthcareDetailLayout({ place, mapsUrl, onShare, onReport, onDelete })
   const logo = place.logo || null;
   const cover = place.coverImage || place.images?.[0] || null;
   const gallery = (place.images || []).slice(0, 10);
+  const videos = (place.attributes?.businessProfile?.common?.videos || place.attributes?.videos || []).filter(Boolean);
   const socialLinks = place.socialLinks || {};
   const website = getWebsiteUrl(place.website);
   const whatsappUrl = getWhatsAppUrl(socialLinks.whatsapp || place.phone);
@@ -272,6 +273,7 @@ function HealthcareDetailLayout({ place, mapsUrl, onShare, onReport, onDelete })
     { label: 'Home', href: '#' },
     { label: 'About', href: '#about' },
     { label: 'Gallery', href: '#gallery' },
+    ...(videos.length > 0 ? [{ label: 'Videos', href: '#videos' }] : []),
     { label: 'Services', href: '#services' },
     { label: 'Contact', href: '#contact' },
   ];
@@ -492,6 +494,22 @@ function HealthcareDetailLayout({ place, mapsUrl, onShare, onReport, onDelete })
                 <div key={`${image}-${index}`} className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
                   <img src={image} alt={`${place.name} photo ${index + 1}`} className="h-56 w-full object-cover transition duration-300 hover:scale-[1.02]" loading="lazy" />
                 </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {videos.length > 0 && (
+          <section id="videos" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Video Gallery</p>
+                <h2 className="mt-2 text-3xl font-semibold text-slate-900">Hospital &amp; Healthcare Videos</h2>
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {videos.map((video, index) => (
+                <PublicVideoCard key={`${video.url || video}-${index}`} video={typeof video === 'string' ? { url: video } : video} />
               ))}
             </div>
           </section>
