@@ -6,6 +6,8 @@ import { BUSINESS_PAGE_TYPES } from '../../data/businessPageConfig';
 import { CATEGORY_GROUPS } from '../../data/categoryGroups';
 import CollegeRegistrationFields from '../../components/CollegeRegistrationFields';
 import UniversityRegistrationFields from '../../components/UniversityRegistrationFields';
+import AcademyRegistrationFields from '../../components/AcademyRegistrationFields';
+import SportsAcademyRegistrationFields from '../../components/SportsAcademyRegistrationFields';
 
 const initialLocation = { state: '', district: '', city: '', area: '' };
 const initialForm = {
@@ -91,6 +93,9 @@ export default function CreateListing() {
   const [footerLogoFile, setFooterLogoFile] = useState(null);
   const [principalImageFile, setPrincipalImageFile] = useState(null);
   const [aboutImageFile, setAboutImageFile] = useState(null);
+  const [academyAboutImageFile, setAcademyAboutImageFile] = useState(null);
+  const [academyIntroVideoFile, setAcademyIntroVideoFile] = useState(null);
+  const [academyVideoThumbnailFile, setAcademyVideoThumbnailFile] = useState(null);
   const [facilityImageFiles, setFacilityImageFiles] = useState([]);
   const [galleryFiles, setGalleryFiles] = useState([]);
   const [videoFiles, setVideoFiles] = useState([]);
@@ -141,6 +146,8 @@ export default function CreateListing() {
   const isCollege = selectedCategory?.name?.toLowerCase() === 'colleges';
   const categoryName = (selectedCategory?.name || form.subcategory || '').toLowerCase().trim();
   const isUniversity = ['university', 'universities'].includes(categoryName);
+  const isAcademy = ['academy', 'academies', 'training institute', 'training institutes', 'training institution', 'training institutions'].includes(categoryName);
+  const isSportsAcademy = ['sports academy', 'sports academies'].includes(categoryName);
 
   const selectMainCategory = (e) => {
     setForm({ ...form, mainCategory: e.target.value, category: '', subcategory: '' });
@@ -175,6 +182,15 @@ export default function CreateListing() {
 
     setSubmitting(true);
     try {
+      const academyPhotoFiles = (form.academy?.galleryPhotos || []).map((item, index) => ({ item, index })).filter(({ item }) => item.file);
+      const academyVideoFiles = (form.academy?.galleryVideos || []).map((item, index) => ({ item, index })).filter(({ item }) => item.file);
+      const academyCourseFiles = (form.academy?.courses || []).map((item, index) => ({ item, index })).filter(({ item }) => item.file);
+      const academyForSave = isAcademy ? {
+        ...(form.academy || {}),
+        galleryPhotos: (form.academy?.galleryPhotos || []).map(({ file, ...item }, index) => ({ ...item, uploadIndex: file ? (form.academy.galleryPhotos.slice(0, index + 1).filter((entry) => entry.file).length - 1) : undefined })),
+        galleryVideos: (form.academy?.galleryVideos || []).map(({ file, ...item }, index) => ({ ...item, uploadIndex: file ? (form.academy.galleryVideos.slice(0, index + 1).filter((entry) => entry.file).length - 1) : undefined })),
+        courses: (form.academy?.courses || []).map(({ file, ...item }, index) => ({ ...item, uploadIndex: file ? (form.academy.courses.slice(0, index + 1).filter((entry) => entry.file).length - 1) : undefined })),
+      } : form.academy;
       const payload = new FormData();
       ['name', 'category', 'subcategory', 'address', 'description', 'phone', 'email', 'website'].forEach((field) => {
         if (form[field]) payload.append(field, form[field]);
@@ -193,6 +209,7 @@ export default function CreateListing() {
           // Preserve category-specific form fields, including the college
           // registration sections, in the public page data.
           ...form,
+          academy: academyForSave,
           courses: form.collegeType === 'Intermediate College' ? form.collegeGroups : form.collegePrograms,
           admissions: form.admissionProcess,
           placements: form.placementAvailable === 'Yes' ? [
@@ -270,6 +287,9 @@ export default function CreateListing() {
       if (footerLogoFile) payload.append('footerLogo', footerLogoFile);
       if (principalImageFile) payload.append('principalImage', principalImageFile);
       if (aboutImageFile) payload.append('aboutImage', aboutImageFile);
+      if (academyAboutImageFile) payload.append('academyAboutImage', academyAboutImageFile);
+      if (academyIntroVideoFile) payload.append('academyIntroVideo', academyIntroVideoFile);
+      if (academyVideoThumbnailFile) payload.append('academyVideoThumbnail', academyVideoThumbnailFile);
       galleryFiles.forEach((file) => payload.append('images', file));
       facilityImageFiles.forEach((file) => payload.append('facilityImages', file));
       videoFiles.forEach((file) => payload.append('videos', file));
@@ -280,6 +300,9 @@ export default function CreateListing() {
       galleryItems.forEach((item) => (item.files || []).forEach((file) => payload.append('galleryImages', file)));
       schoolVideos.forEach((item) => (item.file ? payload.append('schoolVideoFiles', item.file) : null));
       schoolEvents.forEach((item) => (item.imageFiles || []).forEach((file) => payload.append('eventImages', file)));
+      academyPhotoFiles.forEach(({ item }) => payload.append('academyGalleryImages', item.file));
+      academyVideoFiles.forEach(({ item }) => payload.append('academyGalleryVideos', item.file));
+      academyCourseFiles.forEach(({ item }) => payload.append('academyCourseImages', item.file));
 
       const editableData = {
         name: form.name,
@@ -296,9 +319,22 @@ export default function CreateListing() {
         services: splitList(form.services),
         facilities: splitList(form.facilities),
         socialLinks: { facebook: form.facebook, instagram: form.instagram, youtube: form.youtube, linkedin: form.linkedin, whatsapp: form.whatsapp },
-        attributes: { ...form, courses: form.collegeType === 'Intermediate College' ? form.collegeGroups : form.collegePrograms, admissions: form.admissionProcess, placements: form.placementAvailable === 'Yes' ? [form.placementOfficer && `Placement officer: ${form.placementOfficer}`, form.averagePackage && `Average package: ${form.averagePackage}`, form.highestPackage && `Highest package: ${form.highestPackage}`, form.recruitingCompanies && `Recruiters: ${form.recruitingCompanies}`].filter(Boolean) : [], socialVisibility: undefined, faculty, infrastructure, schoolFacilities, galleryItems, schoolVideos, achievements, schoolEvents, principalImage: existingMedia.principal || undefined, aboutImage: existingMedia.about || undefined, galleryImages: existingMedia.images, ...(isUniversity ? { university: form.university, programs: form.university?.programs || [], facilities: form.university?.facilities || [], stats: form.university?.stats || [], aboutTitle: form.university?.aboutTitle, aboutDescription: form.university?.aboutDescription, rankingEnabled: form.university?.rankingEnabled, rank: form.university?.rank, rankingDescription: form.university?.rankingDescription, campusTitle: form.university?.campusTitle, campusDescription: form.university?.campusDescription, showAdmission: form.university?.showAdmission, admissionTitle: form.university?.admissionTitle, admissionDescription: form.university?.admissionDescription } : {}) },
+        attributes: { ...form, academy: academyForSave, courses: form.collegeType === 'Intermediate College' ? form.collegeGroups : form.collegePrograms, admissions: form.admissionProcess, placements: form.placementAvailable === 'Yes' ? [form.placementOfficer && `Placement officer: ${form.placementOfficer}`, form.averagePackage && `Average package: ${form.averagePackage}`, form.highestPackage && `Highest package: ${form.highestPackage}`, form.recruitingCompanies && `Recruiters: ${form.recruitingCompanies}`].filter(Boolean) : [], socialVisibility: undefined, faculty, infrastructure, schoolFacilities, galleryItems, schoolVideos, achievements, schoolEvents, principalImage: existingMedia.principal || undefined, aboutImage: existingMedia.about || undefined, galleryImages: existingMedia.images, ...(isUniversity ? { university: form.university, programs: form.university?.programs || [], facilities: form.university?.facilities || [], stats: form.university?.stats || [], aboutTitle: form.university?.aboutTitle, aboutDescription: form.university?.aboutDescription, rankingEnabled: form.university?.rankingEnabled, rank: form.university?.rank, rankingDescription: form.university?.rankingDescription, campusTitle: form.university?.campusTitle, campusDescription: form.university?.campusDescription, showAdmission: form.university?.showAdmission, admissionTitle: form.university?.admissionTitle, admissionDescription: form.university?.admissionDescription } : {}) },
       };
-      await (isEditing ? api.put(`/places/${editId}`, editableData) : api.post('/places', payload));
+      if (isEditing) {
+        const updatePayload = new FormData();
+        Object.entries(editableData).forEach(([key, value]) => updatePayload.append(key, value && typeof value === 'object' ? JSON.stringify(value) : value ?? ''));
+        academyPhotoFiles.forEach(({ item }) => updatePayload.append('academyGalleryImages', item.file));
+        academyVideoFiles.forEach(({ item }) => updatePayload.append('academyGalleryVideos', item.file));
+        academyCourseFiles.forEach(({ item }) => updatePayload.append('academyCourseImages', item.file));
+        if (logoFile) updatePayload.append('logo', logoFile);
+        if (academyAboutImageFile) updatePayload.append('academyAboutImage', academyAboutImageFile);
+        if (academyIntroVideoFile) updatePayload.append('academyIntroVideo', academyIntroVideoFile);
+        if (academyVideoThumbnailFile) updatePayload.append('academyVideoThumbnail', academyVideoThumbnailFile);
+        await api.put(`/places/${editId}`, updatePayload);
+      } else {
+        await api.post('/places', payload);
+      }
       setSuccess(isEditing ? 'Changes updated successfully.' : 'Listing submitted! It will appear publicly once an admin approves it.');
       setTimeout(() => navigate('/business/dashboard'), 1600);
     } catch (err) {
@@ -451,13 +487,13 @@ export default function CreateListing() {
             <input required={!isEditing && !coverFile} type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} className={inputClass} />
           </div>}
 
-          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2">
+          {!isSchool && !isCollege && !isUniversity && !isSportsAcademy && <div className="col-span-2">
             <label className="text-sm text-ink/70">Gallery photos (select as many as needed)</label>
             <input type="file" accept="image/*" multiple onChange={(e) => setGalleryFiles(Array.from(e.target.files || []))} className={inputClass} />
             {galleryFiles.length > 0 && <p className="mt-1 text-xs text-ink/50">{galleryFiles.length} photos selected.</p>}
           </div>}
 
-          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2">
+          {!isSchool && !isCollege && !isUniversity && !isAcademy && !isSportsAcademy && <div className="col-span-2">
             <label className="text-sm text-ink/70">Facilities</label>
             <textarea rows={2} value={form.facilities} onChange={update('facilities')} placeholder="School bus, Library, Science lab, Playground" className={inputClass} />
           </div>}
@@ -476,40 +512,42 @@ export default function CreateListing() {
 
           {isCollege && <CollegeRegistrationFields form={form} setForm={setForm} inputClass={inputClass} faculty={faculty} setFaculty={setFaculty} achievements={achievements} setAchievements={setAchievements} principalImageFile={principalImageFile} setPrincipalImageFile={setPrincipalImageFile} logoFile={logoFile} setLogoFile={setLogoFile} footerLogoFile={footerLogoFile} setFooterLogoFile={setFooterLogoFile} galleryFiles={galleryFiles} setGalleryFiles={setGalleryFiles} schoolVideos={schoolVideos} setSchoolVideos={setSchoolVideos} />}
           {isUniversity && <UniversityRegistrationFields form={form} setForm={setForm} inputClass={inputClass} logoFile={logoFile} setLogoFile={setLogoFile} coverFile={coverFile} setCoverFile={setCoverFile} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} galleryFiles={galleryFiles} setGalleryFiles={setGalleryFiles} schoolVideos={schoolVideos} setSchoolVideos={setSchoolVideos} />}
+          {isAcademy && <AcademyRegistrationFields form={form} setForm={setForm} logoFile={logoFile} setLogoFile={setLogoFile} existingLogo={existingMedia.logo} aboutImageFile={academyAboutImageFile} setAboutImageFile={setAcademyAboutImageFile} introVideoFile={academyIntroVideoFile} setIntroVideoFile={setAcademyIntroVideoFile} videoThumbnailFile={academyVideoThumbnailFile} setVideoThumbnailFile={setAcademyVideoThumbnailFile} />}
+          {isSportsAcademy && <SportsAcademyRegistrationFields form={form} setForm={setForm} logoFile={logoFile} setLogoFile={setLogoFile} existingLogo={existingMedia.logo} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} galleryFiles={galleryFiles} setGalleryFiles={setGalleryFiles} videoFiles={videoFiles} setVideoFiles={setVideoFiles} />}
 
-          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2"><h2 className="font-display text-lg font-medium text-ink">Additional business details</h2><p className="mt-1 text-xs text-ink/50">Optional details for your selected category.</p></div>}
+          {!isSchool && !isCollege && !isUniversity && !isAcademy && !isSportsAcademy && <div className="col-span-2"><h2 className="font-display text-lg font-medium text-ink">Additional business details</h2><p className="mt-1 text-xs text-ink/50">Optional details for your selected category.</p></div>}
 
-          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2 sm:col-span-1">
+          {!isSchool && !isCollege && !isUniversity && !isAcademy && !isSportsAcademy && <div className="col-span-2 sm:col-span-1">
             <label className="text-sm text-ink/70">Curriculum / board</label>
             <input value={form.board} onChange={update('board')} placeholder="CBSE, State Board, ICSE" className={inputClass} />
           </div>}
-          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2 sm:col-span-1">
+          {!isSchool && !isCollege && !isUniversity && !isAcademy && !isSportsAcademy && <div className="col-span-2 sm:col-span-1">
             <label className="text-sm text-ink/70">Classes offered</label>
             <input value={form.classes} onChange={update('classes')} placeholder="LKG to Class 10" className={inputClass} />
           </div>}
-          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2 sm:col-span-1">
+          {!isSchool && !isCollege && !isUniversity && !isAcademy && !isSportsAcademy && <div className="col-span-2 sm:col-span-1">
             <label className="text-sm text-ink/70">Curriculum type</label>
             <input value={form.curriculum} onChange={update('curriculum')} placeholder="English medium, Montessori" className={inputClass} />
           </div>}
-          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2 sm:col-span-1">
+          {!isSchool && !isCollege && !isUniversity && !isAcademy && !isSportsAcademy && <div className="col-span-2 sm:col-span-1">
             <label className="text-sm text-ink/70">School type</label>
             <input value={form.type} onChange={update('type')} placeholder="Private, Government" className={inputClass} />
           </div>}
-          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2 sm:col-span-1">
+          {!isSchool && !isCollege && !isUniversity && !isAcademy && !isSportsAcademy && <div className="col-span-2 sm:col-span-1">
             <label className="text-sm text-ink/70">Student type</label>
             <input value={form.gender} onChange={update('gender')} placeholder="Co-ed, Boys, Girls" className={inputClass} />
           </div>}
-          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2">
+          {!isSchool && !isCollege && !isUniversity && !isAcademy && !isSportsAcademy && <div className="col-span-2">
             <label className="text-sm text-ink/70">Admission details</label>
             <input value={form.admission} onChange={update('admission')} placeholder="Open throughout the year" className={inputClass} />
           </div>}
 
-          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2">
+          {!isSchool && !isCollege && !isUniversity && !isAcademy && !isSportsAcademy && <div className="col-span-2">
             <h2 className="font-display text-lg font-medium text-ink">Videos and social links</h2>
             <p className="mt-1 text-xs text-ink/50">Upload multiple videos for the school video gallery.</p>
           </div>}
 
-          {!isSchool && !isCollege && !isUniversity && <div className="col-span-2">
+          {!isSchool && !isCollege && !isUniversity && !isAcademy && <div className="col-span-2">
             <label className="text-sm text-ink/70">School videos</label>
             <input type="file" accept="video/*" multiple onChange={(e) => setVideoFiles(Array.from(e.target.files || []))} className={inputClass} />
             <p className="mt-1 text-xs text-ink/50">Select multiple videos. Maximum 50 MB each.</p>

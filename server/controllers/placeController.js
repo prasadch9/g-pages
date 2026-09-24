@@ -194,6 +194,12 @@ const createPlace = async (req, res, next) => {
     const video = [...uploadedVideos, ...linkedVideos, ...(Array.isArray(body.video) ? body.video : body.video ? [body.video] : [])];
     const facilityImages = filesFor('facilityImages').map((file) => publicUploadUrl(req, file));
     const galleryImages = filesFor('galleryImages').map((file) => publicUploadUrl(req, file));
+    const academyGalleryImages = filesFor('academyGalleryImages').map((file) => publicUploadUrl(req, file));
+    const academyGalleryVideos = filesFor('academyGalleryVideos').map((file) => publicUploadUrl(req, file));
+    const academyCourseImages = filesFor('academyCourseImages').map((file) => publicUploadUrl(req, file));
+    const academyAboutImage = filesFor('academyAboutImage')[0] ? publicUploadUrl(req, filesFor('academyAboutImage')[0]) : undefined;
+    const academyIntroVideo = filesFor('academyIntroVideo')[0] ? publicUploadUrl(req, filesFor('academyIntroVideo')[0]) : undefined;
+    const academyVideoThumbnail = filesFor('academyVideoThumbnail')[0] ? publicUploadUrl(req, filesFor('academyVideoThumbnail')[0]) : undefined;
     const principalImage = filesFor('principalImage')[0] ? publicUploadUrl(req, filesFor('principalImage')[0]) : body.principalImage;
     const schoolMedia = {
       principalGallery: filesFor('principalGallery').map((file) => publicUploadUrl(req, file)),
@@ -206,6 +212,15 @@ const createPlace = async (req, res, next) => {
     };
     body.attributes = {
       ...(body.attributes || {}),
+      ...(body.attributes?.academy ? { academy: {
+        ...body.attributes.academy,
+        aboutImage: academyAboutImage || body.attributes.academy.aboutImage,
+        videoUrl: academyIntroVideo || body.attributes.academy.videoUrl,
+        videoThumbnail: academyVideoThumbnail || body.attributes.academy.videoThumbnail,
+        galleryPhotos: (body.attributes.academy.galleryPhotos || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? academyGalleryImages[uploadIndex] || item.url : item.url })),
+        galleryVideos: (body.attributes.academy.galleryVideos || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? academyGalleryVideos[uploadIndex] || item.url : item.url })),
+        courses: (body.attributes.academy.courses || []).map(({ uploadIndex, ...item }) => ({ ...item, image: uploadIndex !== undefined ? academyCourseImages[uploadIndex] || item.image : item.image })),
+      } } : {}),
       ...schoolMedia,
       principalImage,
       aboutImage,
@@ -272,6 +287,32 @@ const updatePlace = async (req, res, next) => {
       name: requestedName,
       ...ownerUpdates
     } = req.body;
+    ownerUpdates.location = parseMultipartValue(ownerUpdates.location, ownerUpdates.location);
+    ownerUpdates.services = parseMultipartValue(ownerUpdates.services, ownerUpdates.services);
+    ownerUpdates.facilities = parseMultipartValue(ownerUpdates.facilities, ownerUpdates.facilities);
+    ownerUpdates.socialLinks = parseMultipartValue(ownerUpdates.socialLinks, ownerUpdates.socialLinks);
+    ownerUpdates.attributes = parseMultipartValue(ownerUpdates.attributes, ownerUpdates.attributes);
+    const uploadedFiles = Array.isArray(req.files) ? req.files : [];
+    const uploadedUrls = (field) => uploadedFiles.filter((file) => file.fieldname === field).map((file) => publicUploadUrl(req, file));
+    if (uploadedUrls('logo')[0]) ownerUpdates.logo = uploadedUrls('logo')[0];
+    if (ownerUpdates.attributes?.academy) {
+      const academy = ownerUpdates.attributes.academy;
+      const photos = uploadedUrls('academyGalleryImages');
+      const videos = uploadedUrls('academyGalleryVideos');
+      const courseImages = uploadedUrls('academyCourseImages');
+      const aboutImage = uploadedUrls('academyAboutImage')[0];
+      const introVideo = uploadedUrls('academyIntroVideo')[0];
+      const videoThumbnail = uploadedUrls('academyVideoThumbnail')[0];
+      ownerUpdates.attributes.academy = {
+        ...academy,
+        aboutImage: aboutImage || academy.aboutImage,
+        videoUrl: introVideo || academy.videoUrl,
+        videoThumbnail: videoThumbnail || academy.videoThumbnail,
+        galleryPhotos: (academy.galleryPhotos || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? photos[uploadIndex] || item.url : item.url })),
+        galleryVideos: (academy.galleryVideos || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? videos[uploadIndex] || item.url : item.url })),
+        courses: (academy.courses || []).map(({ uploadIndex, ...item }) => ({ ...item, image: uploadIndex !== undefined ? courseImages[uploadIndex] || item.image : item.image })),
+      };
+    }
     if (requestedName && requestedName !== place.name) {
       ownerUpdates.name = requestedName;
     }
@@ -283,6 +324,14 @@ const updatePlace = async (req, res, next) => {
       };
     }
     const updateFields = { ...ownerUpdates };
+    const newImages = uploadedUrls('images');
+    const newVideos = uploadedUrls('videos');
+    if (uploadedUrls('coverImage')[0]) updateFields.coverImage = uploadedUrls('coverImage')[0];
+    if (newImages.length) updateFields.images = [...(place.images || []), ...newImages];
+    if (newVideos.length) {
+      const currentVideos = Array.isArray(place.video) ? place.video : place.video ? [place.video] : [];
+      updateFields.video = [...currentVideos, ...newVideos];
+    }
     // Keep the listing's current publication and approval state when its owner
     // edits it. The existing document is excluded from the slug lookup so an
     // unchanged business name can never conflict with its own slug.
