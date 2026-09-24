@@ -1,2 +1,2 @@
-import CategoryBusinessEditor from './CategoryBusinessEditor';
-export default function BakeryEditor({ place }) { return <CategoryBusinessEditor place={place} businessType="bakery" />; }
+import FoodBusinessEditor from './FoodBusinessEditor';
+export default function BakeryEditor({ place }) { return <FoodBusinessEditor place={place} businessType="bakery" />; }

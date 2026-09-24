@@ -45,7 +45,7 @@ export default function BusinessEditorPage() {
   if (!place) return <div className="container-page py-20 text-center text-ink/50">Loading business editor...</div>;
 
   const type = resolveType(place);
-  if (type === 'restaurant') return <RestaurantEditor />;
+  if (type === 'restaurant') return <RestaurantEditor place={place} />;
   if (type === 'coffee-shop') return <CoffeeShopEditor place={place} />;
   if (type === 'bakery') return <BakeryEditor place={place} />;
   if (type === 'catering') return <CateringEditor place={place} />;

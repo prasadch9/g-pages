@@ -77,7 +77,7 @@ export default function App() {
             path="/business/listings/new"
             element={
               <ProtectedRoute roles={['business']}>
-                <CreateListing foodDiningOnly />
+                <CreateListing />
               </ProtectedRoute>
             }
           />
@@ -85,7 +85,7 @@ export default function App() {
             path="/business/listings/new/restaurant"
             element={
               <ProtectedRoute roles={['business']}>
-                <CreateListing foodDiningOnly />
+                <CreateListing />
               </ProtectedRoute>
             }
           />

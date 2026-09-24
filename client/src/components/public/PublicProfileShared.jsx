@@ -22,6 +22,34 @@ const foodBusinessTypeMap = {
   'food-processing': 'food-processing',
 };
 
+const weddingBusinessTypeMap = {
+  'marriage-bureaus': 'marriage-bureau',
+  'marriage-bureau': 'marriage-bureau',
+  'function-halls': 'function-hall',
+  'function-hall': 'function-hall',
+  'event-organizers': 'event-organizer',
+  'event-organizer': 'event-organizer',
+  'catering-services': 'catering-service',
+  'catering-service': 'catering-service',
+  'flower-decoration': 'flower-decoration',
+  'fashion-designers': 'fashion-designer',
+  'fashion-designer': 'fashion-designer',
+  'beauty-parlours': 'beauty-parlour',
+  'beauty-parlour': 'beauty-parlour',
+  'saloon-and-spa': 'saloon-spa',
+  'saloon-spa': 'saloon-spa',
+};
+
+const propertyBusinessTypeMap = {
+  'real-estate': 'real-estate',
+  construction: 'construction',
+  roofing: 'roofing',
+  'interiors-and-decorations': 'interiors',
+  interiors: 'interiors',
+  'tiles-shops': 'tiles',
+  'furniture-shops': 'furniture',
+};
+
 export const resolveFoodBusinessType = (place) => {
   const businessType = place?.attributes?.businessProfile?.businessType || place?.attributes?.restaurantProfile?.businessType;
   const candidates = [businessType, place?.subcategory?.slug, place?.subcategory?.name, place?.category?.slug, place?.category?.name];
@@ -29,6 +57,31 @@ export const resolveFoodBusinessType = (place) => {
     if (!candidate) continue;
     const key = String(candidate).trim().toLowerCase().replace(/[_\s]+/g, '-');
     if (foodBusinessTypeMap[key]) return foodBusinessTypeMap[key];
+  }
+  return '';
+};
+
+export const resolveWeddingBusinessType = (place) => {
+  const parent = place?.subcategory?.parent;
+  const parentKey = parent && String(parent.name || parent.slug || parent).trim().toLowerCase().replace(/[_\s]+/g, '-');
+  if (parentKey === 'food-and-dining') return '';
+  const businessType = place?.attributes?.businessProfile?.businessType || place?.attributes?.restaurantProfile?.businessType;
+  const candidates = [businessType, place?.subcategory?.slug, place?.subcategory?.name, place?.category?.slug, place?.category?.name];
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    const key = String(candidate).trim().toLowerCase().replace(/[_\s]+/g, '-').replace(/&/g, 'and');
+    if (weddingBusinessTypeMap[key]) return weddingBusinessTypeMap[key];
+  }
+  return '';
+};
+
+export const resolvePropertyBusinessType = (place) => {
+  const businessType = place?.attributes?.businessProfile?.businessType;
+  const candidates = [businessType, place?.subcategory?.slug, place?.subcategory?.name, place?.category?.slug, place?.category?.name];
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    const key = String(candidate).trim().toLowerCase().replace(/[_\s]+/g, '-').replace(/&/g, 'and');
+    if (propertyBusinessTypeMap[key]) return propertyBusinessTypeMap[key];
   }
   return '';
 };
@@ -110,10 +163,93 @@ export function ServicesSection({ title = 'Services', items = [] }) {
   return <section id="services" className="bg-black/5 px-5 py-16 sm:px-8"><div className="mx-auto max-w-7xl"><h2 className="font-display text-4xl font-semibold">{title}</h2><div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{items.map((item, index) => <div key={`${item}-${index}`} className="rounded-xl border border-black/10 bg-white p-5"><p className="text-lg font-semibold">{typeof item === 'string' ? item : item.name}</p>{typeof item !== 'string' && item.description && <p className="mt-2 text-sm opacity-65">{item.description}</p>}</div>)}</div></div></section>;
 }
 
-export function VideoGallery({ videos = [], title = 'Video Gallery' }) {
-  const values = videos.map((video) => typeof video === 'string' ? { url: video } : video).filter((video) => video.url);
-  return <section id="videos" className="mx-auto max-w-7xl px-5 py-16 sm:px-8"><h2 className="font-display text-4xl font-semibold">{title}</h2>{values.length ? <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{values.slice(0, 10).map((video, index) => <a key={`${video.url}-${index}`} href={safeUrl(video.url)} target="_blank" rel="noreferrer" className="rounded-xl border border-black/10 bg-white p-4"><div className="grid aspect-video place-items-center rounded-lg bg-black/10 text-3xl">▶</div><p className="mt-3 truncate text-sm font-semibold">{video.title || 'Watch video'}</p></a>)}</div> : <p className="mt-5 text-sm opacity-60">Videos will be added soon.</p>}</section>;
+const getYouTubeId = (url) => {
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes('youtu.be')) return u.pathname.slice(1).split('?')[0];
+    if (u.pathname.includes('/shorts/')) return u.pathname.split('/shorts/')[1]?.split('?')[0];
+    return u.searchParams.get('v');
+  } catch { return null; }
+};
+const getVimeoId = (url) => { try { const m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/); return m ? m[1] : null; } catch { return null; } };
+const getGoogleDriveEmbedUrl = (url) => { try { const m = url.match(/drive\.google\.com\/file\/d\/([^/]+)/); if (m) return `https://drive.google.com/file/d/${m[1]}/preview`; if (url.includes('drive.google.com') && url.includes('/preview')) return url; return null; } catch { return null; } };
+const detectVideoSrcType = (video) => {
+  if (video.type && video.type !== 'url') return video.type;
+  const url = video.url || '';
+  if (/youtu\.be|youtube\.com/i.test(url)) return 'youtube';
+  if (/vimeo\.com/i.test(url)) return 'vimeo';
+  if (/drive\.google\.com/i.test(url)) return 'google';
+  if (/\.(mp4|webm|mov|avi|mkv)(\?|$)/i.test(url)) return 'direct';
+  return 'url';
+};
+
+export function PublicVideoCard({ video }) {
+  const [failed, setFailed] = useState(false);
+  const srcType = detectVideoSrcType(video);
+  let embedUrl = null;
+  if (srcType === 'youtube') { const id = getYouTubeId(video.url); embedUrl = id ? `https://www.youtube.com/embed/${id}` : null; }
+  else if (srcType === 'vimeo') { const id = getVimeoId(video.url); embedUrl = id ? `https://player.vimeo.com/video/${id}` : null; }
+  else if (srcType === 'google') { embedUrl = getGoogleDriveEmbedUrl(video.url); }
+
+  const sourceLabel = { upload: '📁 Uploaded', youtube: '▶ YouTube', vimeo: '🎬 Vimeo', google: '🔵 Google Drive', direct: '🎞 Video', url: '🔗 Video' }[srcType] || '🔗 Video';
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-black/10 bg-white shadow-sm">
+      <div className="aspect-video w-full overflow-hidden bg-black/5">
+        {(srcType === 'upload' || srcType === 'direct') ? (
+          <video src={video.url} controls className="h-full w-full" onError={() => setFailed(true)} />
+        ) : embedUrl && !failed ? (
+          <iframe
+            src={embedUrl}
+            title={video.title || 'Video'}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="h-full w-full border-0"
+            onError={() => setFailed(true)}
+          />
+        ) : (
+          <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+            <span className="text-4xl">🎬</span>
+            <p className="text-sm font-semibold opacity-70">{video.title || 'Video'}</p>
+            <a
+              href={safeUrl(video.url)}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-lg bg-stone-900 px-5 py-2.5 text-sm font-bold text-white"
+            >
+              Open Video ↗
+            </a>
+          </div>
+        )}
+      </div>
+      <div className="px-4 py-3">
+        <p className="truncate text-sm font-semibold">{video.title || video.originalName || 'Watch video'}</p>
+        <p className="mt-0.5 text-xs opacity-50">{sourceLabel}</p>
+      </div>
+    </div>
+  );
 }
+
+export function VideoGallery({ videos = [], title = 'Video Gallery' }) {
+  const items = videos
+    .map((v) => (typeof v === 'string' ? { url: v } : v))
+    .filter((v) => v && v.url);
+  return (
+    <section id="videos" className="mx-auto max-w-7xl px-5 py-16 sm:px-8">
+      <h2 className="font-display text-4xl font-semibold">{title}</h2>
+      {items.length ? (
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {items.slice(0, 20).map((video, index) => (
+            <PublicVideoCard key={`${video.url}-${index}`} video={video} />
+          ))}
+        </div>
+      ) : (
+        <p className="mt-5 text-sm opacity-60">Videos will be added soon.</p>
+      )}
+    </section>
+  );
+}
+
 
 export function PhotoGallery({ place, profile, title = 'Gallery' }) {
   const [lightbox, setLightbox] = useState(-1);

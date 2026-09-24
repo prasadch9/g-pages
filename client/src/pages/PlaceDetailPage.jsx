@@ -10,6 +10,7 @@ import ShoppingMallBusinessPage from '../components/ShoppingMallBusinessPage';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { resolveFoodBusinessType } from '../components/public/PublicProfileShared';
+import { isHealthcareBusiness } from '../utils/healthcare';
 import BusinessPageLayouts from '../components/BusinessPageLayouts';
 import SunriseSchoolPage from '../components/SunriseSchoolPage';
 import CollegePage from '../components/CollegePage';
@@ -510,7 +511,7 @@ export default function PlaceDetailPage() {
     );
   }
 
-  if (foodBusinessType) return <Navigate to={`/business/${place._id}`} replace />;
+  if (foodBusinessType || isHealthcareBusiness(place)) return <Navigate to={`/business/${place._id}`} replace />;
   if (isCollegeCategory) {
     return <CollegePage place={place} mapsUrl={mapsUrl} onShare={handleShare} onReport={() => setShowReport(true)} />;
   }

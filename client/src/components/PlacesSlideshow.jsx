@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { isHealthcareBusiness } from '../utils/healthcare';
 
 /**
  * Auto-advancing image carousel for "Popular places in <city>". Supports
@@ -36,6 +37,8 @@ export default function PlacesSlideshow({ places = [] }) {
 
   const place = places[index];
   const cover = place.coverImage || place.images?.[0];
+  const travelCategory = ['tours-and-travels', 'hotels-and-residencies', 'resorts', 'party-zones'].includes(place.category?.slug);
+  const profileUrl = travelCategory || isHealthcareBusiness(place) ? `/business/${place._id}` : `/place/${place._id}`;
 
   return (
     <div
@@ -51,7 +54,7 @@ export default function PlacesSlideshow({ places = [] }) {
           <p className="mt-1 line-clamp-1 text-sm text-white/85">{place.address}</p>
           {place._id && (
             <Link
-              to={`/place/${place._id}`}
+              to={profileUrl}
               className="mt-3 inline-block rounded bg-white px-4 py-2 text-sm font-medium text-ink hover:bg-slate-50"
             >
               View details

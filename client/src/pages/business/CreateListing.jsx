@@ -6,6 +6,9 @@ import { BUSINESS_PAGE_TYPES } from '../../data/businessPageConfig';
 import { CATEGORY_GROUPS } from '../../data/categoryGroups';
 import CollegeRegistrationFields from '../../components/CollegeRegistrationFields';
 import UniversityRegistrationFields from '../../components/UniversityRegistrationFields';
+import CategorySpecificFields from '../../components/business/CategorySpecificFields';
+import FoodBusinessSpecificFields from '../../components/business/FoodBusinessSpecificFields';
+import WeddingBusinessSpecificFields from '../../components/business/WeddingBusinessSpecificFields';
 import mediaUrl from '../../utils/mediaUrl';
 
 const initialLocation = { state: '', district: '', city: '', area: '', areaText: '' };
@@ -137,6 +140,9 @@ export default function CreateListing() {
   const [categories, setCategories] = useState([]);
   const [location, setLocation] = useState(initialLocation);
   const [form, setForm] = useState(initialForm);
+  const [travelDetails, setTravelDetails] = useState({});
+  const [foodDetails, setFoodDetails] = useState({});
+  const [weddingDetails, setWeddingDetails] = useState({});
   const [shoppingDetails, setShoppingDetails] = useState({});
   const [mallCollectionDetails, setMallCollectionDetails] = useState([]);
   const [mallVideos, setMallVideos] = useState([]);
@@ -176,7 +182,9 @@ export default function CreateListing() {
       const subcategory = place.attributes?.subCategory || place.category?.name || '';
       const existingVideos = place.attributes?.mallVideos?.length
         ? place.attributes.mallVideos
-        : (Array.isArray(place.video) ? place.video : place.video ? [place.video] : (place.videos || []));
+        : (place.attributes?.businessProfile?.common?.videos?.length
+          ? place.attributes.businessProfile.common.videos
+          : Array.isArray(place.video) ? place.video : place.video ? [place.video] : (place.videos || []));
       const categoryGroup = CATEGORY_GROUPS.find((group) => group.children.some((child) => child.toLowerCase() === subcategory.toLowerCase()));
       setForm({
         ...initialForm,
@@ -360,6 +368,9 @@ export default function CreateListing() {
       const admissionDetails = attributes.admissionDetails || {};
       const fees = attributes.fees || {};
       setForm((current) => ({ ...current, name: place.name || '', category: place.category?._id || place.category || '', subcategory: place.subcategory || place.category?.name || '', mainCategory: place.categoryGroup || '', address: place.address || '', description: place.description || '', phone: place.phone || '', email: place.email || '', website: place.website || '', services: (place.services || []).join(', '), facilities: (place.facilities || []).join(', '), pageType: place.pageType || 'static', facebook: place.socialLinks?.facebook || '', instagram: place.socialLinks?.instagram || '', whatsapp: place.socialLinks?.whatsapp || '', youtube: place.socialLinks?.youtube || '', linkedin: place.socialLinks?.linkedin || '', ...place.attributes }));
+      setTravelDetails(place.attributes?.businessProfile?.categorySpecific || place.attributes?.travelDetails || {});
+      setFoodDetails(place.attributes?.businessProfile?.categorySpecific || place.attributes?.foodDetails || {});
+      setWeddingDetails(place.attributes?.businessProfile?.categorySpecific || place.attributes?.weddingDetails || {});
       setForm((current) => ({ ...current, principalName: principal.name || '', principalDesignation: principal.designation || 'Principal', principalQualification: principal.qualification || '', principalExperience: principal.experience || '', principalMessage: principal.message || attributes.principalMessage || '', admissionStatus: admissionDetails.status || 'open', admissionClasses: admissionDetails.classes || [], ageCriteria: admissionDetails.ageCriteria || '', requiredDocuments: admissionDetails.requiredDocuments || [], enquiryPhone: admissionDetails.enquiryPhone || '', admissionProcess: admissionDetails.process || attributes.admissionProcess || '', eligibility: admissionDetails.eligibility || attributes.eligibility || '', showFees: fees.show !== false, admissionFee: fees.admission || '', tuitionFee: fees.tuition || '', transportFee: fees.transport || '', otherCharges: fees.other || '', feeInformation: fees.description || attributes.feeInformation || '' }));
       setLocation({ state: place.location?.state?._id || place.location?.state || '', district: place.location?.district?._id || place.location?.district || '', city: place.location?.city?._id || place.location?.city || '', area: place.location?.area?._id || place.location?.area || '' });
       setFaculty(attributes.faculty || []);
@@ -379,8 +390,19 @@ export default function CreateListing() {
   const isCollege = selectedCategory?.name?.toLowerCase() === 'colleges';
   const categoryName = (selectedCategory?.name || form.subcategory || '').toLowerCase().trim();
   const isUniversity = ['university', 'universities'].includes(categoryName);
+  const isTravelCategory = form.mainCategory === 'Travel & Hospitality';
+  const isFoodCategory = form.mainCategory === 'Food & Dining';
+  const isWeddingCategory = form.mainCategory === 'Marriage & Wedding';
+  const foodBusinessType = ({ Restaurant: 'restaurant', Restaurants: 'restaurant', 'Coffee Shop': 'coffee-shop', 'Coffee Shops': 'coffee-shop', 'Sweet Shop & Bakery': 'bakery', 'Sweet Shops & Bakery': 'bakery', 'Catering Service': 'catering', 'Catering Services': 'catering', 'Food Processing': 'food-processing' })[form.subcategory] || 'restaurant';
+  const weddingBusinessType = ({ 'Marriage Bureaus': 'marriage-bureau', 'Function Halls': 'function-hall', 'Event Organizers': 'event-organizer', 'Catering Services': 'catering-service', 'Flower Decoration': 'flower-decoration', 'Fashion Designers': 'fashion-designer', 'Beauty Parlours': 'beauty-parlour', 'Saloon & Spa': 'saloon-spa' })[form.subcategory] || 'event-organizer';
 
   const selectMainCategory = (e) => {
+    setTravelDetails({});
+    setFoodDetails({});
+    setWeddingDetails({});
+    setMallVideos([]);
+    setMallVideoUrl('');
+    setMallVideoCaption('');
     setForm({ ...form, mainCategory: e.target.value, category: '', subcategory: '' });
   };
 
@@ -390,6 +412,12 @@ export default function CreateListing() {
       navigate(`/business/listings/new/solar?category=${category._id}`);
       return;
     }
+    setTravelDetails({});
+    setFoodDetails({});
+    setWeddingDetails({});
+    setMallVideos([]);
+    setMallVideoUrl('');
+    setMallVideoCaption('');
     setForm({ ...form, category: category?._id || '', subcategory: category?.name || e.target.value });
   };
 
@@ -463,7 +491,7 @@ export default function CreateListing() {
         uploadSingleImage(uploadedFiles.coverImage),
         uploadSingleImage(uploadedFiles.aboutImage),
         uploadImages(uploadedFiles.galleryImages || []),
-        (isShoppingCategory && form.subcategory === 'Shopping Malls') || isAutomotiveCategory ? uploadMallVideos(mallVideos) : Promise.resolve(splitList(form.videoUrls)),
+        (isShoppingCategory && form.subcategory === 'Shopping Malls') || isAutomotiveCategory || isWeddingCategory ? uploadMallVideos(mallVideos) : Promise.resolve(splitList(form.videoUrls)),
       ]);
       const mallCollections = galleryImages.map((image, index) => {
         const details = mallCollectionDetails[index] || {};
@@ -493,6 +521,8 @@ export default function CreateListing() {
         },
         attributes: {
           subCategory: form.subcategory || undefined,
+          ...(isFoodCategory ? { foodDetails, businessProfile: { businessType: foodBusinessType, categorySpecific: foodDetails } } : {}),
+          ...(isWeddingCategory ? { weddingDetails, businessProfile: { businessType: weddingBusinessType, categorySpecific: weddingDetails } } : {}),
           ...(isShoppingCategory ? Object.fromEntries(Object.entries(shoppingDetails).filter(([, value]) => String(value || '').trim())) : {}),
           ...(isShoppingCategory && form.subcategory === 'Shopping Malls' ? { mallCollections, mallVideos: mallVideoDetails } : {}),
         },
@@ -538,6 +568,9 @@ export default function CreateListing() {
           // Preserve category-specific form fields, including the college
           // registration sections, in the public page data.
           ...form,
+          ...(isTravelCategory ? { travelDetails, businessProfile: { categorySpecific: travelDetails } } : {}),
+          ...(isFoodCategory ? { foodDetails, businessProfile: { businessType: foodBusinessType, categorySpecific: foodDetails } } : {}),
+          ...(isWeddingCategory ? { weddingDetails, businessProfile: { businessType: weddingBusinessType, categorySpecific: weddingDetails } } : {}),
           subCategory: form.subcategory || undefined,
           ...(isShoppingCategory ? Object.fromEntries(Object.entries(shoppingDetails).filter(([, value]) => String(value || '').trim())) : {}),
           ...(isShoppingCategory && form.subcategory === 'Shopping Malls' ? { mallCollections: mallCollectionDetailsPayload, mallVideos: mallVideos.map((video) => ({ url: video.url || '', caption: video.caption || '' })) } : {}),
@@ -655,7 +688,7 @@ export default function CreateListing() {
           uploadSingleImage(uploadedFiles.coverImage),
           uploadSingleImage(uploadedFiles.aboutImage),
           uploadImages(uploadedFiles.galleryImages || []),
-          (isShoppingCategory && form.subcategory === 'Shopping Malls') || isAutomotiveCategory ? uploadMallVideos(mallVideos) : Promise.resolve(splitList(form.videoUrls)),
+          (isShoppingCategory && form.subcategory === 'Shopping Malls') || isAutomotiveCategory || isFoodCategory || isWeddingCategory ? uploadMallVideos(mallVideos) : Promise.resolve(splitList(form.videoUrls)),
         ]);
       }
       const editableData = {
@@ -679,8 +712,16 @@ export default function CreateListing() {
         images: editedGalleryImages,
         videos: editedVideoUrls,
         workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed),
-        attributes: { ...form, subCategory: form.subcategory || undefined, ...(isShoppingCategory ? Object.fromEntries(Object.entries(shoppingDetails).filter(([, value]) => String(value || '').trim())) : {}), ...(isShoppingCategory && form.subcategory === 'Shopping Malls' ? { mallCollections: mallCollectionDetailsPayload, mallVideos: mallVideos.map((video) => ({ url: video.url || '', caption: video.caption || '' })) } : {}), courses: form.collegeType === 'Intermediate College' ? form.collegeGroups : form.collegePrograms, admissions: form.admissionProcess, placements: form.placementAvailable === 'Yes' ? [form.placementOfficer && `Placement officer: ${form.placementOfficer}`, form.averagePackage && `Average package: ${form.averagePackage}`, form.highestPackage && `Highest package: ${form.highestPackage}`, form.recruitingCompanies && `Recruiters: ${form.recruitingCompanies}`].filter(Boolean) : [], socialVisibility: undefined, faculty, infrastructure, schoolFacilities, galleryItems, schoolVideos, achievements, schoolEvents, principalImage: existingMedia.principal || undefined, aboutImage: editedAboutImage || undefined, galleryImages: editedGalleryImages, workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed), ...(isUniversity ? { university: form.university, programs: form.university?.programs || [], facilities: form.university?.facilities || [], stats: form.university?.stats || [], aboutTitle: form.university?.aboutTitle, aboutDescription: form.university?.aboutDescription, rankingEnabled: form.university?.rankingEnabled, rank: form.university?.rank, rankingDescription: form.university?.rankingDescription, campusTitle: form.campusTitle, campusDescription: form.campusDescription, showAdmission: form.university?.showAdmission, admissionTitle: form.university?.admissionTitle, admissionDescription: form.university?.admissionDescription } : {}) },
+        attributes: { ...form, ...(isTravelCategory ? { travelDetails, businessProfile: { categorySpecific: travelDetails } } : {}), ...(isFoodCategory ? { foodDetails, businessProfile: { businessType: foodBusinessType, categorySpecific: foodDetails } } : {}), subCategory: form.subcategory || undefined, ...(isShoppingCategory ? Object.fromEntries(Object.entries(shoppingDetails).filter(([, value]) => String(value || '').trim())) : {}), ...(isShoppingCategory && form.subcategory === 'Shopping Malls' ? { mallCollections: mallCollectionDetailsPayload, mallVideos: mallVideos.map((video) => ({ url: video.url || '', caption: video.caption || '' })) } : {}), courses: form.collegeType === 'Intermediate College' ? form.collegeGroups : form.collegePrograms, admissions: form.admissionProcess, placements: form.placementAvailable === 'Yes' ? [form.placementOfficer && `Placement officer: ${form.placementOfficer}`, form.averagePackage && `Average package: ${form.averagePackage}`, form.highestPackage && `Highest package: ${form.highestPackage}`, form.recruitingCompanies && `Recruiters: ${form.recruitingCompanies}`].filter(Boolean) : [], socialVisibility: undefined, faculty, infrastructure, schoolFacilities, galleryItems, schoolVideos, achievements, schoolEvents, principalImage: existingMedia.principal || undefined, aboutImage: editedAboutImage || undefined, galleryImages: editedGalleryImages, workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed), ...(isUniversity ? { university: form.university, programs: form.university?.programs || [], facilities: form.university?.facilities || [], stats: form.university?.stats || [], aboutTitle: form.university?.aboutTitle, aboutDescription: form.university?.aboutDescription, rankingEnabled: form.university?.rankingEnabled, rank: form.university?.rank, rankingDescription: form.university?.rankingDescription, campusTitle: form.campusTitle, campusDescription: form.campusDescription, showAdmission: form.university?.showAdmission, admissionTitle: form.university?.admissionTitle, admissionDescription: form.university?.admissionDescription } : {}) },
       };
+      if (isWeddingCategory) {
+        editableData.attributes.weddingDetails = weddingDetails;
+        editableData.attributes.businessProfile = {
+          ...(editableData.attributes.businessProfile || {}),
+          businessType: weddingBusinessType,
+          categorySpecific: weddingDetails,
+        };
+      }
       await (isEditing ? api.put(`/places/${editId}`, editableData) : api.post('/places', payload));
       setSuccess(isEditing ? 'Changes updated successfully.' : 'Listing submitted! It will appear publicly once an admin approves it.');
       setTimeout(() => navigate('/business/dashboard'), 1600);
@@ -737,7 +778,7 @@ export default function CreateListing() {
             <input value={form.phone} onChange={update('phone')} className={inputClass} />
           </div>}
 
-          {!isAutomotiveCategory && !isShoppingCategory && <div className="col-span-2">
+          {!isAutomotiveCategory && !isShoppingCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2">
             <fieldset>
               <legend className="text-sm font-semibold text-ink">Choose your business page</legend>
               <p className="mt-1 text-xs text-ink/50">You can select the presentation style {isEditing ? 'before updating your listing.' : 'before submitting for admin approval.'}</p>
@@ -763,6 +804,11 @@ export default function CreateListing() {
 
           <LocationCascadeFields value={location} onChange={setLocation} />
 
+          {isFoodCategory && <div className="col-span-2 sm:col-span-1">
+            <label className="text-sm text-ink/70">Pincode</label>
+            <input inputMode="numeric" maxLength={6} value={form.pincode} onChange={update('pincode')} placeholder="6 digit pincode" className={inputClass} />
+          </div>}
+
           {!isAutomotiveCategory && !isShoppingCategory && <div className="col-span-2">
             <label className="text-sm text-ink/70">Address</label>
             <input required value={form.address} onChange={update('address')} className={inputClass} />
@@ -772,6 +818,49 @@ export default function CreateListing() {
             <label className="text-sm text-ink/70">Description</label>
             <textarea required rows={4} value={form.description} onChange={update('description')} className={inputClass} />
           </div>}
+
+          {isFoodCategory && form.subcategory && (
+            <div className="col-span-2">
+              <FoodBusinessSpecificFields businessType={foodBusinessType} values={foodDetails} onChange={setFoodDetails} />
+            </div>
+          )}
+
+          {isWeddingCategory && form.subcategory && (
+            <div className="col-span-2">
+              <WeddingBusinessSpecificFields businessType={weddingBusinessType} values={weddingDetails} onChange={setWeddingDetails} />
+            </div>
+          )}
+
+          {(isFoodCategory || isWeddingCategory) && form.subcategory && <section className="col-span-2 rounded-xl border border-[#ebded8] bg-white p-5 sm:p-7">
+            <h2 className="font-display text-xl font-semibold text-ink">Business Hours</h2>
+            <p className="mt-1 text-sm text-ink/55">Set opening and closing times for each day. Mark days when the business is closed.</p>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">{MALL_DAYS.map(([day, label]) => {
+              const entry = workingHours.find((item) => item.day === day) || { day, open: '', close: '', closed: false };
+              const updateHours = (changes) => setWorkingHours((current) => [...current.filter((item) => item.day !== day), { ...entry, ...changes }]);
+              return <div key={day} className="grid items-center gap-2 rounded-lg border border-[#ebded8] p-3 sm:grid-cols-[90px_1fr_1fr_auto]">
+                <span className="text-sm font-medium">{label}</span>
+                <input type="time" value={entry.open || ''} disabled={entry.closed} onChange={(event) => updateHours({ open: event.target.value })} className={`${inputClass} disabled:bg-slate-100`} aria-label={`${label} opening time`} />
+                <input type="time" value={entry.close || ''} disabled={entry.closed} onChange={(event) => updateHours({ close: event.target.value })} className={`${inputClass} disabled:bg-slate-100`} aria-label={`${label} closing time`} />
+                <label className="flex items-center gap-2 text-xs text-ink/70"><input type="checkbox" checked={Boolean(entry.closed)} onChange={(event) => updateHours({ closed: event.target.checked })} />Closed</label>
+              </div>;
+            })}</div>
+          </section>}
+
+          {isTravelCategory && form.subcategory && (
+            <section className="col-span-2 rounded-xl border border-[#b9ddc6] bg-[#f4fbf5] p-5 sm:p-7">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#167447]">{form.subcategory} website details</p>
+              <h2 className="mt-2 font-display text-2xl font-semibold text-[#164e35]">Build your public website</h2>
+              <p className="mt-1 text-sm text-ink/60">Enter each detail separately. These values appear in the matching public website section.</p>
+              <div className="mt-5 rounded-lg border border-[#cde7d4] bg-white p-4">
+                <CategorySpecificFields
+                  groupName="Travel & Hospitality"
+                  subcategoryName={form.subcategory}
+                  values={travelDetails}
+                  onChange={(field, value) => setTravelDetails((current) => ({ ...current, [field]: value }))}
+                />
+              </div>
+            </section>
+          )}
 
           {isShoppingCategory && (
             <>
@@ -890,7 +979,6 @@ export default function CreateListing() {
                 <label className="text-sm text-ink/70">Email</label>
                 <input type="email" value={form.email} onChange={update('email')} className={inputClass} />
               </div>
-
               <div className="col-span-2 sm:col-span-1">
                 <label className="text-sm text-ink/70">WhatsApp</label>
                 <input value={form.whatsapp} onChange={update('whatsapp')} placeholder="WhatsApp number or https://wa.me/..." className={inputClass} />
@@ -915,37 +1003,42 @@ export default function CreateListing() {
 
           {!isAutomotiveCategory && !isShoppingCategory && !isSchool && !isCollege && !isUniversity && (
             <>
-              <div className="col-span-2">
+              {!isFoodCategory && !isWeddingCategory && <div className="col-span-2">
                 <label className="text-sm text-ink/70">Business name</label>
                 <input required value={form.name} onChange={update('name')} className={inputClass} />
-              </div>
+              </div>}
 
-              <div className="col-span-2">
+              {!isFoodCategory && !isWeddingCategory && <div className="col-span-2">
                 <label className="text-sm text-ink/70">Address</label>
                 <input required value={form.address} onChange={update('address')} className={inputClass} />
-              </div>
+              </div>}
 
-              <div className="col-span-2">
+              {!isFoodCategory && !isWeddingCategory && <div className="col-span-2">
                 <label className="text-sm text-ink/70">Description</label>
                 <textarea rows={4} value={form.description} onChange={update('description')} placeholder="Optional: leave blank to use a description based on the business name and location." className={inputClass} />
-              </div>
+              </div>}
 
-              <div className="col-span-2 sm:col-span-1">
+              {!isFoodCategory && !isWeddingCategory && <div className="col-span-2 sm:col-span-1">
                 <label className="text-sm text-ink/70">Phone</label>
                 <input value={form.phone} onChange={update('phone')} className={inputClass} />
-              </div>
+              </div>}
 
               <div className="col-span-2 sm:col-span-1">
                 <label className="text-sm text-ink/70">Email</label>
                 <input type="email" value={form.email} onChange={update('email')} className={inputClass} />
               </div>
 
+          {(isFoodCategory || isWeddingCategory) && <div className="col-span-2 sm:col-span-1">
+                <label className="text-sm text-ink/70">Website</label>
+                <input type="url" value={form.website} onChange={update('website')} placeholder="https://" className={inputClass} />
+              </div>}
+
               {renderSingleImageUpload('logo', 'Business logo')}
 
-              <div className="col-span-2">
+              {!isFoodCategory && !isWeddingCategory && <div className="col-span-2">
                 <label className="text-sm text-ink/70">Services (comma-separated)</label>
                 <input value={form.services} onChange={update('services')} className={inputClass} />
-              </div>
+              </div>}
 
               {renderSingleImageUpload('coverImage', 'Cover image', false)}
 
@@ -969,10 +1062,20 @@ export default function CreateListing() {
                 </div>
               </div>
 
-              <div className="col-span-2">
+              {(isFoodCategory || isWeddingCategory) ? <div className="col-span-2 rounded-xl border border-[#ebded8] bg-white p-4">
+                <p className="text-sm font-semibold text-ink">Business videos (optional)</p>
+                <p className="mt-1 text-xs text-ink/60">Add a video URL or upload video files. These videos appear on the business website.</p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                  <input type="url" value={mallVideoUrl} onChange={(event) => setMallVideoUrl(event.target.value)} placeholder="YouTube or direct video URL" className={inputClass} />
+                  <input value={mallVideoCaption} onChange={(event) => setMallVideoCaption(event.target.value)} placeholder="Video caption (optional)" className={inputClass} />
+                  <button type="button" onClick={addMallVideoUrl} className="mt-1 rounded border border-[#a83f32] px-4 py-2 text-sm font-semibold text-[#a83f32]">Add URL</button>
+                </div>
+                <label className="mt-3 inline-flex cursor-pointer items-center rounded border border-dashed border-line px-4 py-3 text-xs font-semibold text-ink/70 hover:border-ink/40">Upload video files<input type="file" accept="video/mp4,video/webm,video/ogg,video/quicktime" multiple className="hidden" onChange={(event) => { handleMallVideoFiles(event.target.files); event.target.value = ''; }} /></label>
+                {mallVideos.length > 0 && <div className="mt-3 grid gap-2">{mallVideos.map((video, index) => <div key={video.preview || video.url || index} className="grid items-center gap-2 rounded border border-line p-2 sm:grid-cols-[1fr_1fr_auto]"><span className="truncate text-xs text-ink/70">{video.file?.name || video.url}</span><input value={video.caption || ''} onChange={(event) => setMallVideos((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, caption: event.target.value } : item))} placeholder="Video caption" className={inputClass} /><button type="button" onClick={() => { if (video.preview) URL.revokeObjectURL(video.preview); setMallVideos((current) => current.filter((_, itemIndex) => itemIndex !== index)); }} className="rounded px-3 py-2 text-xs font-semibold text-red-600">Remove</button></div>)}</div>}
+              </div> : <div className="col-span-2">
                 <label className="text-sm text-ink/70">Video URLs</label>
                 <textarea rows={3} value={form.videoUrls} onChange={update('videoUrls')} className={inputClass} />
-              </div>
+              </div>}
 
               <div className="col-span-2 sm:col-span-1">
                 <label className="text-sm text-ink/70">Facebook</label>
@@ -1016,7 +1119,7 @@ export default function CreateListing() {
 
           {isSchool && <div className="col-span-2 rounded-xl border border-[#b9e6df] bg-white p-5 sm:p-7"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#168b9a]">School selections</p><div className="mt-4 grid gap-5"><CheckboxGroup label="Required documents" items={documents} values={form.requiredDocuments} onChange={(values) => setForm({ ...form, requiredDocuments: values })} /></div></div>}
 
-          {!isShoppingCategory && !isAutomotiveCategory && !isSchool && !isCollege && !isUniversity && <div className="col-span-2">
+          {!isShoppingCategory && !isAutomotiveCategory && !isSchool && !isCollege && !isUniversity && !isFoodCategory && !isWeddingCategory && <div className="col-span-2">
             <h2 className="font-display text-lg font-medium text-ink">Photos and facilities</h2>
             <p className="mt-1 text-xs text-ink/50">All of these are optional. Separate multiple values with commas or new lines.</p>
           </div>}
@@ -1035,18 +1138,18 @@ export default function CreateListing() {
             <div className="rounded-xl border border-[#b9e6df] bg-[#f1fbf8] p-5 sm:p-7"><div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#168b9a]">7. Facilities</p><h2 className="mt-1 font-display text-xl font-semibold text-[#17324d]">Dynamic facilities with images</h2></div><button type="button" onClick={() => addItem(setSchoolFacilities, { name: '', icon: '', description: '', available: true, imageFiles: [] })} className="rounded-full bg-[#168b9a] px-4 py-2 text-xs font-bold text-white">+ Add Facility</button></div>{schoolFacilities.map((item, index) => <div key={index} className="mt-4 grid grid-cols-2 gap-3 rounded-lg border border-[#cfe6e5] bg-white p-4"><label className="col-span-2 text-xs font-semibold text-ink/70 sm:col-span-1">Facility name *<input value={item.name} onChange={(e) => updateItem(setSchoolFacilities, index, 'name', e.target.value)} className={inputClass} /></label><label className="col-span-2 text-xs font-semibold text-ink/70 sm:col-span-1">Facility icon<input value={item.icon} onChange={(e) => updateItem(setSchoolFacilities, index, 'icon', e.target.value)} placeholder="🏫" className={inputClass} /></label><label className="col-span-2 text-xs font-semibold text-ink/70">Description<textarea rows={2} value={item.description} onChange={(e) => updateItem(setSchoolFacilities, index, 'description', e.target.value)} className={inputClass} /></label><label className="col-span-2 text-xs font-semibold text-ink/70">Facility images<input type="file" accept="image/*" multiple onChange={(e) => updateItem(setSchoolFacilities, index, 'imageFiles', Array.from(e.target.files || []))} className={inputClass} /></label><label className="col-span-2 flex items-center gap-2 text-xs font-semibold text-ink/70"><input type="checkbox" checked={item.available} onChange={(e) => updateItem(setSchoolFacilities, index, 'available', e.target.checked)} /> Available</label><button type="button" onClick={() => removeItem(setSchoolFacilities, index)} className="col-span-2 text-left text-xs font-bold text-vermilion">Delete facility</button></div>)}</div>
           </div>}
 
-          {!isSchool && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && <div className="col-span-2">
+          {!isSchool && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2">
             <label className="text-sm text-ink/70">Cover photo</label>
             <input required={!isEditing && !coverFile} type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} className={inputClass} />
           </div>}
 
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && <div className="col-span-2">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2">
             <label className="text-sm text-ink/70">Gallery photos (select as many as needed)</label>
             <input type="file" accept="image/*" multiple onChange={(e) => setGalleryFiles(Array.from(e.target.files || []))} className={inputClass} />
             {galleryFiles.length > 0 && <p className="mt-1 text-xs text-ink/50">{galleryFiles.length} photos selected.</p>}
           </div>}
 
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && <div className="col-span-2">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2">
             <label className="text-sm text-ink/70">Facilities</label>
             <textarea rows={2} value={form.facilities} onChange={update('facilities')} placeholder="School bus, Library, Science lab, Playground" className={inputClass} />
           </div>}
@@ -1066,52 +1169,52 @@ export default function CreateListing() {
           {isCollege && <CollegeRegistrationFields form={form} setForm={setForm} inputClass={inputClass} faculty={faculty} setFaculty={setFaculty} achievements={achievements} setAchievements={setAchievements} principalImageFile={principalImageFile} setPrincipalImageFile={setPrincipalImageFile} logoFile={logoFile} setLogoFile={setLogoFile} footerLogoFile={footerLogoFile} setFooterLogoFile={setFooterLogoFile} galleryFiles={galleryFiles} setGalleryFiles={setGalleryFiles} schoolVideos={schoolVideos} setSchoolVideos={setSchoolVideos} />}
           {isUniversity && <UniversityRegistrationFields form={form} setForm={setForm} inputClass={inputClass} logoFile={logoFile} setLogoFile={setLogoFile} coverFile={coverFile} setCoverFile={setCoverFile} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} galleryFiles={galleryFiles} setGalleryFiles={setGalleryFiles} schoolVideos={schoolVideos} setSchoolVideos={setSchoolVideos} />}
 
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && <div className="col-span-2"><h2 className="font-display text-lg font-medium text-ink">Additional business details</h2><p className="mt-1 text-xs text-ink/50">Optional details for your selected category.</p></div>}
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2"><h2 className="font-display text-lg font-medium text-ink">Additional business details</h2><p className="mt-1 text-xs text-ink/50">Optional details for your selected category.</p></div>}
 
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && <div className="col-span-2 sm:col-span-1">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2 sm:col-span-1">
             <label className="text-sm text-ink/70">Curriculum / board</label>
             <input value={form.board} onChange={update('board')} placeholder="CBSE, State Board, ICSE" className={inputClass} />
           </div>}
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && <div className="col-span-2 sm:col-span-1">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2 sm:col-span-1">
             <label className="text-sm text-ink/70">Classes offered</label>
             <input value={form.classes} onChange={update('classes')} placeholder="LKG to Class 10" className={inputClass} />
           </div>}
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && <div className="col-span-2 sm:col-span-1">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2 sm:col-span-1">
             <label className="text-sm text-ink/70">Curriculum type</label>
             <input value={form.curriculum} onChange={update('curriculum')} placeholder="English medium, Montessori" className={inputClass} />
           </div>}
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && <div className="col-span-2 sm:col-span-1">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2 sm:col-span-1">
             <label className="text-sm text-ink/70">School type</label>
             <input value={form.type} onChange={update('type')} placeholder="Private, Government" className={inputClass} />
           </div>}
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && <div className="col-span-2 sm:col-span-1">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2 sm:col-span-1">
             <label className="text-sm text-ink/70">Student type</label>
             <input value={form.gender} onChange={update('gender')} placeholder="Co-ed, Boys, Girls" className={inputClass} />
           </div>}
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && <div className="col-span-2">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2">
             <label className="text-sm text-ink/70">Admission details</label>
             <input value={form.admission} onChange={update('admission')} placeholder="Open throughout the year" className={inputClass} />
           </div>}
 
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && <div className="col-span-2">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2">
             <h2 className="font-display text-lg font-medium text-ink">Videos and social links</h2>
             <p className="mt-1 text-xs text-ink/50">Upload multiple videos for the school video gallery.</p>
           </div>}
 
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && <div className="col-span-2">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2">
             <label className="text-sm text-ink/70">School videos</label>
             <input type="file" accept="video/*" multiple onChange={(e) => setVideoFiles(Array.from(e.target.files || []))} className={inputClass} />
             <p className="mt-1 text-xs text-ink/50">Select multiple videos. Maximum 50 MB each.</p>
           </div>}
-          {!isSchool && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && <div className="col-span-2 sm:col-span-1">
+          {!isSchool && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2 sm:col-span-1">
             <label className="text-sm text-ink/70">Facebook URL</label>
             <input value={form.facebook} onChange={update('facebook')} placeholder="https://facebook.com/…" className={inputClass} />
           </div>}
-          {!isSchool && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && <div className="col-span-2 sm:col-span-1">
+          {!isSchool && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2 sm:col-span-1">
             <label className="text-sm text-ink/70">Instagram URL</label>
             <input value={form.instagram} onChange={update('instagram')} placeholder="https://instagram.com/…" className={inputClass} />
           </div>}
-          {!isSchool && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && <div className="col-span-2 sm:col-span-1">
+          {!isSchool && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2 sm:col-span-1">
             <label className="text-sm text-ink/70">WhatsApp number or link</label>
             <input value={form.whatsapp} onChange={update('whatsapp')} placeholder="https://wa.me/91…" className={inputClass} />
           </div>}
