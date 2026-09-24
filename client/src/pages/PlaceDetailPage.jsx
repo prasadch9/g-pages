@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import FavoriteButton from '../components/FavoriteButton';
 import ReviewsSection from '../components/ReviewsSection';
+import { StaticBusinessPage, DynamicBusinessPage, ReligiousSocialBrandPage } from '../components/BusinessPageLayouts';
+import ConsultancyBrandPage from './ConsultancyBrandPage';
 
 const DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
 const REPORT_REASONS = [
@@ -303,6 +305,23 @@ export default function PlaceDetailPage() {
   const academics = place.attributes || {};
   const gallery = place.images || [];
   const isSchoolCategory = ['school', 'schools'].includes((place.category?.slug || '').toLowerCase()) || ['school', 'schools'].includes((place.category?.name || '').toLowerCase());
+  const categorySlug = (place.category?.slug || '').toLowerCase();
+  const categoryName = (place.category?.name || place.subcategory || '').toLowerCase();
+  const premiumBusinessCategoryNames = [
+    'consultancies', 'agencies', 'manpower agencies', 'professions',
+    'packers & movers', 'packers and movers', 'packers-movers',
+    'logistics', 'moving', 'logistics & moving', 'logistics-moving'
+  ];
+  const isBusinessProfessionalSubcategory = premiumBusinessCategoryNames.includes(categorySlug)
+    || premiumBusinessCategoryNames.includes(categoryName)
+    || premiumBusinessCategoryNames.includes((place.subcategory || '').toLowerCase());
+  const isReligiousSocialCategory = ['religious-social', 'temples', 'churches', 'trusts', 'ngos', 'associations'].includes(categorySlug)
+    || ['religious-social', 'temples', 'churches', 'trusts', 'ngos', 'associations'].includes(categoryName)
+    || ['temples', 'churches', 'trusts', 'ngos', 'associations'].includes((place.subcategory || '').toLowerCase());
+
+  if (isReligiousSocialCategory) {
+    return <><ReligiousSocialBrandPage place={place} mapsUrl={mapsUrl} onShare={handleShare} onReport={() => setShowReport(true)} />{showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}</>;
+  }
 
   if (isSchoolCategory) {
     return (
@@ -319,6 +338,18 @@ export default function PlaceDetailPage() {
         {showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}
       </>
     );
+  }
+
+  if (isBusinessProfessionalSubcategory) {
+    return <><ConsultancyBrandPage place={place} />{showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}</>;
+  }
+
+  if (place.pageType === 'premium' || place.pageType === 'dynamic') {
+    return <><DynamicBusinessPage place={place} mapsUrl={mapsUrl} onShare={handleShare} onReport={() => setShowReport(true)} />{showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}</>;
+  }
+
+  if (place.pageType === 'static') {
+    return <><StaticBusinessPage place={place} mapsUrl={mapsUrl} onShare={handleShare} onReport={() => setShowReport(true)} />{showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}</>;
   }
 
   return (

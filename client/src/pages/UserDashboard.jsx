@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
@@ -6,11 +6,23 @@ import api from '../services/api';
 const TABS = ['Favorites', 'Recently viewed', 'Notifications', 'Profile'];
 
 export default function UserDashboard() {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const [tab, setTab] = useState('Favorites');
   const [favorites, setFavorites] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [profileForm, setProfileForm] = useState({
+    name: '',
+    email: '',
+    mobile: '',
+    state: '',
+    district: '',
+    city: '',
+    role: 'user',
+    password: '',
+  });
+  const [profileError, setProfileError] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
 
   useEffect(() => {
     Promise.allSettled([api.get('/favorites'), api.get('/notifications')]).then(
@@ -22,7 +34,56 @@ export default function UserDashboard() {
     );
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+    setProfileForm({
+      name: user.name || '',
+      email: user.email || '',
+      mobile: user.mobile || '',
+      state: user.location?.state || '',
+      district: user.location?.district || '',
+      city: user.location?.city || '',
+      role: user.role === 'admin' ? 'user' : user.role || 'user',
+      password: '',
+    });
+  }, [user]);
+
   const recentlyViewed = (user?.recentlyViewed || []).filter((r) => r.place);
+
+  const handleProfileSubmit = async (event) => {
+    event.preventDefault();
+    setProfileError('');
+    setProfileSaving(true);
+
+    try {
+      const payload = {
+        name: profileForm.name,
+        email: profileForm.email,
+        mobile: profileForm.mobile,
+        role: profileForm.role,
+        location: {
+          state: profileForm.state,
+          district: profileForm.district,
+          city: profileForm.city,
+        },
+      };
+
+      if (profileForm.password.trim()) {
+        payload.password = profileForm.password.trim();
+      }
+
+      await updateProfile(payload);
+    } catch (error) {
+      setProfileError(error.message);
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const profileRoleOptions = useMemo(() => [
+    { value: 'user', label: 'User account' },
+    { value: 'business', label: 'Business account' },
+  ], []);
 
   if (user?.role === 'admin') return <Navigate to="/admin" replace />;
   if (user?.role === 'business') return <Navigate to="/business/dashboard" replace />;
@@ -103,13 +164,61 @@ export default function UserDashboard() {
         )}
 
         {tab === 'Profile' && user && (
-          <div className="max-w-sm rounded border border-line bg-white/40 p-5 text-sm">
-            <Row label="Name" value={user.name} />
-            <Row label="Email" value={user.email} />
-            <Row label="Mobile" value={user.mobile} />
-            <Row label="Location" value={[user.location?.city, user.location?.district, user.location?.state].filter(Boolean).join(', ')} />
-            <Row label="Account type" value={user.role} last />
-          </div>
+          <form onSubmit={handleProfileSubmit} className="max-w-xl rounded border border-line bg-white/40 p-5 text-sm">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <label className="mb-1 block text-ink/60">Full name</label>
+                <input value={profileForm.name} onChange={(event) => setProfileForm({ ...profileForm, name: event.target.value })} className="w-full rounded border border-line bg-white px-3 py-2.5 outline-none focus:border-ink/40" />
+              </div>
+              <div>
+                <label className="mb-1 block text-ink/60">Email</label>
+                <input type="email" value={profileForm.email} onChange={(event) => setProfileForm({ ...profileForm, email: event.target.value })} className="w-full rounded border border-line bg-white px-3 py-2.5 outline-none focus:border-ink/40" />
+              </div>
+              <div>
+                <label className="mb-1 block text-ink/60">Mobile</label>
+                <input value={profileForm.mobile} onChange={(event) => setProfileForm({ ...profileForm, mobile: event.target.value })} className="w-full rounded border border-line bg-white px-3 py-2.5 outline-none focus:border-ink/40" />
+              </div>
+              <div>
+                <label className="mb-1 block text-ink/60">State</label>
+                <input value={profileForm.state} onChange={(event) => setProfileForm({ ...profileForm, state: event.target.value })} className="w-full rounded border border-line bg-white px-3 py-2.5 outline-none focus:border-ink/40" />
+              </div>
+              <div>
+                <label className="mb-1 block text-ink/60">District</label>
+                <input value={profileForm.district} onChange={(event) => setProfileForm({ ...profileForm, district: event.target.value })} className="w-full rounded border border-line bg-white px-3 py-2.5 outline-none focus:border-ink/40" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="mb-1 block text-ink/60">City</label>
+                <input value={profileForm.city} onChange={(event) => setProfileForm({ ...profileForm, city: event.target.value })} className="w-full rounded border border-line bg-white px-3 py-2.5 outline-none focus:border-ink/40" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="mb-1 block text-ink/60">Account type</label>
+                <div className="flex gap-2 rounded border border-line bg-white p-1">
+                  {profileRoleOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setProfileForm({ ...profileForm, role: option.value })}
+                      className={`flex-1 rounded px-3 py-2 text-sm transition ${
+                        profileForm.role === option.value ? 'bg-ink text-paper' : 'text-ink/60 hover:text-ink'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="md:col-span-2">
+                <label className="mb-1 block text-ink/60">New password (optional)</label>
+                <input type="password" value={profileForm.password} onChange={(event) => setProfileForm({ ...profileForm, password: event.target.value })} placeholder="Leave blank to keep the current password" className="w-full rounded border border-line bg-white px-3 py-2.5 outline-none focus:border-ink/40" />
+              </div>
+            </div>
+
+            {profileError && <p className="mt-4 text-sm text-vermilion">{profileError}</p>}
+
+            <button type="submit" disabled={profileSaving} className="mt-5 rounded bg-ink px-4 py-2.5 text-sm font-medium text-paper disabled:opacity-60">
+              {profileSaving ? 'Saving…' : 'Update profile'}
+            </button>
+          </form>
         )}
       </div>
     </div>

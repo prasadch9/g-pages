@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const Place = require('../models/Place');
 const Category = require('../models/Category');
@@ -48,7 +49,7 @@ const importPlaces = async (req, res, next) => {
         website: row.website || null, images, coverImage: images[0] || null,
         services: String(row.services || '').split('|').map((v) => v.trim()).filter(Boolean),
         attributes: {}, rating: { average: Number(row.rating) || 0, count: Number(row.reviewCount) || 0 },
-        verified: true, status: 'approved', owner: req.user._id,
+        verified: true, status: 'approved', applicationStatus: 'approved', isPublished: true, owner: req.user._id,
       });
       imported.push(place);
     }
@@ -145,7 +146,11 @@ const getBusinesses = async (req, res, next) => {
   try {
     const { status, page = 1, limit = 20 } = req.query;
     const filter = {};
-    if (status) filter.status = status;
+    if (status) {
+      filter.$or = status === 'pending'
+        ? [{ applicationStatus: { $in: ['submitted', 'under_review', 'resubmitted'] } }, { status: 'pending' }]
+        : [{ applicationStatus: status }, { status }];
+    }
 
     const skip = (Number(page) - 1) * Number(limit);
     const [places, total] = await Promise.all([
@@ -169,20 +174,41 @@ const getBusinesses = async (req, res, next) => {
   }
 };
 
+const getBusinessById = async (req, res, next) => {
+  try {
+    const place = await Place.findById(req.params.id)
+      .populate('category', 'name slug filters')
+      .populate('owner', 'name email mobile')
+      .populate('location.state location.district location.city location.area', 'name slug');
+    if (!place) return next(new AppError('Listing not found.', 404));
+    const request = await BusinessRequest.findOne({ place: place._id }).sort('-createdAt');
+    res.status(200).json({ success: true, data: { place, request } });
+  } catch (error) {
+    next(error);
+  }
+};
+
 /** PUT /api/admin/businesses/:id/approve */
 const approveBusiness = async (req, res, next) => {
   try {
-    const place = await Place.findByIdAndUpdate(
-      req.params.id,
-      { status: 'approved', verified: true, rejectionReason: null },
-      { new: true }
-    );
-    if (!place) return next(new AppError('Listing not found.', 404));
-
-    await BusinessRequest.findOneAndUpdate(
-      { place: place._id },
-      { status: 'approved', reviewedBy: req.user._id, reviewedAt: new Date() }
-    );
+    const session = await mongoose.startSession();
+    let place;
+    await session.withTransaction(async () => {
+      const reviewedAt = new Date();
+      const request = await BusinessRequest.findOneAndUpdate(
+        { place: req.params.id, status: { $in: ['pending', 'submitted', 'under_review', 'resubmitted'] } },
+        { $set: { status: 'approved', reviewedBy: req.user._id, reviewedAt, approvedAt: reviewedAt, publishedAt: reviewedAt, rejectionReason: null }, $push: { reviewHistory: { action: 'approved', actor: req.user._id, timestamp: reviewedAt } } },
+        { new: true, session }
+      );
+      if (!request) throw new AppError('This request is not awaiting approval.', 409);
+      place = await Place.findOneAndUpdate(
+        { _id: req.params.id, $or: [{ applicationStatus: { $in: ['submitted', 'under_review', 'resubmitted'] } }, { status: 'pending' }] },
+        { status: 'approved', applicationStatus: 'approved', verified: true, isPublished: true, rejectionReason: null, reviewedBy: req.user._id, reviewedAt, approvedAt: reviewedAt, publishedAt: reviewedAt },
+        { new: true, session }
+      );
+      if (!place) throw new AppError('Listing not found.', 404);
+    });
+    await session.endSession();
 
     await Notification.create({
       user: place.owner,
@@ -204,17 +230,24 @@ const rejectBusiness = async (req, res, next) => {
     const { reason } = req.body;
     if (!reason) return next(new AppError('A rejection reason is required.', 400));
 
-    const place = await Place.findByIdAndUpdate(
-      req.params.id,
-      { status: 'rejected', rejectionReason: reason },
-      { new: true }
-    );
-    if (!place) return next(new AppError('Listing not found.', 404));
-
-    await BusinessRequest.findOneAndUpdate(
-      { place: place._id },
-      { status: 'rejected', rejectionReason: reason, reviewedBy: req.user._id, reviewedAt: new Date() }
-    );
+    const session = await mongoose.startSession();
+    let place;
+    const reviewedAt = new Date();
+    await session.withTransaction(async () => {
+      const request = await BusinessRequest.findOneAndUpdate(
+        { place: req.params.id, status: { $in: ['pending', 'submitted', 'under_review', 'resubmitted'] } },
+        { $set: { status: 'rejected', rejectionReason: reason, reviewedBy: req.user._id, reviewedAt }, $push: { reviewHistory: { action: 'rejected', actor: req.user._id, reason, timestamp: reviewedAt } } },
+        { new: true, session }
+      );
+      if (!request) throw new AppError('This request is not awaiting review.', 409);
+      place = await Place.findOneAndUpdate(
+        { _id: req.params.id, $or: [{ applicationStatus: { $in: ['submitted', 'under_review', 'resubmitted'] } }, { status: 'pending' }] },
+        { status: 'rejected', applicationStatus: 'rejected', isPublished: false, rejectionReason: reason, reviewedBy: req.user._id, reviewedAt },
+        { new: true, session }
+      );
+      if (!place) throw new AppError('Listing not found.', 404);
+    });
+    await session.endSession();
 
     await Notification.create({
       user: place.owner,
@@ -318,6 +351,7 @@ module.exports = {
   setUserRole,
   deleteUser,
   getBusinesses,
+  getBusinessById,
   approveBusiness,
   rejectBusiness,
   suspendBusiness,

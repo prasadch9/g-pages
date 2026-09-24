@@ -6,6 +6,7 @@ const {
   setUserRole,
   deleteUser,
   getBusinesses,
+  getBusinessById,
   approveBusiness,
   rejectBusiness,
   suspendBusiness,
@@ -34,6 +35,7 @@ router.put('/users/:id/role', setUserRole);
 router.delete('/users/:id', deleteUser);
 
 router.get('/businesses', getBusinesses);
+router.get('/businesses/:id', getBusinessById);
 router.put('/businesses/:id/approve', approveBusiness);
 router.put('/businesses/:id/reject', rejectBusiness);
 router.put('/businesses/:id/suspend', suspendBusiness);

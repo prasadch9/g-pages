@@ -1,6 +1,47 @@
 const Place = require('../models/Place');
 const Favorite = require('../models/Favorite');
+const Category = require('../models/Category');
+const BusinessRequest = require('../models/BusinessRequest');
+const Notification = require('../models/Notification');
+const { getBusinessGroup } = require('../config/businessConfig');
+const { storeUpload } = require('../services/mediaStorage');
 const { AppError } = require('../middleware/errorHandler');
+
+const normalizeExternalUrl = (value) => {
+  if (!value) return null;
+  const normalized = String(value).startsWith('http') ? String(value) : `https://${value}`;
+  try {
+    const url = new URL(normalized);
+    if (!['http:', 'https:'].includes(url.protocol)) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+};
+
+const validateLinks = (payload) => {
+  const result = {};
+  const links = { ...(payload.socialLinks || {}) };
+  const website = payload.website ? normalizeExternalUrl(payload.website) : payload.website;
+  if (payload.website && !website) throw new AppError('Please provide a valid website URL.', 400);
+  if (Object.prototype.hasOwnProperty.call(payload, 'website')) result.website = website;
+  if (Object.prototype.hasOwnProperty.call(payload, 'socialLinks')) {
+    Object.entries(links).forEach(([key, value]) => {
+      if (!value) return;
+      const normalized = normalizeExternalUrl(value);
+      if (!normalized) throw new AppError(`Please provide a valid ${key} URL.`, 400);
+      links[key] = normalized;
+    });
+    result.socialLinks = links;
+  }
+  return result;
+};
+
+const parseField = (value, fallback) => {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (typeof value !== 'string') return value;
+  try { return JSON.parse(value); } catch { return value; }
+};
 
 /**
  * GET /api/places
@@ -24,7 +65,7 @@ const getPlaces = async (req, res, next) => {
       limit = 12,
     } = req.query;
 
-    const filter = { status: 'approved' };
+    const filter = { status: 'approved', applicationStatus: 'approved', isPublished: true };
     if (city) filter['location.city'] = city;
     if (area) filter['location.area'] = area;
     if (category) filter.category = category;
@@ -95,7 +136,8 @@ const getPlaceById = async (req, res, next) => {
       .populate('location.state location.district location.city location.area', 'name slug')
       .populate('owner', 'name email');
 
-    if (!place || place.status !== 'approved') {
+    const isAdminPreview = req.user?.role === 'admin';
+    if (!place || (!isAdminPreview && (place.status !== 'approved' || place.applicationStatus !== 'approved' || !place.isPublished))) {
       return next(new AppError('Listing not found.', 404));
     }
 
@@ -123,7 +165,7 @@ const getPlaceById = async (req, res, next) => {
 /** GET /api/places/trending?city=... */
 const getTrending = async (req, res, next) => {
   try {
-    const filter = { status: 'approved' };
+    const filter = { status: 'approved', applicationStatus: 'approved', isPublished: true };
     if (req.query.city) filter['location.city'] = req.query.city;
 
     const places = await Place.find(filter)
@@ -140,13 +182,79 @@ const getTrending = async (req, res, next) => {
 /** POST /api/places — business owner submits a new listing (starts as 'pending'). */
 const createPlace = async (req, res, next) => {
   try {
-    const place = await Place.create({ ...req.body, owner: req.user._id, status: 'pending' });
+    const body = req.body;
+    const { subcategory } = body;
+    const pageType = 'premium';
 
-    const BusinessRequest = require('../models/BusinessRequest');
+    const businessGroup = getBusinessGroup(subcategory);
+    if (subcategory && !businessGroup) {
+      return next(new AppError('Unsupported business subcategory.', 400));
+    }
+
+    if (businessGroup) {
+      const category = await Category.findById(body.category).select('name');
+      if (!category || category.name !== subcategory) {
+        return next(new AppError('The selected subcategory does not match the category.', 400));
+      }
+    }
+
+    const parsedBody = {
+      ...body,
+      services: parseField(body.services, []),
+      facilities: parseField(body.facilities, []),
+      images: parseField(body.images, []),
+      location: parseField(body.location, {}),
+      socialLinks: parseField(body.socialLinks, {}),
+      attributes: parseField(body.attributes, {}),
+      categoryData: parseField(body.categoryData, {}),
+    };
+    const links = validateLinks(parsedBody);
+    const files = req.files || {};
+    const photoFiles = files.photos || [];
+    const videoFiles = files.videos || [];
+    const invalidPhoto = photoFiles.find((file) => !['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype));
+    const invalidVideo = videoFiles.find((file) => !['video/mp4', 'video/webm', 'video/quicktime'].includes(file.mimetype));
+    if (invalidPhoto || invalidVideo) return next(new AppError('Unsupported media file type.', 400));
+    const uploadedPhotos = photoFiles.map(storeUpload);
+    const uploadedVideos = videoFiles.map(storeUpload);
+
+    const place = await Place.create({
+      ...parsedBody,
+      ...links,
+      images: [...(Array.isArray(parsedBody.images) ? parsedBody.images : []), ...uploadedPhotos.map((file) => file.url)],
+      videos: uploadedVideos.map((file) => ({ ...file, title: '', description: '', featured: false })),
+      owner: req.user._id,
+      pageType,
+      subcategory: subcategory || null,
+      businessGroup,
+      status: 'pending',
+      applicationStatus: 'submitted',
+      isPublished: false,
+      submittedAt: new Date(),
+      reviewedAt: null,
+      reviewedBy: null,
+      approvedAt: null,
+      publishedAt: null,
+    });
+
     await BusinessRequest.create({
       owner: req.user._id,
       place: place._id,
       placeSnapshot: place.toObject(),
+      pageType,
+      businessGroup,
+      subcategory: subcategory || null,
+      status: 'submitted',
+      submittedAt: place.submittedAt,
+      reviewHistory: [{ action: 'application_created', actor: req.user._id, timestamp: place.submittedAt }],
+    });
+
+    await Notification.create({
+      user: req.user._id,
+      title: 'Business request submitted',
+      message: 'Your business request has been submitted for review.',
+      type: 'business_request_submitted',
+      link: '/business/dashboard',
     });
 
     res.status(201).json({
@@ -170,10 +278,22 @@ const updatePlace = async (req, res, next) => {
       return next(new AppError('You do not have permission to edit this listing.', 403));
     }
 
-    Object.assign(place, req.body);
+    const { status, applicationStatus, isPublished, reviewedBy, reviewedAt, approvedAt, publishedAt, owner, ...editableFields } = req.body;
+    Object.assign(editableFields, validateLinks(editableFields));
+    Object.assign(place, editableFields);
     if (isOwner && req.user.role !== 'admin') {
       place.status = 'pending'; // owner edits require re-approval
+      place.applicationStatus = place.applicationStatus === 'rejected' ? 'resubmitted' : 'submitted';
+      place.isPublished = false;
       place.rejectionReason = null;
+      place.submittedAt = new Date();
+      await BusinessRequest.findOneAndUpdate(
+        { place: place._id, owner: req.user._id },
+        {
+          $set: { status: place.applicationStatus, placeSnapshot: { ...place.toObject(), ...editableFields }, submittedAt: place.submittedAt, rejectionReason: null },
+          $push: { reviewHistory: { action: 'resubmitted', actor: req.user._id, timestamp: place.submittedAt } },
+        }
+      );
     }
     await place.save();
 
@@ -251,11 +371,71 @@ const getMyPlaces = async (req, res, next) => {
   }
 };
 
+const getMyBusinessRequests = async (req, res, next) => {
+  try {
+    const requests = await BusinessRequest.find({ owner: req.user._id })
+      .populate({ path: 'place', populate: [{ path: 'category', select: 'name slug' }, { path: 'location.city', select: 'name slug' }] })
+      .sort('-createdAt');
+    res.status(200).json({ success: true, data: requests });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getBusinessRequest = async (req, res, next) => {
+  try {
+    const request = await BusinessRequest.findOne({ _id: req.params.id, owner: req.user._id }).populate('place');
+    if (!request) return next(new AppError('Business request not found.', 404));
+    res.status(200).json({ success: true, data: request });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const resubmitBusinessRequest = async (req, res, next) => {
+  try {
+    const request = await BusinessRequest.findOne({ _id: req.params.id, owner: req.user._id });
+    if (!request) return next(new AppError('Business request not found.', 404));
+    if (request.status !== 'rejected') return next(new AppError('Only rejected requests can be resubmitted.', 409));
+
+    const place = await Place.findOne({ _id: request.place, owner: req.user._id });
+    if (!place) return next(new AppError('Business listing not found.', 404));
+    const submittedAt = new Date();
+    place.status = 'pending';
+    place.applicationStatus = 'resubmitted';
+    place.isPublished = false;
+    place.submittedAt = submittedAt;
+    place.rejectionReason = null;
+    await place.save();
+
+    request.status = 'resubmitted';
+    request.submittedAt = submittedAt;
+    request.rejectionReason = null;
+    request.placeSnapshot = place.toObject();
+    request.reviewHistory.push({ action: 'resubmitted', actor: req.user._id, timestamp: submittedAt });
+    await request.save();
+
+    await Notification.create({
+      user: req.user._id,
+      title: 'Business request resubmitted',
+      message: 'Your corrected business request has been resubmitted for review.',
+      type: 'business_request_resubmitted',
+      link: '/business/dashboard',
+    });
+    res.status(200).json({ success: true, message: 'Business request resubmitted.', data: request });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getPlaces,
   getPlaceById,
   getTrending,
   getMyPlaces,
+  getMyBusinessRequests,
+  getBusinessRequest,
+  resubmitBusinessRequest,
   getMyFavorites,
   createPlace,
   updatePlace,

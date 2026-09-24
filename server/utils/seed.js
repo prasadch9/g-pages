@@ -541,8 +541,14 @@ const run = async () => {
     const seedAdmin = await User.findOneAndUpdate(
       { email: seedAdminEmail },
       {
-        $set: { name: 'Google Pages Admin', email: seedAdminEmail, mobile: process.env.SEED_ADMIN_MOBILE || '9999999999', role: 'admin', status: 'active' },
-        $setOnInsert: { passwordHash: adminPasswordHash },
+        $set: {
+          name: 'Google Pages Admin',
+          email: seedAdminEmail,
+          mobile: process.env.SEED_ADMIN_MOBILE || '9999999999',
+          passwordHash: adminPasswordHash,
+          role: 'admin',
+          status: 'active',
+        },
       },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
@@ -575,7 +581,7 @@ const run = async () => {
                 category.name === 'Hospitals' ? { specialization: 'Multi-Specialty', emergency: 'true' } :
                 category.name === 'Restaurants' ? { cuisine: categoryIndex % 2 ? 'South Indian' : 'Multi-Cuisine', priceRange: '₹₹' } : {},
               rating: { average: Number((4.1 + (categoryIndex % 8) / 10).toFixed(1)), count: 18 + categoryIndex * 4 },
-              verified: true, status: 'approved', owner: demoOwner._id,
+              verified: true, status: 'approved', applicationStatus: 'approved', isPublished: true, owner: demoOwner._id,
               views: 120 + categoryIndex * 17, favoritesCount: 8 + categoryIndex,
             },
           },

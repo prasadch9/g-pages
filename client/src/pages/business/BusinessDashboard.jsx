@@ -1,9 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
+import BusinessMediaManager from '../../components/BusinessMediaManager';
+import BusinessChatInbox from '../../components/BusinessChatInbox';
+import { getCategoryConfig } from '../../data/businessConfig';
 
 const STATUS_STYLES = {
   pending: 'bg-marigold/20 text-marigold-dark',
+  submitted: 'bg-marigold/20 text-marigold-dark',
+  under_review: 'bg-marigold/20 text-marigold-dark',
+  resubmitted: 'bg-marigold/20 text-marigold-dark',
   approved: 'bg-moss/15 text-moss',
   rejected: 'bg-vermilion/10 text-vermilion',
   suspended: 'bg-ink/10 text-ink/50',
@@ -73,25 +79,41 @@ export default function BusinessDashboard() {
 
         <div className="mt-4 flex flex-col divide-y divide-line rounded border border-line bg-white/40">
           {places.map((place) => (
-            <div key={place._id} className="flex flex-wrap items-center justify-between gap-3 p-4">
+            <div key={place._id} className="p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <div className="font-display text-[15px] font-medium text-ink">{place.name}</div>
                 <div className="text-xs text-ink/45">
-                  {place.category?.name} · {place.views} views · {place.favoritesCount} favorites
+                  {place.category?.name} {place.subcategory ? `· ${place.subcategory}` : ''} · Premium business page · {place.views} views · {place.favoritesCount} favorites
                 </div>
                 {place.status === 'rejected' && place.rejectionReason && (
                   <div className="mt-1 text-xs text-vermilion">Reason: {place.rejectionReason}</div>
                 )}
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {getCategoryConfig(place.subcategory).modules.map((module) => <span key={module} className="rounded-full bg-cyan-50 px-2 py-1 text-[10px] capitalize text-cyan-800">{module.replace(/[A-Z]/g, (letter) => ` ${letter}`)}</span>)}
+                </div>
               </div>
-              <span
-                className={`rounded-sm px-2.5 py-1 text-xs font-medium capitalize ${STATUS_STYLES[place.status]}`}
-              >
-                {place.status}
-              </span>
+              <div className="flex items-center gap-2">
+                <Link
+                  to={`/business/listings/${place._id}/edit`}
+                  state={{ editPlace: place }}
+                  className="rounded border border-line px-3 py-1.5 text-xs font-medium text-ink/70 hover:text-ink"
+                >
+                  Update
+                </Link>
+                <span
+                  className={`rounded-sm px-2.5 py-1 text-xs font-medium capitalize ${STATUS_STYLES[place.status]}`}
+                >
+                  {place.applicationStatus || place.status}
+                </span>
+              </div>
+              </div>
+              <BusinessMediaManager place={place} onUpdated={(updated) => setPlaces((current) => current.map((item) => item._id === updated._id ? updated : item))} />
             </div>
           ))}
         </div>
       </div>
+      <BusinessChatInbox />
     </div>
   );
 }

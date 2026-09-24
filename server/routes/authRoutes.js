@@ -1,6 +1,6 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
-const { register, login, googleLogin, forgotPassword, resetPassword, getMe, logout } = require('../controllers/authController');
+const { register, login, googleLogin, forgotPassword, resetPassword, getMe, updateMe, logout } = require('../controllers/authController');
 const { registerValidator, loginValidator, forgotPasswordValidator, resetPasswordValidator } = require('../validators/authValidator');
 const validate = require('../middleware/validate');
 const { protect } = require('../middleware/auth');
@@ -20,6 +20,8 @@ router.post('/google', googleLogin);
 router.post('/forgot-password', forgotPasswordValidator, validate, forgotPassword);
 router.post('/reset-password', resetPasswordValidator, validate, resetPassword);
 router.get('/me', protect, getMe);
+router.put('/me', protect, updateMe);
+router.patch('/me', protect, updateMe);
 router.post('/logout', logout);
 
 module.exports = router;

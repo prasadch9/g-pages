@@ -24,6 +24,24 @@ const placeSchema = new mongoose.Schema(
       required: true,
     },
 
+    businessGroup: {
+      type: String,
+      enum: ['business-professional-services', 'logistics-moving', null],
+      default: null,
+    },
+
+    subcategory: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+
+    pageType: {
+      type: String,
+      enum: ['premium', 'static', 'dynamic'],
+      default: 'premium',
+    },
+
     location: {
       state: {
         type: mongoose.Schema.Types.ObjectId,
@@ -106,6 +124,11 @@ const placeSchema = new mongoose.Schema(
         type: String,
         default: null,
       },
+
+      twitter: {
+        type: String,
+        default: null,
+      },
     },
 
     images: [
@@ -127,6 +150,48 @@ const placeSchema = new mongoose.Schema(
     video: {
       type: String,
       default: null,
+    },
+
+    videos: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
+
+    albums: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
+
+    portfolio: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
+
+    testimonials: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
+
+    offers: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
+
+    events: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
+
+    categoryData: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+
+    seo: {
+      title: { type: String, default: null, trim: true, maxlength: 160 },
+      description: { type: String, default: null, trim: true, maxlength: 320 },
+      canonicalUrl: { type: String, default: null, trim: true },
+      socialImage: { type: String, default: null, trim: true },
     },
 
     services: [
@@ -220,6 +285,43 @@ const placeSchema = new mongoose.Schema(
       default: 'pending',
     },
 
+    applicationStatus: {
+      type: String,
+      enum: ['draft', 'submitted', 'under_review', 'approved', 'rejected', 'resubmitted'],
+      default: 'submitted',
+    },
+
+    isPublished: {
+      type: Boolean,
+      default: false,
+    },
+
+    submittedAt: {
+      type: Date,
+      default: null,
+    },
+
+    reviewedAt: {
+      type: Date,
+      default: null,
+    },
+
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+
+    approvedAt: {
+      type: Date,
+      default: null,
+    },
+
+    publishedAt: {
+      type: Date,
+      default: null,
+    },
+
     rejectionReason: {
       type: String,
       default: null,
@@ -289,6 +391,18 @@ placeSchema.index({
 placeSchema.index({
   status: 1,
   verified: 1,
+});
+
+placeSchema.index({
+  applicationStatus: 1,
+  isPublished: 1,
+  owner: 1,
+});
+
+placeSchema.index({
+  pageType: 1,
+  businessGroup: 1,
+  subcategory: 1,
 });
 
 // Text search
