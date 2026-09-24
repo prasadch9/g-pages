@@ -22,8 +22,8 @@ export default function PlaceCard({ place }) {
   const categoryKey = place.category?.slug || place.category?.name?.toLowerCase();
   const fallbackImage = FALLBACK_IMAGES[categoryKey] || FALLBACK_IMAGES.default;
   const cover = place.coverImage || place.images?.[0] || fallbackImage;
-  const travelCategory = ['tours-and-travels', 'hotels-and-residencies', 'resorts', 'party-zones'].includes(place.category?.slug);
-  const profileUrl = resolveFoodBusinessType(place) || resolveWeddingBusinessType(place) || resolvePropertyBusinessType(place) || travelCategory ? `/business/${place._id}` : `/place/${place._id}`;
+  const specialCategory = ['tours-and-travels', 'hotels-and-residencies', 'resorts', 'party-zones', 'small-scale-industries', 'food-processing', 'trading-businesses'].includes(place.category?.slug);
+  const profileUrl = resolveFoodBusinessType(place) || resolveWeddingBusinessType(place) || resolvePropertyBusinessType(place) || specialCategory ? `/business/${place._id}` : `/place/${place._id}`;
 
   return (
     <Link

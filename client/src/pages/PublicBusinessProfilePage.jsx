@@ -14,6 +14,7 @@ import ToursTravelWebsite from '../components/public/ToursTravelWebsite';
 import HotelResidencyWebsite from '../components/public/HotelResidencyWebsite';
 import ResortWebsite from '../components/public/ResortWebsite';
 import PartyZoneWebsite from '../components/public/PartyZoneWebsite';
+import IndustrialWebsite from '../components/public/IndustrialWebsite';
 import { ProfileLoading, resolveFoodBusinessType, resolvePropertyBusinessType, resolveWeddingBusinessType } from '../components/public/PublicProfileShared';
 import { isHealthcareBusiness } from '../utils/healthcare';
 
@@ -50,6 +51,10 @@ export default function PublicBusinessProfilePage() {
     const values = [place?.subcategory?.name, place?.subcategory?.slug, place?.category?.name, place?.category?.slug, place?.attributes?.businessProfile?.businessType];
     return values.some((value) => String(value || '').toLowerCase().replace(/[_\s]+/g, '-').includes('party-zone'));
   }, [place]);
+  const isIndustrial = useMemo(() => {
+    const values = [place?.subcategory?.name, place?.subcategory?.slug, place?.category?.name, place?.category?.slug, place?.attributes?.businessProfile?.businessType];
+    return values.some((value) => ['small-scale-industries', 'food-processing', 'trading-businesses'].includes(String(value || '').toLowerCase().replace(/[_\s]+/g, '-')));
+  }, [place]);
   if (loading) return <ProfileLoading />;
   if (error || !place) return <ProfileLoading error={error || 'The business could not be found.'} />;
   if (isHealthcareBusiness(place)) return <HealthcareWebsite place={place} />;
@@ -59,6 +64,7 @@ export default function PublicBusinessProfilePage() {
   if (isHotelResidency) return <HotelResidencyWebsite place={place} />;
   if (isResort) return <ResortWebsite place={place} />;
   if (isPartyZone) return <PartyZoneWebsite place={place} />;
+  if (isIndustrial) return <IndustrialWebsite place={place} />;
   if (type) return <FoodBusinessWebsite place={place} />;
 
   if (type === 'restaurant') return <RestaurantProfilePage place={place} />;

@@ -36,8 +36,8 @@ export default function PlacesSlideshow({ places = [] }) {
 
   const place = places[index];
   const cover = place.coverImage || place.images?.[0];
-  const travelCategory = ['tours-and-travels', 'hotels-and-residencies', 'resorts', 'party-zones'].includes(place.category?.slug);
-  const profileUrl = travelCategory ? `/business/${place._id}` : `/place/${place._id}`;
+  const specialCategory = ['tours-and-travels', 'hotels-and-residencies', 'resorts', 'party-zones', 'small-scale-industries', 'food-processing', 'trading-businesses'].includes(place.category?.slug);
+  const profileUrl = specialCategory ? `/business/${place._id}` : `/place/${place._id}`;
 
   return (
     <div

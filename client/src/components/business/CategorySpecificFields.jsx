@@ -62,9 +62,9 @@ const FIELD_SETS = {
   },
   Automotive: { 'Car Showrooms': ['Brands', 'Models', 'New/Used', 'Services', 'Test Drive', 'Contact'] },
   'Industries & Manufacturing': {
-    'Small Scale Industries': ['Products', 'Manufacturing', 'Capacity'],
-    'Food Processing': ['Products', 'Processing', 'Production'],
-    'Trading Businesses': ['Products', 'Trading Categories', 'Services'],
+    'Small Scale Industries': ['Products', 'Manufacturing', 'Capacity', 'Manufacturing Process', 'Quality', 'Infrastructure', 'Certifications'],
+    'Food Processing': ['Products', 'Processing', 'Production', 'Quality & Safety', 'Packaging', 'Distribution', 'Certifications'],
+    'Trading Businesses': ['Products', 'Trading Categories', 'Services', 'Brands & Suppliers', 'Distribution', 'Supply Network', 'Industries Served'],
   },
   'Business & Professional Services': {
     Consultancies: ['Consultancy Services', 'Specializations'],
