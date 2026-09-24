@@ -39,10 +39,10 @@ const FIELD_SETS = {
     'Saloon & Spa': ['Hair Services', 'Spa Services', 'Beauty Services', 'Packages'],
   },
   'Travel & Hospitality': {
-    'Tours & Travels': ['Tour Packages', 'Destinations', 'Travel Services'],
-    'Hotels & Residencies': ['Rooms', 'Room Types', 'Amenities', 'Check-in/Check-out'],
-    Resorts: ['Rooms', 'Activities', 'Facilities', 'Packages'],
-    'Party Zones': ['Event Types', 'Capacity', 'Facilities', 'Packages'],
+    'Tours & Travels': ['Tour Packages', 'Destinations', 'Travel Services', 'Vehicles', 'Experience', 'Travel Philosophy', 'Facilities'],
+    'Hotels & Residencies': ['Rooms', 'Room Types', 'Amenities', 'Hotel Services', 'Infrastructure', 'Highlights', 'Check-in/Check-out'],
+    Resorts: ['Rooms', 'Activities', 'Facilities', 'Infrastructure', 'Highlights', 'Packages', 'Resort Philosophy'],
+    'Party Zones': ['Event Types', 'Party Services', 'Facilities', 'Infrastructure', 'Highlights', 'Packages', 'Venue Philosophy'],
   },
   'Real Estate & Construction': {
     'Real Estate': ['Property Types', 'Services', 'Property Areas'],

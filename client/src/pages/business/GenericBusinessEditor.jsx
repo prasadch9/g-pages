@@ -11,7 +11,22 @@ const inputClass = 'mt-1 w-full rounded-xl border border-[#e2e8f0] bg-white px-3
 const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const emptyHours = Object.fromEntries(days.map((d) => [d, { open: '', close: '', closed: false }]));
 const split = (v) => Array.isArray(v) ? v : String(v || '').split(/[\n,]/).map((s) => s.trim()).filter(Boolean);
-const asText = (v) => Array.isArray(v) ? v.filter(Boolean).join('\n') : v || '';
+const asText = (v) => Array.isArray(v)
+  ? v.filter(Boolean).map((item) => (typeof item === 'object' ? JSON.stringify(item) : item)).join('\n')
+  : v || '';
+const structuredTravelFields = new Set(['Tour Packages', 'Destinations', 'Vehicles']);
+const parseSpecificValue = (key, value) => {
+  const values = split(value);
+  if (!structuredTravelFields.has(key)) return values;
+  return values.map((item) => {
+    try {
+      const parsed = JSON.parse(item);
+      return parsed && typeof parsed === 'object' ? parsed : { name: item };
+    } catch {
+      return { name: item };
+    }
+  });
+};
 
 const GROUP_ACCENT = {
   'Education & Learning': { bg: '#f0f9ff', border: '#bae6fd', accent: '#0369a1', dark: '#0c4a6e' },
@@ -88,7 +103,7 @@ export default function GenericBusinessEditor({ place = null, groupName, subcate
     setSaving(true); setError(''); setMessage('');
     const categorySpecific = {
       ...specific,
-      ...Object.fromEntries(Object.entries(form.specific).map(([k, v]) => [k, split(v)])),
+      ...Object.fromEntries(Object.entries(form.specific).map(([k, v]) => [k, parseSpecificValue(k, v)])),
     };
     const businessType = `category-${(subcategoryName || groupName).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`;
     const payload = {
@@ -103,7 +118,7 @@ export default function GenericBusinessEditor({ place = null, groupName, subcate
       logo: form.logo || undefined,
       coverImage: form.coverImage || undefined,
       images: form.gallery.slice(0, 10),
-      services: split(form.specific['Services'] || form.specific['Professional Services'] || form.specific['Medical Services'] || form.specific['Tour Packages'] || ''),
+      services: split(form.specific['Travel Services'] || form.specific['Services'] || form.specific['Professional Services'] || form.specific['Medical Services'] || ''),
       facilities: split(form.specific['Facilities'] || ''),
       socialLinks: { ...form.social, whatsapp: form.whatsapp || undefined },
       workingHours: days.map((d) => ({ day: d, ...(form.hours[d] || {}) })),
@@ -211,7 +226,9 @@ export default function GenericBusinessEditor({ place = null, groupName, subcate
                       rows={3}
                       value={form.specific[fieldName] || ''}
                       onChange={(e) => setSpecificField(fieldName, e.target.value)}
-                      placeholder={`Enter ${fieldName.toLowerCase()}...`}
+                      placeholder={structuredTravelFields.has(fieldName)
+                        ? `One item per line. For details use JSON, e.g. {"name":"Goa Escape","days":4,"nights":3,"price":"₹24,000","description":"Beach and heritage stay"}`
+                        : `Enter ${fieldName.toLowerCase()}...`}
                       className={inputClass}
                     />
                   </label>

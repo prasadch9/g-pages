@@ -704,6 +704,7 @@ export default function PlaceDetailPage() {
   const foodBusinessType = resolveFoodBusinessType(place);
   const weddingBusinessType = resolveWeddingBusinessType(place);
   const propertyBusinessType = resolvePropertyBusinessType(place);
+  const isTravelHospitalityCategory = ['tours-and-travels', 'hotels-and-residencies', 'resorts', 'party-zones'].includes(place.category?.slug);
   const businessType = place.attributes?.businessProfile?.businessType;
   const isRestaurant = businessType === 'restaurant'
     || (!businessType && !place.attributes?.businessProfile && Boolean(place.attributes?.restaurantProfile))
@@ -732,6 +733,8 @@ export default function PlaceDetailPage() {
   if (propertyBusinessType) {
     return <PropertyBusinessWebsite place={place} propertyType={propertyBusinessType} />;
   }
+
+  if (isTravelHospitalityCategory) return <Navigate to={`/business/${place._id}`} replace />;
 
   if (isSchoolCategory) {
     return (

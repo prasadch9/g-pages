@@ -573,12 +573,13 @@ const run = async () => {
         const category = categories[categoryIndex];
         const area = await Location.findOne({ level: 'area', parent: city._id }).skip(categoryIndex % Math.max(1, (AREAS[city.name] || []).length));
         const name = `${city.name} ${category.name.replace(/s$/, '')} Hub`;
+        const placeSlug = createSlug(name);
         const image = IMAGE_SETS[categoryIndex % IMAGE_SETS.length];
         const place = await Place.findOneAndUpdate(
-          { name, 'location.city': city._id, category: category._id },
+          { slug: placeSlug, 'location.city': city._id },
           {
             $set: {
-              name, slug: createSlug(name), category: category._id,
+              name, slug: placeSlug, category: category._id,
               location: { state: state._id, district: city.parent._id, city: city._id, area: area?._id || null },
               address: `${area?.name || city.name} Main Road, ${city.name}, Andhra Pradesh`,
               description: `A trusted, locally loved ${category.name.toLowerCase()} serving families and visitors across ${city.name}.`,
