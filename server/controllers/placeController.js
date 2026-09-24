@@ -1,6 +1,40 @@
 const Place = require('../models/Place');
+const Category = require('../models/Category');
 const Favorite = require('../models/Favorite');
+const slugify = require('slugify');
 const { AppError } = require('../middleware/errorHandler');
+const { getCategoryGroup } = require('../config/categoryModules');
+
+const PUBLIC_PLACE_FILTER = { status: 'approved', applicationStatus: 'approved', isPublished: true };
+
+const parseMultipartValue = (value, fallback) => {
+  if (value === undefined || value === '') return fallback;
+  try { return JSON.parse(value); } catch { return value; }
+};
+
+const publicUploadUrl = (req, file) => `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
+
+async function createUniqueSlug(name, city, excludeId = null) {
+  const base = slugify(name || 'place', { lower: true, strict: true, trim: true }) || 'place';
+  let slug = base;
+  let suffix = 2;
+  while (await Place.exists({ slug, 'location.city': city, ...(excludeId ? { _id: { $ne: excludeId } } : {}) })) {
+    slug = `${base}-${suffix}`;
+    suffix += 1;
+  }
+  return slug;
+}
+
+async function geocodeAddress(address) {
+  if (!address || typeof fetch !== 'function') return null;
+  try {
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(address)}`, {
+      headers: { 'User-Agent': 'GooglePages/1.0 contact@googlepages.local' },
+    });
+    const results = await response.json();
+    return results[0] ? { lat: Number(results[0].lat), lng: Number(results[0].lon) } : null;
+  } catch { return null; }
+}
 
 /**
  * GET /api/places
@@ -24,7 +58,7 @@ const getPlaces = async (req, res, next) => {
       limit = 12,
     } = req.query;
 
-    const filter = { status: 'approved' };
+    const filter = { ...PUBLIC_PLACE_FILTER };
     if (city) filter['location.city'] = city;
     if (area) filter['location.area'] = area;
     if (category) filter.category = category;
@@ -96,7 +130,11 @@ const getPlaceById = async (req, res, next) => {
       .populate('owner', 'name email');
 
     const isOwner = place && req.user && place.owner?._id?.toString() === req.user._id.toString();
-    if (!place || (place.status !== 'approved' && !isOwner)) {
+  const isPubliclyAvailable = place
+    && place.status === 'approved'
+    && place.applicationStatus === 'approved'
+    && place.isPublished;
+  if (!place || (!isPubliclyAvailable && !isOwner)) {
       return next(new AppError('Listing not found.', 404));
     }
 
@@ -124,7 +162,7 @@ const getPlaceById = async (req, res, next) => {
 /** GET /api/places/trending?city=... */
 const getTrending = async (req, res, next) => {
   try {
-    const filter = { status: 'approved' };
+    const filter = { ...PUBLIC_PLACE_FILTER };
     if (req.query.city) filter['location.city'] = req.query.city;
 
     const places = await Place.find(filter)
@@ -141,13 +179,70 @@ const getTrending = async (req, res, next) => {
 /** POST /api/places — business owner submits a new listing (starts as 'pending'). */
 const createPlace = async (req, res, next) => {
   try {
-    const place = await Place.create({ ...req.body, owner: req.user._id, status: 'pending' });
+    const body = { ...req.body };
+    const category = await Category.findById(body.category).select('name group');
+    if (!category) return next(new AppError('Select a valid category.', 400));
+    const pageType = body.pageType === 'dynamic' ? 'dynamic' : 'static';
+    body.location = parseMultipartValue(body.location, body.location);
+    body.socialLinks = parseMultipartValue(body.socialLinks, {});
+    body.attributes = parseMultipartValue(body.attributes, {});
+    body.video = parseMultipartValue(body.video, body.video);
+    ['services', 'facilities', 'images'].forEach((field) => { body[field] = parseMultipartValue(body[field], []); });
+    const files = (Array.isArray(req.files) ? req.files : Object.entries(req.files || {}).flatMap(([fieldname, entries]) => entries.map((file) => ({ ...file, fieldname }))));
+    const filesFor = (fieldname) => files.filter((file) => file.fieldname === fieldname);
+    const logo = filesFor('logo')[0] ? publicUploadUrl(req, filesFor('logo')[0]) : body.logo;
+    const footerLogo = filesFor('footerLogo')[0] ? publicUploadUrl(req, filesFor('footerLogo')[0]) : body.attributes?.footerLogo;
+    const aboutImage = filesFor('aboutImage')[0] ? publicUploadUrl(req, filesFor('aboutImage')[0]) : body.aboutImage;
+    const coverImage = filesFor('coverImage')[0] ? publicUploadUrl(req, filesFor('coverImage')[0]) : body.coverImage;
+    const images = filesFor('images').map((file) => publicUploadUrl(req, file));
+    const uploadedVideos = [...filesFor('video'), ...filesFor('videos'), ...filesFor('schoolVideoFiles')].map((file) => publicUploadUrl(req, file));
+    const linkedVideos = (body.attributes?.schoolVideos || []).filter((item) => item?.type !== 'upload' && item?.url).map((item) => item.url);
+    const video = [...uploadedVideos, ...linkedVideos, ...(Array.isArray(body.video) ? body.video : body.video ? [body.video] : [])];
+    const facilityImages = filesFor('facilityImages').map((file) => publicUploadUrl(req, file));
+    const galleryImages = filesFor('galleryImages').map((file) => publicUploadUrl(req, file));
+    const principalImage = filesFor('principalImage')[0] ? publicUploadUrl(req, filesFor('principalImage')[0]) : body.principalImage;
+    const schoolMedia = {
+      principalGallery: filesFor('principalGallery').map((file) => publicUploadUrl(req, file)),
+      facultyImages: filesFor('facultyImages').map((file) => publicUploadUrl(req, file)),
+      infrastructureImages: filesFor('infrastructureImages').map((file) => publicUploadUrl(req, file)),
+      galleryImages,
+      facilityImages: facilityImages.length ? facilityImages : body.attributes?.facilityImages,
+      eventImages: filesFor('eventImages').map((file) => publicUploadUrl(req, file)),
+      videoFiles: filesFor('schoolVideoFiles').map((file) => publicUploadUrl(req, file)),
+    };
+    body.attributes = {
+      ...(body.attributes || {}),
+      ...schoolMedia,
+      principalImage,
+      aboutImage,
+      footerLogo,
+    };
+    body.slug = await createUniqueSlug(body.name, body.location?.city);
+    const coordinates = await geocodeAddress(body.address);
+    const place = await Place.create({
+      ...body,
+      categoryGroup: category.group || getCategoryGroup(category.name),
+      subcategory: category.name,
+      pageType,
+      images: [...(Array.isArray(body.images) ? body.images : []), ...images, ...galleryImages],
+      logo,
+      coverImage,
+      video,
+      coordinates: coordinates || body.coordinates || undefined,
+      owner: req.user._id,
+      status: 'pending',
+      applicationStatus: 'submitted',
+      isPublished: false,
+      submittedAt: new Date(),
+    });
 
     const BusinessRequest = require('../models/BusinessRequest');
     await BusinessRequest.create({
       owner: req.user._id,
       place: place._id,
       placeSnapshot: place.toObject(),
+      status: 'submitted',
+      submittedAt: place.submittedAt,
     });
 
     res.status(201).json({
@@ -171,25 +266,45 @@ const updatePlace = async (req, res, next) => {
       return next(new AppError('You do not have permission to edit this listing.', 403));
     }
 
-    const updates = { ...req.body };
-    delete updates.owner;
-    delete updates.status;
-    delete updates.reviewedBy;
-    delete updates.reviewedAt;
-    Object.assign(place, updates);
-    if (isOwner && req.user.role !== 'admin') {
-      const wasPreviouslyApproved = place.status === 'pending' && place.reviewedAt && !place.rejectionReason;
-      if (place.status === 'approved' || wasPreviouslyApproved) {
-        place.status = 'approved';
-        place.rejectionReason = null;
-      } else {
-        place.status = 'pending';
-        place.rejectionReason = null;
-      }
+    const {
+      status: ignoredStatus,
+      applicationStatus: ignoredApplicationStatus,
+      isPublished: ignoredPublished,
+      reviewedBy: ignoredReviewedBy,
+      reviewedAt: ignoredReviewedAt,
+      approvedAt: ignoredApprovedAt,
+      publishedAt: ignoredPublishedAt,
+      owner: ignoredOwner,
+      name: requestedName,
+      ...ownerUpdates
+    } = req.body;
+    if (requestedName && requestedName !== place.name) {
+      ownerUpdates.name = requestedName;
     }
-    await place.save();
+    if (ownerUpdates.location) {
+      ownerUpdates.location = {
+        ...ownerUpdates.location,
+        // Area is optional; an empty string cannot be cast to its ObjectId.
+        area: ownerUpdates.location.area || null,
+      };
+    }
+    const updateFields = { ...ownerUpdates };
+    // Keep the listing's current publication and approval state when its owner
+    // edits it. The existing document is excluded from the slug lookup so an
+    // unchanged business name can never conflict with its own slug.
+    const targetCity = ownerUpdates.location?.city || place.location.city;
+    const nameChanged = requestedName && requestedName !== place.name;
+    const cityChanged = targetCity.toString() !== place.location.city.toString();
+    if (nameChanged || cityChanged) {
+      updateFields.slug = await createUniqueSlug(requestedName || place.name, targetCity, place._id);
+    }
+    const updatedPlace = await Place.findByIdAndUpdate(
+      place._id,
+      { $set: updateFields },
+      { new: true, runValidators: true }
+    );
 
-    res.status(200).json({ success: true, message: 'Listing updated.', data: place });
+    res.status(200).json({ success: true, message: 'Listing updated.', data: updatedPlace });
   } catch (error) {
     next(error);
   }

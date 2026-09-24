@@ -69,8 +69,9 @@ enquiries (contact-business form, business inbox), reporting a listing, in-app n
 
 ## Known limitations / next steps
 
-- **Image uploads**: listings currently take an image *URL* rather than a file upload widget.
-  Wiring up Cloudinary/S3 (`multer` is already a dependency) is the natural next step.
+- **Media storage**: development listings support multipart photo/video uploads through the
+  existing Multer integration and local `server/uploads` storage. Production deployments
+  should replace that storage adapter with Cloudinary or S3/CDN storage.
 - **Maps**: the "Get directions" link opens Google Maps in a new tab; there's no embedded map
   widget yet — add the Google Maps JavaScript API using the `GOOGLE_MAPS_API_KEY` env var.
 - **Self-serve business signup**: today a user's role is flipped to `business` directly in the
@@ -81,6 +82,9 @@ enquiries (contact-business form, business inbox), reporting a listing, in-app n
 - **Category management UI**: the API supports full category CRUD, but there's no admin screen
   for it yet — categories are managed via `npm run seed` or directly in MongoDB.
 - **SEO extras** (sitemap.xml, structured data, meta tags per page) aren't generated yet.
+- **Business page types**: new listings choose Static/Standard or Dynamic/Premium, with
+  category-driven modules and server-controlled approval/publication fields. Run the seed
+  command once after upgrading so existing demo places receive the new publication fields.
 
 ## Security notes
 

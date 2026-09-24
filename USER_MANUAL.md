@@ -154,11 +154,14 @@ Do not use the normal visitor option if you need to create listings.
 
 1. Open **Business dashboard**.
 2. Select **Create new listing**.
-3. Enter business name.
-4. Select a category.
-5. Select state, district, city, and optional area.
-6. Enter address, description, phone, email, website, services, and image URL.
-7. Submit the listing.
+4. Enter business name.
+5. Select a category/subcategory.
+6. Choose **Static / Standard** or **Dynamic / Premium**.
+7. Select state, district, city, and optional area.
+8. Enter address, description, phone, email, website, services, and facilities.
+9. Upload a cover photo, multiple gallery photos, and an optional video.
+10. Add category-specific academic or business details when applicable.
+11. Submit the listing.
 
 The listing is saved to MongoDB with:
 

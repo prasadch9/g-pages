@@ -125,7 +125,7 @@ export default function AdminBusinesses() {
               <div>
                 <div className="font-display text-[15px] font-medium text-ink">{place.name}</div>
                 <div className="text-xs text-ink/45">
-                  {place.category?.name} · {place.location?.city?.name} · owner: {place.owner?.name} ({place.owner?.email})
+                  {place.category?.name} · {place.location?.city?.name} · {place.pageType || 'static'} page · owner: {place.owner?.name} ({place.owner?.email})
                 </div>
                 <p className="mt-1 max-w-lg text-sm text-ink/60">{place.address}</p>
               </div>

@@ -4,7 +4,7 @@ const { AppError } = require('../middleware/errorHandler');
 /** GET /api/categories — public, dynamically loaded (never hard-coded in the frontend) */
 const getCategories = async (req, res, next) => {
   try {
-    const categories = await Category.find({ status: 'active' }).sort('order name');
+    const categories = await Category.find({ status: 'active' }).populate('parent', 'name slug').sort('order name');
     res.status(200).json({ success: true, data: categories });
   } catch (error) {
     next(error);
