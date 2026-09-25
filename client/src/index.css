@@ -122,6 +122,58 @@
   .school-page a { transition: color .2s ease, background-color .2s ease, transform .2s ease, box-shadow .2s ease; }
   .school-form label:has(> select[multiple]) { display: none; }
   @keyframes school-page-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  [role="dialog"][aria-label^="Enroll in "] > form {
+    max-width: 42rem;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, .35);
+    border-radius: 1.25rem;
+    padding: 0;
+    box-shadow: 0 28px 90px rgba(3, 20, 48, .42);
+  }
+  [role="dialog"][aria-label^="Enroll in "] > form > div:first-child {
+    position: relative;
+    overflow: hidden;
+    padding: 1.7rem 2rem;
+    color: white;
+    background: radial-gradient(circle at 92% 5%, rgba(105, 208, 255, .5), transparent 9rem), linear-gradient(120deg, #062c60, #075cb2 62%, #1185c8);
+  }
+  [role="dialog"][aria-label^="Enroll in "] > form > div:first-child::after {
+    position: absolute;
+    right: 2rem;
+    bottom: -2.5rem;
+    content: '🏅';
+    font-size: 5.5rem;
+    opacity: .12;
+    pointer-events: none;
+  }
+  [role="dialog"][aria-label^="Enroll in "] > form > div:first-child p { color: rgba(219, 239, 255, .88); }
+  [role="dialog"][aria-label^="Enroll in "] > form > div:first-child h2 { color: white; font-size: 1.65rem; letter-spacing: -.025em; }
+  [role="dialog"][aria-label^="Enroll in "] > form > div:nth-child(2) { padding: 1.5rem 2rem 1.8rem; }
+  [role="dialog"][aria-label^="Enroll in "] > form label { display: block; color: #294461; font-size: .72rem; font-weight: 700; }
+  [role="dialog"][aria-label^="Enroll in "] > form input,
+  [role="dialog"][aria-label^="Enroll in "] > form textarea {
+    border: 1px solid #d5e3f1;
+    border-radius: .7rem;
+    background: #f7faff;
+    transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+  }
+  [role="dialog"][aria-label^="Enroll in "] > form input:focus,
+  [role="dialog"][aria-label^="Enroll in "] > form textarea:focus {
+    border-color: #2583db;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(37, 131, 219, .13);
+    outline: none;
+  }
+  [role="dialog"][aria-label^="Enroll in "] > form button[type="submit"] {
+    background: linear-gradient(100deg, #f08b16, #ffad27);
+    box-shadow: 0 8px 20px rgba(240, 139, 22, .25);
+  }
+  [role="dialog"][aria-label^="Enroll in "] > form button[type="submit"]:hover { filter: brightness(.96); }
+  @media (max-width: 640px) {
+    [role="dialog"][aria-label^="Enroll in "] > form > div:first-child,
+    [role="dialog"][aria-label^="Enroll in "] > form > div:nth-child(2) { padding-left: 1.2rem; padding-right: 1.2rem; }
+  }
 }
 
 @layer utilities {

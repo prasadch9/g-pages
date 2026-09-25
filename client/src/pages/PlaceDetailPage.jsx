@@ -15,6 +15,9 @@ import BusinessPageLayouts from '../components/BusinessPageLayouts';
 import SunriseSchoolPage from '../components/SunriseSchoolPage';
 import CollegePage from '../components/CollegePage';
 import UniversityPage from '../components/UniversityPage';
+import TrainingInstitutionPage from '../components/TrainingInstitutionPage';
+import AcademyPage from '../components/AcademyPage';
+import SportsAcademyPage from '../components/SportsAcademyPage';
 import SolarPage from './SolarPage';
 
 const DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
@@ -448,6 +451,10 @@ export default function PlaceDetailPage() {
     || ['restaurant', 'restaurants'].includes((place.subcategory?.name || place.category?.name || '').toLowerCase());
   const isCollegeCategory = ['college', 'colleges'].includes((place.category?.slug || '').toLowerCase()) || ['college', 'colleges'].includes((place.category?.name || '').toLowerCase());
   const isUniversityCategory = ['university', 'universities'].includes((place.category?.slug || '').toLowerCase()) || ['university', 'universities'].includes((place.category?.name || '').toLowerCase());
+  const trainingCategory = (place.subcategory?.slug || place.subcategory?.name || place.category?.slug || place.category?.name || '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const isAcademyCategory = ['academies', 'academy'].includes(trainingCategory);
+  const isSportsAcademyCategory = ['sports-academies', 'sports-academy'].includes(trainingCategory);
+  const isTrainingInstitution = ['training-institutes', 'training-institute', 'academies', 'academy', 'sports-academies', 'sports-academy'].includes(trainingCategory);
   const isSolarCategory = ['solar'].includes((place.category?.slug || '').toLowerCase()) || ['solar'].includes((place.category?.name || '').toLowerCase());
 
   // School listings always use the full school website layout so their
@@ -518,6 +525,17 @@ export default function PlaceDetailPage() {
 
   if (isUniversityCategory) {
     return <UniversityPage place={place} mapsUrl={mapsUrl} onShare={handleShare} onReport={() => setShowReport(true)} />;
+  }
+
+  if (isTrainingInstitution) {
+    return <>
+      {isSportsAcademyCategory
+        ? <SportsAcademyPage place={place} onReport={() => setShowReport(true)} />
+        : isAcademyCategory
+          ? <AcademyPage place={place} onReport={() => setShowReport(true)} />
+          : <TrainingInstitutionPage place={place} onReport={() => setShowReport(true)} />}
+      {showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}
+    </>;
   }
 
   if (isSolarCategory) {
