@@ -16,6 +16,7 @@ import ProtectedRoute from './routes/ProtectedRoute';
 import UserDashboard from './pages/UserDashboard';
 import BusinessDashboard from './pages/business/BusinessDashboard';
 import CreateListing from './pages/business/CreateListing';
+import SolarCreateListing from './pages/business/SolarCreateListing';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminOverview from './pages/admin/AdminOverview';
 import AdminBusinesses from './pages/admin/AdminBusinesses';
@@ -26,16 +27,21 @@ import CityPage from './pages/CityPage';
 import CategoryListingPage from './pages/CategoryListingPage';
 import PlaceDetailPage from './pages/PlaceDetailPage';
 import SearchResultsPage from './pages/SearchResultsPage';
+import PublicBusinessProfilePage from './pages/PublicBusinessProfilePage';
+import RestaurantEditor from './pages/business/RestaurantEditor';
+import BusinessEditorPage from './pages/business/BusinessEditorPage';
 import WhatsAppButton from './components/WhatsAppButton';
 
 export default function App() {
-  const location = useLocation();
-  const isBusinessPage = location.pathname.startsWith('/place/');
+  const isPlaceRoute = location.pathname.startsWith('/place/');
+  const isRestaurantProfile = /^\/business\/[^/]+$/.test(location.pathname);
   const isConsultancyPage = location.pathname.endsWith('/consultancies');
+  const isBusinessOwnerSurface = /^(\/business\/dashboard|\/business\/listings\/new(?:\/restaurant)?|\/business\/listings\/[^/]+\/edit)/.test(location.pathname);
+  const hideChrome = isPlaceRoute || isRestaurantProfile || isBusinessOwnerSurface || isConsultancyPage;
 
   return (
     <div className="flex min-h-screen flex-col bg-paper">
-      {!isBusinessPage && !isConsultancyPage && <Header />}
+      {!hideChrome && <Header />}
       <main className="flex-1 bg-[radial-gradient(circle_at_8%_8%,rgba(20,184,166,0.10),transparent_22rem),radial-gradient(circle_at_92%_35%,rgba(59,130,246,0.09),transparent_26rem)]">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -44,6 +50,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/search" element={<SearchResultsPage />} />
           <Route path="/place/:id" element={<PlaceDetailPage />} />
+          <Route path="/business/:businessId" element={<PublicBusinessProfilePage />} />
           <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/categories/:category" element={<CategoryPlacesPage />} />
           <Route path="/explore" element={<ExplorePage />} />
@@ -76,10 +83,34 @@ export default function App() {
             }
           />
           <Route
-            path="/business/listings/:id/edit"
+            path="/business/listings/new/restaurant"
             element={
               <ProtectedRoute roles={['business']}>
                 <CreateListing />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/business/listings/new/solar"
+            element={
+              <ProtectedRoute roles={['business']}>
+                <SolarCreateListing />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/business/listings/:id/edit"
+            element={
+              <ProtectedRoute roles={['business', 'admin']}>
+                <BusinessEditorPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/business/listings/:id/edit/solar"
+            element={
+              <ProtectedRoute roles={['business']}>
+                <SolarCreateListing />
               </ProtectedRoute>
             }
           />
@@ -110,8 +141,8 @@ export default function App() {
           <Route path="*" element={<ComingSoon title="This page" />} />
         </Routes>
       </main>
-      {!isBusinessPage && !isConsultancyPage && <Footer />}
-      {!isBusinessPage && !isConsultancyPage && <WhatsAppButton />}
+      {!hideChrome && <Footer />}
+      {!hideChrome && <WhatsAppButton />}
     </div>
   );
 }

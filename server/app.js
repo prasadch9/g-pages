@@ -1,11 +1,11 @@
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const mongoSanitize = require('express-mongo-sanitize');
 const rateLimit = require('express-rate-limit');
-const path = require('path');
 
 const authRoutes = require('./routes/authRoutes');
 const locationRoutes = require('./routes/locationRoutes');
@@ -18,14 +18,29 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const enquiryRoutes = require('./routes/enquiryRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
+const mediaRoutes = require('./routes/mediaRoutes');
+const { uploadDirectory } = require('./controllers/mediaController');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
+app.set('trust proxy', 1);
+const publicApiOrigin = (process.env.PUBLIC_API_URL || '').replace(/\/$/, '');
+const imageSources = ["'self'", 'data:', 'blob:', 'https:', ...(publicApiOrigin ? [publicApiOrigin] : ['http://localhost:5000'])];
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { maxAge: '1d' }));
 
 // --- Security & core middleware ---
-app.use(helmet()); // sensible secure HTTP headers
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: {
+      directives: {
+        'img-src': imageSources,
+      },
+    },
+  })
+); // sensible secure HTTP headers
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -43,7 +58,7 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json({ limit: '10kb' })); // small limit — this API doesn't need large JSON bodies
+app.use(express.json({ limit: '15mb' })); // listings may contain compressed upload-only image data
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(mongoSanitize()); // strips $ and . operators from user input to prevent NoSQL injection
@@ -76,7 +91,15 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/enquiries', enquiryRoutes);
 app.use('/api/business-chat', chatRoutes);
+app.use('/api/chat', chatRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/uploads', uploadRoutes);
+app.use('/api/media', mediaRoutes);
+app.use('/uploads', express.static(uploadDirectory, {
+  fallthrough: false,
+  maxAge: '7d',
+  setHeaders: (res) => res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin'),
+}));
 
 // --- Error handling (must be last) ---
 app.use(notFound);

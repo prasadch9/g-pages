@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { resolveFoodBusinessType, resolvePropertyBusinessType, resolveWeddingBusinessType } from './public/PublicProfileShared';
+import { isHealthcareBusiness } from '../utils/healthcare';
 
 const FALLBACK_IMAGES = {
   schools: 'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=900&q=80',
@@ -21,14 +23,16 @@ export default function PlaceCard({ place }) {
   const categoryKey = place.category?.slug || place.category?.name?.toLowerCase();
   const fallbackImage = FALLBACK_IMAGES[categoryKey] || FALLBACK_IMAGES.default;
   const cover = place.coverImage || place.images?.[0] || fallbackImage;
+  const travelCategory = ['tours-and-travels', 'hotels-and-residencies', 'resorts', 'party-zones'].includes(place.category?.slug);
+  const profileUrl = resolveFoodBusinessType(place) || resolveWeddingBusinessType(place) || resolvePropertyBusinessType(place) || isHealthcareBusiness(place) || travelCategory ? `/business/${place._id}` : `/place/${place._id}`;
 
   return (
     <Link
-      to={`/place/${place._id}`}
+      to={profileUrl}
       className="group flex flex-col overflow-hidden rounded-lg border border-line bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
     >
       <div className="relative flex h-36 items-center justify-center overflow-hidden bg-ink/5">
-        <img src={cover} alt={`${place.name} image`} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+        <img src={cover} alt={`${place.name} image`} loading="lazy" className="h-full w-full object-contain transition duration-500" />
         {place.verified && (
           <span className="absolute left-2 top-2 rounded bg-moss px-2 py-0.5 text-[11px] font-medium text-paper">
             Verified

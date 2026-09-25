@@ -81,6 +81,21 @@ const businessRequestSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+
+    submittedAt: {
+      type: Date,
+      default: Date.now,
+    },
+
+    approvedAt: {
+      type: Date,
+      default: null,
+    },
+
+    publishedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

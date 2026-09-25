@@ -21,7 +21,7 @@ function Stars({ value, onChange }) {
   );
 }
 
-export default function ReviewsSection({ placeId }) {
+export default function ReviewsSection({ placeId, onReviewPosted }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,6 +30,7 @@ export default function ReviewsSection({ placeId }) {
   const [loading, setLoading] = useState(true);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [editingReview, setEditingReview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -56,7 +57,14 @@ export default function ReviewsSection({ placeId }) {
     setError('');
     setSubmitting(true);
     try {
-      await api.post('/reviews', { place: placeId, rating, comment });
+      if (editingReview) {
+        await api.put(`/reviews/${editingReview._id}`, { rating, comment });
+        onReviewPosted?.({ type: 'edit', oldRating: editingReview.rating, newRating: rating });
+        setEditingReview(null);
+      } else {
+        await api.post('/reviews', { place: placeId, rating, comment });
+        onReviewPosted?.({ type: 'create', rating });
+      }
       setRating(0);
       setComment('');
       loadReviews();
@@ -67,9 +75,47 @@ export default function ReviewsSection({ placeId }) {
     }
   };
 
+  const startEditing = (review) => {
+    setEditingReview(review);
+    setRating(review.rating);
+    setComment(review.comment);
+    setError('');
+  };
+
+  const cancelEditing = () => {
+    setEditingReview(null);
+    setRating(0);
+    setComment('');
+    setError('');
+  };
+
+  const deleteReview = async (review) => {
+    if (!window.confirm('Delete this review? This cannot be undone.')) return;
+    try {
+      await api.delete(`/reviews/${review._id}`);
+      setReviews((current) => current.filter((item) => item._id !== review._id));
+      onReviewPosted?.({ type: 'delete', oldRating: review.rating });
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   return (
     <div>
-      <h2 className="font-display text-xl font-semibold text-ink">Reviews</h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="font-display text-xl font-semibold text-ink">Reviews</h2>
+        <button
+          type="button"
+          onClick={() => {
+            const commentField = document.getElementById(`review-comment-${placeId}`);
+            commentField?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            commentField?.focus({ preventScroll: true });
+          }}
+          className="rounded-full border border-line px-4 py-2 text-xs font-semibold text-ink/70 hover:border-ink/30 hover:text-ink"
+        >
+          Add Comment ↓
+        </button>
+      </div>
 
       <form onSubmit={handleSubmit} className="mt-4 rounded border border-line bg-white/50 p-4">
         <label className="text-sm text-ink/70">Your rating</label>
@@ -77,6 +123,7 @@ export default function ReviewsSection({ placeId }) {
           <Stars value={rating} onChange={setRating} />
         </div>
         <textarea
+          id={`review-comment-${placeId}`}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           placeholder="Share your experience…"
@@ -90,8 +137,9 @@ export default function ReviewsSection({ placeId }) {
           disabled={submitting}
           className="mt-3 rounded bg-ink px-5 py-2 text-sm font-medium text-paper hover:bg-ink-light disabled:opacity-60"
         >
-          {submitting ? 'Posting…' : 'Post review'}
+          {submitting ? (editingReview ? 'Saving…' : 'Posting…') : (editingReview ? 'Save changes' : 'Post review')}
         </button>
+        {editingReview && <button type="button" onClick={cancelEditing} className="ml-2 mt-3 rounded border border-line px-5 py-2 text-sm text-ink/70 hover:border-ink/40">Cancel</button>}
       </form>
 
       <div className="mt-6">
@@ -99,7 +147,6 @@ export default function ReviewsSection({ placeId }) {
         {!loading && reviews.length === 0 && (
           <p className="py-4 text-sm text-ink/45">No reviews yet — be the first to share your experience.</p>
         )}
-
         {!loading && reviews.length > 0 && (
           <div className="overflow-x-auto pb-2">
             <div className="flex min-w-max gap-4">
@@ -119,6 +166,13 @@ export default function ReviewsSection({ placeId }) {
                   </div>
 
                   <p className="mt-4 text-[14px] leading-7 text-ink/70">“{r.comment}”</p>
+
+                  {user?._id === r.user?._id && (
+                    <div className="mt-3 flex gap-3 text-xs font-medium">
+                      <button type="button" onClick={() => startEditing(r)} className="text-ink/60 hover:text-ink">Edit review</button>
+                      <button type="button" onClick={() => deleteReview(r)} className="text-vermilion hover:underline">Delete review</button>
+                    </div>
+                  )}
 
                   {r.ownerReply?.text && (
                     <div className="mt-4 rounded-xl bg-sky-50 p-3 text-[13px] leading-6 text-sky-800">

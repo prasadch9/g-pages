@@ -8,6 +8,7 @@ const Enquiry = require('../models/Enquiry');
 const BusinessRequest = require('../models/BusinessRequest');
 const Notification = require('../models/Notification');
 const { AppError } = require('../middleware/errorHandler');
+const { getCategoryGroup } = require('../config/categoryModules');
 
 const parseImportFile = (file) => {
   if (!file) return [];
@@ -44,12 +45,15 @@ const importPlaces = async (req, res, next) => {
       const images = String(row.images || row.image || '').split('|').map((image) => image.trim()).filter(Boolean);
       const place = await Place.create({
         name: row.name, category: category._id,
+        categoryGroup: category.group || getCategoryGroup(category.name), subcategory: category.name,
+        pageType: row.pageType === 'dynamic' ? 'dynamic' : 'static',
         location: { state: state._id, district: district._id, city: city._id, area: area?._id || null },
         address: row.address, description: row.description || '', phone: row.phone || null,
         website: row.website || null, images, coverImage: images[0] || null,
         services: String(row.services || '').split('|').map((v) => v.trim()).filter(Boolean),
         attributes: {}, rating: { average: Number(row.rating) || 0, count: Number(row.reviewCount) || 0 },
-        verified: true, status: 'approved', applicationStatus: 'approved', isPublished: true, owner: req.user._id,
+        verified: true, status: 'approved', applicationStatus: 'approved', isPublished: true,
+        submittedAt: new Date(), reviewedAt: new Date(), reviewedBy: req.user._id, approvedAt: new Date(), publishedAt: new Date(), owner: req.user._id,
       });
       imported.push(place);
     }
@@ -191,24 +195,39 @@ const getBusinessById = async (req, res, next) => {
 /** PUT /api/admin/businesses/:id/approve */
 const approveBusiness = async (req, res, next) => {
   try {
-    const session = await mongoose.startSession();
-    let place;
-    await session.withTransaction(async () => {
-      const reviewedAt = new Date();
-      const request = await BusinessRequest.findOneAndUpdate(
-        { place: req.params.id, status: { $in: ['pending', 'submitted', 'under_review', 'resubmitted'] } },
-        { $set: { status: 'approved', reviewedBy: req.user._id, reviewedAt, approvedAt: reviewedAt, publishedAt: reviewedAt, rejectionReason: null }, $push: { reviewHistory: { action: 'approved', actor: req.user._id, timestamp: reviewedAt } } },
-        { new: true, session }
-      );
-      if (!request) throw new AppError('This request is not awaiting approval.', 409);
-      place = await Place.findOneAndUpdate(
-        { _id: req.params.id, $or: [{ applicationStatus: { $in: ['submitted', 'under_review', 'resubmitted'] } }, { status: 'pending' }] },
-        { status: 'approved', applicationStatus: 'approved', verified: true, isPublished: true, rejectionReason: null, reviewedBy: req.user._id, reviewedAt, approvedAt: reviewedAt, publishedAt: reviewedAt },
-        { new: true, session }
-      );
-      if (!place) throw new AppError('Listing not found.', 404);
-    });
-    await session.endSession();
+    const existingPlace = await Place.findById(req.params.id);
+    if (!existingPlace) return next(new AppError('Listing not found.', 404));
+    const reviewableStates = ['submitted', 'under_review', 'resubmitted', 'pending', undefined, null];
+    if (!reviewableStates.includes(existingPlace.applicationStatus)) {
+      return next(new AppError('This listing is not ready for approval.', 409));
+    }
+    const reviewedAt = new Date();
+    const place = await Place.findByIdAndUpdate(
+      req.params.id,
+      {
+        status: 'approved',
+        applicationStatus: 'approved',
+        isPublished: true,
+        verified: true,
+        rejectionReason: null,
+        reviewedBy: req.user._id,
+        reviewedAt,
+        approvedAt: reviewedAt,
+        publishedAt: reviewedAt,
+      },
+      { new: true }
+    );
+    await BusinessRequest.findOneAndUpdate(
+      { place: place._id },
+      {
+        status: 'approved',
+        reviewedBy: req.user._id,
+        reviewedAt,
+        approvedAt: reviewedAt,
+        publishedAt: reviewedAt,
+        $push: { reviewHistory: { action: 'approved', actor: req.user._id, timestamp: reviewedAt } },
+      }
+    );
 
     await Notification.create({
       user: place.owner,
@@ -230,24 +249,31 @@ const rejectBusiness = async (req, res, next) => {
     const { reason } = req.body;
     if (!reason) return next(new AppError('A rejection reason is required.', 400));
 
-    const session = await mongoose.startSession();
-    let place;
     const reviewedAt = new Date();
-    await session.withTransaction(async () => {
-      const request = await BusinessRequest.findOneAndUpdate(
-        { place: req.params.id, status: { $in: ['pending', 'submitted', 'under_review', 'resubmitted'] } },
-        { $set: { status: 'rejected', rejectionReason: reason, reviewedBy: req.user._id, reviewedAt }, $push: { reviewHistory: { action: 'rejected', actor: req.user._id, reason, timestamp: reviewedAt } } },
-        { new: true, session }
-      );
-      if (!request) throw new AppError('This request is not awaiting review.', 409);
-      place = await Place.findOneAndUpdate(
-        { _id: req.params.id, $or: [{ applicationStatus: { $in: ['submitted', 'under_review', 'resubmitted'] } }, { status: 'pending' }] },
-        { status: 'rejected', applicationStatus: 'rejected', isPublished: false, rejectionReason: reason, reviewedBy: req.user._id, reviewedAt },
-        { new: true, session }
-      );
-      if (!place) throw new AppError('Listing not found.', 404);
-    });
-    await session.endSession();
+    const place = await Place.findByIdAndUpdate(
+      req.params.id,
+      {
+        status: 'rejected',
+        applicationStatus: 'rejected',
+        isPublished: false,
+        rejectionReason: reason,
+        reviewedBy: req.user._id,
+        reviewedAt,
+      },
+      { new: true }
+    );
+    if (!place) return next(new AppError('Listing not found.', 404));
+
+    await BusinessRequest.findOneAndUpdate(
+      { place: place._id },
+      {
+        status: 'rejected',
+        rejectionReason: reason,
+        reviewedBy: req.user._id,
+        reviewedAt,
+        $push: { reviewHistory: { action: 'rejected', actor: req.user._id, reason, timestamp: reviewedAt } },
+      }
+    );
 
     await Notification.create({
       user: place.owner,

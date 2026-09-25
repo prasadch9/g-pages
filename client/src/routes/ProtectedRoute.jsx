@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 /**
@@ -24,7 +24,15 @@ export default function ProtectedRoute({ children, roles }) {
     return (
       <div className="container-page py-24 text-center">
         <h1 className="font-display text-xl font-semibold text-ink">Access restricted</h1>
-        <p className="mt-2 text-sm text-ink/55">You don't have permission to view this page.</p>
+        <p className="mt-2 text-sm text-ink/55">This page is for business accounts. You are currently logged in as a {user.role || 'user'} account.</p>
+        <div className="mt-5 flex flex-wrap justify-center gap-3">
+          <Link to="/business/register?role=business" className="rounded bg-ink px-4 py-2 text-sm font-medium text-paper hover:bg-ink-light">
+            Create business account
+          </Link>
+          <Link to="/dashboard" className="rounded border border-line px-4 py-2 text-sm text-ink/70 hover:border-ink/30">
+            Go to my dashboard
+          </Link>
+        </div>
       </div>
     );
   }

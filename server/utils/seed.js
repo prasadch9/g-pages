@@ -29,6 +29,7 @@ const Location = require('../models/Location');
 const Category = require('../models/Category');
 const Place = require('../models/Place');
 const User = require('../models/User');
+const { getCategoryGroup } = require('../config/categoryModules');
 
 
 // ============================================================
@@ -231,6 +232,7 @@ const LEGACY_CATEGORIES = [
 ];
 
 const REQUESTED_CATEGORY_NAMES = [
+  'Food & Dining',
   'Schools', 'Colleges', 'Universities', 'Training Institutes', 'Academies', 'Sports Academies',
   'Hospitals', 'Multispeciality Hospitals', 'Cardiology', 'ENT', 'Dental', 'Hearing Solutions', 'Fitness Centres',
   'Temples', 'Churches', 'Trusts', 'NGOs', 'Associations',
@@ -241,7 +243,7 @@ const REQUESTED_CATEGORY_NAMES = [
   'Restaurants', 'Coffee Shops', 'Sweet Shops & Bakery', 'Food Processing',
   'Shopping Malls', 'Boutique', 'Home Appliances', 'Mattress Shops', 'Nurseries',
   'Car Showrooms',
-  'Small Scale Industries', 'Trading Businesses',
+  'Small Scale Industries', 'Trading Businesses', 'Solar',
   'Consultancies', 'Agencies', 'Manpower Agencies', 'Professions',
   'Packers & Movers',
   'Sculptures (Arts)',
@@ -253,6 +255,7 @@ const LEGACY_FILTERS = Object.fromEntries(
 
 const CATEGORIES = REQUESTED_CATEGORY_NAMES.map((name, index) => ({
   name,
+  group: getCategoryGroup(name),
   order: index + 1,
   ...(LEGACY_FILTERS[name] ? { filters: LEGACY_FILTERS[name] } : {}),
 }));
@@ -359,7 +362,9 @@ const run = async () => {
           $set: {
             name: category.name,
             slug: slug,
+            group: category.group,
             order: category.order,
+            parent: null,
             filters: category.filters || [],
           },
         },
@@ -369,6 +374,14 @@ const run = async () => {
           new: true,
           setDefaultsOnInsert: true,
         }
+      );
+    }
+
+    const foodDiningCategory = await Category.findOne({ name: 'Food & Dining' });
+    if (foodDiningCategory) {
+      await Category.updateMany(
+        { name: { $in: ['Restaurants', 'Coffee Shops', 'Sweet Shops & Bakery', 'Catering Services', 'Food Processing'] } },
+        { $set: { parent: foodDiningCategory._id } }
       );
     }
 
@@ -569,11 +582,19 @@ const run = async () => {
           {
             $set: {
               name, slug: createSlug(name), category: category._id,
+              categoryGroup: category.group || getCategoryGroup(category.name),
+              subcategory: category.name,
+              pageType: 'static', applicationStatus: 'approved', isPublished: true,
               location: { state: state._id, district: city.parent._id, city: city._id, area: area?._id || null },
               address: `${area?.name || city.name} Main Road, ${city.name}, Andhra Pradesh`,
               description: `A trusted, locally loved ${category.name.toLowerCase()} serving families and visitors across ${city.name}.`,
               phone: '9876543210', email: 'hello@googlepages.local', website: 'https://www.google.com',
               images: [image, IMAGE_SETS[(categoryIndex + 3) % IMAGE_SETS.length]], coverImage: image,
+              videos: category.name === 'Car Showrooms' ? [
+                'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                'https://www.youtube.com/watch?v=ysz5S6PUM-U',
+                'https://www.youtube.com/watch?v=jNQXAC9IVRw',
+              ] : [],
               services: ['Walk-in service', 'Online enquiries', 'Verified information'],
               facilities: ['Easy access', 'Customer support', 'Digital payments'],
               coordinates: { lat: 16.98 + (categoryIndex % 5) * 0.006, lng: 81.78 + (categoryIndex % 4) * 0.006 },

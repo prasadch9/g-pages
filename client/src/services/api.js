@@ -1,7 +1,14 @@
 import axios from 'axios';
 
+const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/+$/, '');
+const apiBaseUrl = configuredApiUrl
+  ? configuredApiUrl.endsWith('/api')
+    ? configuredApiUrl
+    : `${configuredApiUrl}/api`
+  : '/api';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: apiBaseUrl,
   withCredentials: true, // send the httpOnly auth cookie
 });
 
@@ -18,8 +25,11 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const message =
-      error.response?.data?.message || 'Something went wrong. Please try again.';
+    const message = error.response?.data?.message
+      || (error.response?.status === 404 ? 'API endpoint was not found. Check the backend URL.' : null)
+      || (error.response?.status === 401 ? 'Your session expired. Please log in again.' : null)
+      || (!error.response ? 'Cannot connect to the API. Start the backend or check VITE_API_URL.' : null)
+      || 'The request failed. Please try again.';
     return Promise.reject(new Error(message));
   }
 );

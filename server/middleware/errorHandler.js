@@ -41,6 +41,13 @@ const errorHandler = (err, req, res, next) => {
       .join(', ');
   }
 
+  if (err.name === 'MulterError') {
+    statusCode = 400;
+    message = err.code === 'LIMIT_FILE_SIZE'
+      ? 'Image files must be 5 MB or smaller.'
+      : 'The image upload could not be processed.';
+  }
+
   if (process.env.NODE_ENV !== 'production' && !err.isOperational) {
     console.error(err);
   }

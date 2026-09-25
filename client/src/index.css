@@ -78,11 +78,111 @@
     .city-hero-background { inset: 0; width: 100%; opacity: .18; }
     .city-hero-overlay { background: rgba(239,247,255,.83); }
   }
+
+  .school-page {
+    position: relative;
+    isolation: isolate;
+    background: linear-gradient(180deg, #e9fbf7 0%, #fff8ea 36%, #f3efff 72%, #eaf7ff 100%);
+  }
+  .school-page::before,
+  .school-page::after {
+    position: absolute;
+    z-index: -1;
+    border-radius: 9999px;
+    content: '';
+    pointer-events: none;
+  }
+  .school-page::before {
+    top: 12rem;
+    right: -8rem;
+    height: 24rem;
+    width: 24rem;
+    background: rgba(244, 114, 73, .12);
+    filter: blur(8px);
+  }
+  .school-page::after {
+    bottom: 18rem;
+    left: -10rem;
+    height: 28rem;
+    width: 28rem;
+    background: rgba(20, 184, 166, .11);
+    filter: blur(10px);
+  }
+  .school-hero {
+    animation: school-page-enter .7s ease-out both;
+    box-shadow: 0 24px 70px rgba(16, 42, 67, .18), 0 4px 0 rgba(255, 191, 18, .72);
+  }
+  .school-stats { animation: school-page-enter .7s .08s ease-out both; }
+  .school-stats > div { transition: transform .2s ease, box-shadow .2s ease; }
+  .school-stats > div:hover { transform: translateY(-4px); box-shadow: 0 14px 26px rgba(16, 42, 67, .14); }
+  .school-section {
+    animation: school-page-enter .7s ease-out both;
+    box-shadow: 0 12px 32px rgba(16, 42, 67, .07);
+  }
+  .school-page a { transition: color .2s ease, background-color .2s ease, transform .2s ease, box-shadow .2s ease; }
+  .school-form label:has(> select[multiple]) { display: none; }
+  @keyframes school-page-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  [role="dialog"][aria-label^="Enroll in "] > form {
+    max-width: 42rem;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, .35);
+    border-radius: 1.25rem;
+    padding: 0;
+    box-shadow: 0 28px 90px rgba(3, 20, 48, .42);
+  }
+  [role="dialog"][aria-label^="Enroll in "] > form > div:first-child {
+    position: relative;
+    overflow: hidden;
+    padding: 1.7rem 2rem;
+    color: white;
+    background: radial-gradient(circle at 92% 5%, rgba(105, 208, 255, .5), transparent 9rem), linear-gradient(120deg, #062c60, #075cb2 62%, #1185c8);
+  }
+  [role="dialog"][aria-label^="Enroll in "] > form > div:first-child::after {
+    position: absolute;
+    right: 2rem;
+    bottom: -2.5rem;
+    content: '🏅';
+    font-size: 5.5rem;
+    opacity: .12;
+    pointer-events: none;
+  }
+  [role="dialog"][aria-label^="Enroll in "] > form > div:first-child p { color: rgba(219, 239, 255, .88); }
+  [role="dialog"][aria-label^="Enroll in "] > form > div:first-child h2 { color: white; font-size: 1.65rem; letter-spacing: -.025em; }
+  [role="dialog"][aria-label^="Enroll in "] > form > div:nth-child(2) { padding: 1.5rem 2rem 1.8rem; }
+  [role="dialog"][aria-label^="Enroll in "] > form label { display: block; color: #294461; font-size: .72rem; font-weight: 700; }
+  [role="dialog"][aria-label^="Enroll in "] > form input,
+  [role="dialog"][aria-label^="Enroll in "] > form textarea {
+    border: 1px solid #d5e3f1;
+    border-radius: .7rem;
+    background: #f7faff;
+    transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+  }
+  [role="dialog"][aria-label^="Enroll in "] > form input:focus,
+  [role="dialog"][aria-label^="Enroll in "] > form textarea:focus {
+    border-color: #2583db;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(37, 131, 219, .13);
+    outline: none;
+  }
+  [role="dialog"][aria-label^="Enroll in "] > form button[type="submit"] {
+    background: linear-gradient(100deg, #f08b16, #ffad27);
+    box-shadow: 0 8px 20px rgba(240, 139, 22, .25);
+  }
+  [role="dialog"][aria-label^="Enroll in "] > form button[type="submit"]:hover { filter: brightness(.96); }
+  @media (max-width: 640px) {
+    [role="dialog"][aria-label^="Enroll in "] > form > div:first-child,
+    [role="dialog"][aria-label^="Enroll in "] > form > div:nth-child(2) { padding-left: 1.2rem; padding-right: 1.2rem; }
+  }
 }
 
 @layer utilities {
   .container-page {
     @apply mx-auto w-full max-w-7xl px-5 sm:px-8;
+  }
+
+  .restaurant-profile [id] {
+    scroll-margin-top: 6rem;
   }
 }
 
@@ -93,3 +193,27 @@
     transition-duration: 0.001ms !important;
   }
 }
+
+/* SunVolt Solar category page */
+.solar-page { --solar-navy: #002951; --solar-blue: #0878c9; --solar-green: #25a84a; --solar-ink: #123c62; color: var(--solar-ink); background: #f8fcfd; font-family: Arial, sans-serif; }
+.solar-header { align-items: center; background: #00264d; color: white; display: flex; gap: 1.5rem; justify-content: space-between; min-height: 62px; padding: .45rem clamp(1rem, 5vw, 4.5rem); }
+.solar-brand { align-items: center; color: white; display: inline-flex; flex: 0 0 auto; gap: .35rem; text-decoration: none; }
+.solar-brand-mark { align-items: center; background: #ffca28; border-radius: 50%; color: #fff; display: inline-flex; font-size: 1.5rem; height: 2.35rem; justify-content: center; width: 2.35rem; }
+.solar-brand b { font-size: 1rem; letter-spacing: -.03em; }.solar-brand strong { color: #8bd63a; font-size: 1rem; }.solar-brand small { display: block; font-size: .42rem; letter-spacing: .03em; opacity: .75; }
+.solar-nav { display: flex; gap: clamp(.6rem, 1.7vw, 1.5rem); }.solar-nav a { color: #fff; font-size: .58rem; padding: 1rem 0; text-decoration: none; }.solar-nav a.active { border-bottom: 2px solid #8bd63a; color: #b7ee62; }
+.solar-header-actions { align-items: center; display: flex; gap: .7rem; }.solar-search { font-size: 1.25rem; }.solar-menu { display: none; }
+.solar-button { background: var(--solar-green); border: 0; border-radius: 1.2rem; color: #fff; cursor: pointer; font-size: .62rem; font-weight: 700; padding: .66rem 1rem; white-space: nowrap; }.solar-button span { margin-left: .35rem; }.solar-button-secondary { background: #fff; border: 1px solid #b7d5e5; color: #174b70; }
+.solar-icon-action { align-items: center; background: transparent; border: 0; color: #fff; cursor: pointer; display: inline-flex; font-size: .9rem; justify-content: center; text-decoration: none; }
+.solar-contact-card button { background: none; border: 0; color: var(--solar-ink); cursor: pointer; font-size: .55rem; padding: 0; text-align: left; }
+.solar-chat-panel { background: #fff; border: 1px solid #b7d5e5; border-radius: .8rem; bottom: 1rem; box-shadow: 0 12px 32px #00295135; color: var(--solar-ink); padding: 1rem; position: fixed; right: 1rem; width: min(24rem, calc(100vw - 2rem)); z-index: 50; }.solar-chat-panel h3 { font-size: .9rem; margin: 0 0 .6rem; }.solar-chat-panel p { color: #648095; font-size: .65rem; line-height: 1.5; }.solar-chat-close { background: none; border: 0; color: #648095; cursor: pointer; float: right; font-size: 1.2rem; }.solar-chat-messages { background: #f1f8fa; border-radius: .45rem; display: flex; flex-direction: column; gap: .4rem; max-height: 15rem; min-height: 5rem; overflow: auto; padding: .6rem; }.solar-chat-messages > span { color: #7890a0; font-size: .65rem; margin: auto; }.solar-chat-messages p { background: #fff; border-radius: .5rem; margin: 0; max-width: 85%; padding: .45rem .6rem; }.solar-chat-messages p.solar-chat-mine { align-self: flex-end; background: #dff5e5; }.solar-chat-messages small { color: #7890a0; display: block; font-size: .45rem; margin-top: .2rem; }.solar-chat-error { color: #c33; display: block; font-size: .6rem; margin: .4rem 0; }.solar-chat-form { display: flex; gap: .4rem; margin-top: .6rem; }.solar-chat-form input { border: 1px solid #b7d5e5; border-radius: .4rem; flex: 1; font-size: .65rem; min-width: 0; padding: .55rem; }.solar-chat-form button { background: var(--solar-green); border: 0; border-radius: .4rem; color: #fff; cursor: pointer; font-size: .65rem; padding: .55rem .7rem; }
+.solar-hero { background: linear-gradient(90deg, rgba(0, 31, 66, .78), rgba(0, 31, 66, .08)), url('https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?auto=format&fit=crop&w=1900&q=90') center/cover; min-height: 330px; padding: 3.5rem clamp(1.3rem, 9vw, 8rem); position: relative; }.solar-hero-copy { color: white; max-width: 31rem; }.solar-eyebrow { color: var(--solar-green); font-size: .56rem; font-weight: 800; letter-spacing: .08em; margin: 0 0 .25rem; text-transform: uppercase; }.solar-hero .solar-eyebrow { color: #a4e64d; }.solar-hero h1 { font-size: clamp(1.9rem, 4vw, 3rem); line-height: .98; margin: 0 0 .75rem; }.solar-hero h1 span { color: #23a94f; }.solar-hero-copy > p:not(.solar-eyebrow) { font-size: .65rem; line-height: 1.55; max-width: 28rem; }.solar-actions { display: flex; gap: .7rem; margin-top: 1.1rem; }.solar-contact-card { background: #fff; border-radius: .8rem; box-shadow: 0 12px 28px #00295130; color: var(--solar-ink); display: flex; flex-direction: column; gap: .45rem; padding: 1rem; position: absolute; right: clamp(1.2rem, 8vw, 8rem); top: 1.2rem; width: 10.5rem; }.solar-contact-card b { font-size: .8rem; }.solar-contact-card small, .solar-contact-card em { color: #648095; font-size: .48rem; font-style: normal; }.solar-contact-card a { color: var(--solar-ink); font-size: .55rem; text-decoration: none; }
+.solar-promise { align-items: center; background: #fff; box-shadow: 0 2px 11px #003c6320; display: grid; gap: 1rem; grid-template-columns: repeat(4, 1fr); padding: .65rem clamp(1rem, 9vw, 8rem); }.solar-promise span { color: var(--solar-green); font-size: 1rem; }.solar-promise b, .solar-promise small { color: var(--solar-ink); display: block; font-size: .56rem; margin-left: 1.3rem; margin-top: -1rem; }.solar-promise small { color: #7890a0; font-size: .44rem; margin-top: .12rem; }
+.solar-section { align-items: center; display: grid; gap: 1.2rem; grid-template-columns: 1fr 1.2fr 1fr; margin: auto; max-width: 1150px; padding: 2.2rem clamp(1rem, 5vw, 3rem); }.solar-section h2 { color: #063664; font-size: 1.15rem; margin: 0 0 .45rem; }.solar-copy > p:not(.solar-eyebrow) { color: #577187; font-size: .58rem; line-height: 1.6; }.solar-about-image { position: relative; }.solar-about-image img { border-radius: .3rem; display: block; height: 170px; object-fit: cover; width: 100%; }.solar-about-image span { background: #063664dd; bottom: .5rem; color: white; font-size: .52rem; left: .5rem; padding: .45rem .65rem; position: absolute; }.solar-about-image small { font-size: .43rem; opacity: .7; }.solar-services { position: relative; }.solar-service-grid { display: grid; gap: .45rem; grid-template-columns: 1fr 1fr; }.solar-service-grid a { align-items: center; background: white; border: 1px solid #dcebf1; border-radius: .3rem; display: flex; gap: .45rem; padding: .45rem; text-decoration: none; }.solar-service-grid i { align-items: center; background: #e7f8eb; border-radius: 50%; color: var(--solar-green); display: flex; font-size: .8rem; font-style: normal; height: 1.35rem; justify-content: center; width: 1.35rem; }.solar-service-grid span { flex: 1; }.solar-service-grid b, .solar-service-grid small { color: #14476d; display: block; font-size: .49rem; }.solar-service-grid small { color: #8296a5; font-size: .4rem; margin-top: .1rem; }.solar-service-grid strong { color: #1d75b2; }.solar-view-all { color: var(--solar-green); float: right; font-size: .48rem; margin-top: .5rem; text-decoration: none; }
+.solar-feature-band { background: linear-gradient(90deg, #e8f8ef, #f3fbf9); }.solar-feature-band .solar-section, .solar-gallery, .solar-bottom { grid-template-columns: .85fr 2.2fr; }.solar-feature-grid { display: grid; gap: .45rem; grid-template-columns: repeat(5, 1fr); }.solar-feature-grid article { background: white; border-radius: .35rem; box-shadow: 0 4px 12px #0a836015; padding: .65rem .4rem; text-align: center; }.solar-feature-grid i { align-items: center; background: #39bd46; border-radius: 50%; color: white; display: flex; font-style: normal; height: 1.7rem; justify-content: center; margin: 0 auto .35rem; width: 1.7rem; }.solar-feature-grid b, .solar-feature-grid small { display: block; font-size: .46rem; }.solar-feature-grid small { color: #7890a0; font-size: .39rem; line-height: 1.35; margin-top: .3rem; }.solar-project-grid, .solar-video-grid { display: grid; gap: .55rem; grid-template-columns: repeat(4, 1fr); }.solar-project-grid article img { border-radius: .3rem; display: block; height: 85px; object-fit: cover; width: 100%; }.solar-project-grid b, .solar-project-grid small { display: block; font-size: .48rem; margin-top: .25rem; }.solar-project-grid small { color: #7890a0; font-size: .4rem; }.solar-video-band { background: #002951; color: white; }.solar-video-band h2 { color: white; }.solar-video-band .solar-copy > p:not(.solar-eyebrow) { color: #b8cad6; }.solar-video-grid article { position: relative; }.solar-video-grid img { border-radius: .3rem; display: block; height: 100px; object-fit: cover; width: 100%; }.solar-video-grid b, .solar-video-grid small { display: block; font-size: .45rem; margin-top: .25rem; }.solar-video-grid small { color: #a7c1d0; float: right; margin-top: -.8rem; }.solar-play { align-items: center; background: #ffffffdd; border-radius: 50%; color: #075086; display: flex; height: 1.7rem; justify-content: center; left: calc(50% - .85rem); position: absolute; top: 2.3rem; width: 1.7rem; }.solar-testimonials { display: grid; gap: .5rem; grid-template-columns: repeat(3, 1fr); }.solar-testimonials article { background: white; border: 1px solid #e1edf1; border-radius: .3rem; padding: .55rem; }.solar-testimonials span { background: #d8eee1; border-radius: 50%; display: inline-block; height: 1.25rem; text-align: center; width: 1.25rem; }.solar-testimonials p, .solar-testimonials b, .solar-testimonials small { display: block; font-size: .46rem; line-height: 1.35; }.solar-testimonials p { color: #617b8c; min-height: 3.2rem; }.solar-testimonials small { color: #8297a3; }.solar-testimonials strong { color: #ffb300; font-size: .55rem; }.solar-touch { background: #fff; border-left: 1px solid #dceaf0; padding-left: 1.1rem; }.solar-touch a, .solar-touch span { color: #4c7189; display: block; font-size: .52rem; margin-top: .65rem; text-decoration: none; }
+.solar-footer { align-items: center; background: #00264d; color: #b5cbd6; display: grid; font-size: .47rem; gap: 1rem; grid-template-columns: 1fr 2fr 1fr 1fr; padding: 1.25rem clamp(1rem, 5vw, 4rem); }.solar-footer-links { text-align: center; }.solar-footer-line { color: white; font-size: .7rem; text-align: right; }
+.solar-brand-logo { border-radius: 50%; height: 2.35rem; object-fit: cover; width: 2.35rem; }.solar-hero { background: linear-gradient(90deg, #063664, #11567a); background-position: center; background-size: cover; }.solar-video-grid video, .solar-video-grid iframe { border: 0; border-radius: .3rem; display: block; height: 130px; width: 100%; }
+.solar-search-form { display: flex; gap: .25rem; }.solar-search-form input { border: 1px solid #80a7be; border-radius: .3rem; font-size: .62rem; min-width: 5rem; padding: .4rem .55rem; }.solar-search-form button, .solar-directions { background: #25a84a; border: 0; border-radius: .3rem; color: white; cursor: pointer; font-size: .58rem; padding: .4rem .6rem; text-decoration: none; }.solar-comments-section { align-items: start; grid-template-columns: 1.2fr .8fr; }.solar-location { background: white; border: 1px solid #dceaf0; border-radius: .4rem; padding: 1rem; }.solar-location > p:not(.solar-eyebrow) { color: #4c7189; font-size: .65rem; line-height: 1.5; }.solar-location iframe { border: 0; border-radius: .35rem; height: 220px; margin-top: 1rem; width: 100%; }.solar-directions { display: inline-block; margin-top: .75rem; }
+.solar-gallery-image-button { background: none; border: 0; cursor: zoom-in; display: block; padding: 0; width: 100%; }.solar-image-lightbox { align-items: center; background: rgba(0, 24, 47, .92); display: flex; inset: 0; justify-content: center; padding: 4rem; position: fixed; z-index: 100; }.solar-image-lightbox img { max-height: calc(100vh - 8rem); max-width: min(900px, 78vw); object-fit: contain; }.solar-image-lightbox button { background: #fff; border: 0; border-radius: .35rem; color: #063664; cursor: pointer; font-size: .75rem; font-weight: 700; padding: .65rem .85rem; position: absolute; }.solar-lightbox-close { right: 1.5rem; top: 1.5rem; }.solar-lightbox-prev { left: 1.5rem; top: 50%; transform: translateY(-50%); }.solar-lightbox-next { right: 1.5rem; top: 50%; transform: translateY(-50%); }
+.solar-image-lightbox img { transition: transform .2s ease; }.solar-lightbox-zoom { align-items: center; display: flex; gap: .4rem; left: 50%; position: absolute; top: 1.5rem; transform: translateX(-50%); }.solar-lightbox-zoom button { position: static; }.solar-lightbox-zoom button:disabled { cursor: not-allowed; opacity: .5; }.solar-lightbox-zoom span { color: white; font-size: .8rem; min-width: 3rem; text-align: center; }
+@media (max-width: 800px) { .solar-nav { display: none; }.solar-menu { display: inline; }.solar-contact-card { display: none; }.solar-hero { min-height: 365px; }.solar-section, .solar-feature-band .solar-section, .solar-gallery, .solar-bottom { grid-template-columns: 1fr; }.solar-promise { grid-template-columns: 1fr 1fr; }.solar-feature-grid { grid-template-columns: repeat(2, 1fr); }.solar-footer { grid-template-columns: 1fr 1fr; }.solar-footer-links { display: none; } }
+@media (max-width: 480px) { .solar-header-actions .solar-button { display: none; }.solar-hero { padding: 3rem 1.2rem; }.solar-promise { grid-template-columns: 1fr; }.solar-project-grid, .solar-video-grid, .solar-testimonials { grid-template-columns: 1fr 1fr; }.solar-service-grid { grid-template-columns: 1fr; }.solar-footer { grid-template-columns: 1fr; }.solar-footer-line { text-align: left; } }

@@ -26,20 +26,27 @@ const placeSchema = new mongoose.Schema(
 
     businessGroup: {
       type: String,
-      enum: ['business-professional-services', 'logistics-moving', null],
       default: null,
+      trim: true,
+    },
+
+    categoryGroup: {
+      type: String,
+      default: null,
+      trim: true,
     },
 
     subcategory: {
       type: String,
-      trim: true,
+      type: mongoose.Schema.Types.Mixed,
       default: null,
+      trim: true
     },
 
     pageType: {
       type: String,
       enum: ['premium', 'static', 'dynamic'],
-      default: 'premium',
+      default: 'static',
     },
 
     location: {
@@ -65,6 +72,12 @@ const placeSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Location',
         default: null,
+      },
+
+      areaText: {
+        type: String,
+        default: '',
+        trim: true,
       },
     },
 
@@ -129,6 +142,11 @@ const placeSchema = new mongoose.Schema(
         type: String,
         default: null,
       },
+
+      chatSupport: {
+        type: String,
+        default: null,
+      },
     },
 
     images: [
@@ -147,8 +165,13 @@ const placeSchema = new mongoose.Schema(
       default: null,
     },
 
-    video: {
+    aboutImage: {
       type: String,
+      default: null,
+    },
+
+    video: {
+      type: mongoose.Schema.Types.Mixed,
       default: null,
     },
 
@@ -298,7 +321,7 @@ const placeSchema = new mongoose.Schema(
 
     submittedAt: {
       type: Date,
-      default: null,
+      default: Date.now,
     },
 
     reviewedAt: {
@@ -364,7 +387,7 @@ const placeSchema = new mongoose.Schema(
 // ============================================================
 
 placeSchema.pre('validate', function (next) {
-  if (this.name) {
+  if (this.name && !this.slug) {
     this.slug = slugify(this.name, {
       lower: true,
       strict: true,
@@ -433,6 +456,15 @@ placeSchema.index({
 placeSchema.index({
   category: 1,
   status: 1,
+});
+
+// Public pages are always filtered by lifecycle and publication state.
+placeSchema.index({
+  applicationStatus: 1,
+  isPublished: 1,
+  status: 1,
+  category: 1,
+  'location.city': 1,
 });
 
 module.exports = mongoose.model('Place', placeSchema);
