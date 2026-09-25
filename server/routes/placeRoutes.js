@@ -24,16 +24,18 @@ const upload = multer({
   limits: { files: 300, fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, callback) => {
     const extension = path.extname(file.originalname).toLowerCase();
+    const mimeType = String(file.mimetype || '').toLowerCase();
     const imageExtensions = new Set(['.jpg', '.jpeg', '.jpe', '.jfif', '.png', '.gif', '.webp', '.avif', '.heic', '.heif', '.svg', '.bmp', '.tif', '.tiff']);
     const videoExtensions = new Set(['.mp4', '.webm', '.ogg', '.ogv', '.mov', '.m4v', '.avi', '.mkv', '.3gp', '.flv']);
-    const imageFields = new Set(['logo', 'footerLogo', 'coverImage', 'aboutImage', 'images', 'facilityImages', 'principalImage', 'principalGallery', 'facultyImages', 'infrastructureImages', 'galleryImages', 'eventImages']);
-    const videoFields = new Set(['video', 'videos', 'schoolVideoFiles']);
-    const isImage = file.mimetype.startsWith('image/') || imageExtensions.has(extension);
-    const isVideo = file.mimetype.startsWith('video/') || videoExtensions.has(extension);
+    const imageFields = new Set(['logo', 'footerLogo', 'coverImage', 'aboutImage', 'images', 'facilityImages', 'principalImage', 'principalGallery', 'facultyImages', 'infrastructureImages', 'galleryImages', 'eventImages', 'academyGalleryImages', 'academyAboutImage', 'academyVideoThumbnail', 'academyCourseImages']);
+    const videoFields = new Set(['video', 'videos', 'schoolVideoFiles', 'academyGalleryVideos', 'academyIntroVideo']);
+    const isImage = mimeType.startsWith('image/') || imageExtensions.has(extension);
+    const isVideo = mimeType.startsWith('video/') || videoExtensions.has(extension);
 
     if (imageFields.has(file.fieldname) && isImage) return callback(null, true);
     if (videoFields.has(file.fieldname) && isVideo) return callback(null, true);
-    return callback(new Error(`Unsupported file for ${file.fieldname}. Upload an image for image fields or a video for video fields.`));
+    const expected = imageFields.has(file.fieldname) ? 'an image' : videoFields.has(file.fieldname) ? 'a video' : 'a supported media file';
+    return callback(new Error(`Unsupported file for ${file.fieldname}. Choose ${expected}; received ${file.mimetype || 'unknown file type'} (${extension || 'no extension'}).`));
   },
 });
 
@@ -43,7 +45,7 @@ router.get('/', getPlaces);
 router.get('/:id', optionalAuth, getPlaceById);
 
 router.post('/', protect, authorize('business', 'admin'), upload.any(), createPlace);
-router.put('/:id', protect, updatePlace);
+router.put('/:id', protect, upload.any(), updatePlace);
 router.delete('/:id', protect, deletePlace);
 
 module.exports = router;

@@ -102,7 +102,20 @@ export default function ReviewsSection({ placeId, onReviewPosted }) {
 
   return (
     <div>
-      <h2 className="font-display text-xl font-semibold text-ink">Reviews</h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="font-display text-xl font-semibold text-ink">Reviews</h2>
+        <button
+          type="button"
+          onClick={() => {
+            const commentField = document.getElementById(`review-comment-${placeId}`);
+            commentField?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            commentField?.focus({ preventScroll: true });
+          }}
+          className="rounded-full border border-line px-4 py-2 text-xs font-semibold text-ink/70 hover:border-ink/30 hover:text-ink"
+        >
+          Add Comment ↓
+        </button>
+      </div>
 
       <form onSubmit={handleSubmit} className="mt-4 rounded border border-line bg-white/50 p-4">
         <label className="text-sm text-ink/70">Your rating</label>
@@ -110,6 +123,7 @@ export default function ReviewsSection({ placeId, onReviewPosted }) {
           <Stars value={rating} onChange={setRating} />
         </div>
         <textarea
+          id={`review-comment-${placeId}`}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           placeholder="Share your experience…"

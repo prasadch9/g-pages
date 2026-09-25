@@ -10,6 +10,8 @@ import CategorySpecificFields from '../../components/business/CategorySpecificFi
 import FoodBusinessSpecificFields from '../../components/business/FoodBusinessSpecificFields';
 import WeddingBusinessSpecificFields from '../../components/business/WeddingBusinessSpecificFields';
 import mediaUrl from '../../utils/mediaUrl';
+import AcademyRegistrationFields from '../../components/AcademyRegistrationFields';
+import SportsAcademyRegistrationFields from '../../components/SportsAcademyRegistrationFields';
 
 const initialLocation = { state: '', district: '', city: '', area: '', areaText: '' };
 const MALL_DAYS = [['mon', 'Monday'], ['tue', 'Tuesday'], ['wed', 'Wednesday'], ['thu', 'Thursday'], ['fri', 'Friday'], ['sat', 'Saturday'], ['sun', 'Sunday']];
@@ -155,6 +157,9 @@ export default function CreateListing() {
   const [footerLogoFile, setFooterLogoFile] = useState(null);
   const [principalImageFile, setPrincipalImageFile] = useState(null);
   const [aboutImageFile, setAboutImageFile] = useState(null);
+  const [academyAboutImageFile, setAcademyAboutImageFile] = useState(null);
+  const [academyIntroVideoFile, setAcademyIntroVideoFile] = useState(null);
+  const [academyVideoThumbnailFile, setAcademyVideoThumbnailFile] = useState(null);
   const [facilityImageFiles, setFacilityImageFiles] = useState([]);
   const [galleryFiles, setGalleryFiles] = useState([]);
   const [videoFiles, setVideoFiles] = useState([]);
@@ -395,6 +400,8 @@ export default function CreateListing() {
   const isWeddingCategory = form.mainCategory === 'Marriage & Wedding';
   const foodBusinessType = ({ Restaurant: 'restaurant', Restaurants: 'restaurant', 'Coffee Shop': 'coffee-shop', 'Coffee Shops': 'coffee-shop', 'Sweet Shop & Bakery': 'bakery', 'Sweet Shops & Bakery': 'bakery', 'Catering Service': 'catering', 'Catering Services': 'catering', 'Food Processing': 'food-processing' })[form.subcategory] || 'restaurant';
   const weddingBusinessType = ({ 'Marriage Bureaus': 'marriage-bureau', 'Function Halls': 'function-hall', 'Event Organizers': 'event-organizer', 'Catering Services': 'catering-service', 'Flower Decoration': 'flower-decoration', 'Fashion Designers': 'fashion-designer', 'Beauty Parlours': 'beauty-parlour', 'Saloon & Spa': 'saloon-spa' })[form.subcategory] || 'event-organizer';
+  const isAcademy = ['academy', 'academies', 'training institute', 'training institutes', 'training institution', 'training institutions'].includes(categoryName);
+  const isSportsAcademy = ['sports academy', 'sports academies'].includes(categoryName);
 
   const selectMainCategory = (e) => {
     setTravelDetails({});
@@ -485,50 +492,15 @@ export default function CreateListing() {
 
     setSubmitting(true);
     try {
-/*
-      const [logo, coverImage, aboutImage, galleryImages, mallVideoUrls] = await Promise.all([
-        uploadSingleImage(uploadedFiles.logo),
-        uploadSingleImage(uploadedFiles.coverImage),
-        uploadSingleImage(uploadedFiles.aboutImage),
-        uploadImages(uploadedFiles.galleryImages || []),
-        (isShoppingCategory && form.subcategory === 'Shopping Malls') || isAutomotiveCategory || isWeddingCategory ? uploadMallVideos(mallVideos) : Promise.resolve(splitList(form.videoUrls)),
-      ]);
-      const mallCollections = galleryImages.map((image, index) => {
-        const details = mallCollectionDetails[index] || {};
-        return { image, tag: details.tag || 'New', caption: details.caption?.trim() || '', features: Array.isArray(details.features) ? details.features : splitList(details.features) };
-      });
-      const mallVideoDetails = mallVideoUrls.map((url, index) => ({ url, caption: mallVideos[index]?.caption?.trim() || '' }));
-      const payload = {
-        name: form.name.trim(),
-        category: categoryId,
-        address: form.address.trim(),
-        description: form.description.trim() || `${form.name.trim()} is located at ${form.address.trim()}. Visit us for trusted local service and support.`,
-        phone: form.phone || undefined,
-        email: form.email || undefined,
-        website: form.website || undefined,
-        logo: logo || undefined,
-        services: splitList(form.services),
-        images: galleryImages,
-        coverImage: coverImage || undefined,
-        aboutImage: aboutImage || undefined,
-        videos: mallVideoUrls,
-        socialLinks: {
-          facebook: form.facebook || undefined,
-          instagram: form.instagram || undefined,
-          youtube: form.youtube || undefined,
-          whatsapp: form.whatsapp || undefined,
-          chatSupport: form.chatSupport || undefined,
-        },
-        attributes: {
-          subCategory: form.subcategory || undefined,
-          ...(isFoodCategory ? { foodDetails, businessProfile: { businessType: foodBusinessType, categorySpecific: foodDetails } } : {}),
-          ...(isWeddingCategory ? { weddingDetails, businessProfile: { businessType: weddingBusinessType, categorySpecific: weddingDetails } } : {}),
-          ...(isShoppingCategory ? Object.fromEntries(Object.entries(shoppingDetails).filter(([, value]) => String(value || '').trim())) : {}),
-          ...(isShoppingCategory && form.subcategory === 'Shopping Malls' ? { mallCollections, mallVideos: mallVideoDetails } : {}),
-        },
-        workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed),
-        location: {
-*/
+      const academyPhotoFiles = (form.academy?.galleryPhotos || []).map((item, index) => ({ item, index })).filter(({ item }) => item.file);
+      const academyVideoFiles = (form.academy?.galleryVideos || []).map((item, index) => ({ item, index })).filter(({ item }) => item.file);
+      const academyCourseFiles = (form.academy?.courses || []).map((item, index) => ({ item, index })).filter(({ item }) => item.file);
+      const academyForSave = isAcademy ? {
+        ...(form.academy || {}),
+        galleryPhotos: (form.academy?.galleryPhotos || []).map(({ file, ...item }, index) => ({ ...item, uploadIndex: file ? (form.academy.galleryPhotos.slice(0, index + 1).filter((entry) => entry.file).length - 1) : undefined })),
+        galleryVideos: (form.academy?.galleryVideos || []).map(({ file, ...item }, index) => ({ ...item, uploadIndex: file ? (form.academy.galleryVideos.slice(0, index + 1).filter((entry) => entry.file).length - 1) : undefined })),
+        courses: (form.academy?.courses || []).map(({ file, ...item }, index) => ({ ...item, uploadIndex: file ? (form.academy.courses.slice(0, index + 1).filter((entry) => entry.file).length - 1) : undefined })),
+      } : form.academy;
       const payload = new FormData();
       const galleryUrls = [];
       const appendImage = (field, value, filename) => {
@@ -575,6 +547,7 @@ export default function CreateListing() {
           ...(isShoppingCategory ? Object.fromEntries(Object.entries(shoppingDetails).filter(([, value]) => String(value || '').trim())) : {}),
           ...(isShoppingCategory && form.subcategory === 'Shopping Malls' ? { mallCollections: mallCollectionDetailsPayload, mallVideos: mallVideos.map((video) => ({ url: video.url || '', caption: video.caption || '' })) } : {}),
           workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed),
+          academy: academyForSave,
           courses: form.collegeType === 'Intermediate College' ? form.collegeGroups : form.collegePrograms,
           admissions: form.admissionProcess,
           placements: form.placementAvailable === 'Yes' ? [
@@ -666,6 +639,9 @@ export default function CreateListing() {
       if (footerLogoFile) payload.append('footerLogo', footerLogoFile);
       if (principalImageFile) payload.append('principalImage', principalImageFile);
       if (aboutImageFile) payload.append('aboutImage', aboutImageFile);
+      if (academyAboutImageFile) payload.append('academyAboutImage', academyAboutImageFile);
+      if (academyIntroVideoFile) payload.append('academyIntroVideo', academyIntroVideoFile);
+      if (academyVideoThumbnailFile) payload.append('academyVideoThumbnail', academyVideoThumbnailFile);
       galleryFiles.forEach((file) => payload.append('images', file));
       facilityImageFiles.forEach((file) => payload.append('facilityImages', file));
       videoFiles.forEach((file) => payload.append('videos', file));
@@ -676,6 +652,9 @@ export default function CreateListing() {
       galleryItems.forEach((item) => (item.files || []).forEach((file) => payload.append('galleryImages', file)));
       schoolVideos.forEach((item) => (item.file ? payload.append('schoolVideoFiles', item.file) : null));
       schoolEvents.forEach((item) => (item.imageFiles || []).forEach((file) => payload.append('eventImages', file)));
+      academyPhotoFiles.forEach(({ item }) => payload.append('academyGalleryImages', item.file));
+      academyVideoFiles.forEach(({ item }) => payload.append('academyGalleryVideos', item.file));
+      academyCourseFiles.forEach(({ item }) => payload.append('academyCourseImages', item.file));
 
       let editedLogo = uploadedFiles.logo;
       let editedCoverImage = uploadedFiles.coverImage;
@@ -712,7 +691,7 @@ export default function CreateListing() {
         images: editedGalleryImages,
         videos: editedVideoUrls,
         workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed),
-        attributes: { ...form, ...(isTravelCategory ? { travelDetails, businessProfile: { categorySpecific: travelDetails } } : {}), ...(isFoodCategory ? { foodDetails, businessProfile: { businessType: foodBusinessType, categorySpecific: foodDetails } } : {}), subCategory: form.subcategory || undefined, ...(isShoppingCategory ? Object.fromEntries(Object.entries(shoppingDetails).filter(([, value]) => String(value || '').trim())) : {}), ...(isShoppingCategory && form.subcategory === 'Shopping Malls' ? { mallCollections: mallCollectionDetailsPayload, mallVideos: mallVideos.map((video) => ({ url: video.url || '', caption: video.caption || '' })) } : {}), courses: form.collegeType === 'Intermediate College' ? form.collegeGroups : form.collegePrograms, admissions: form.admissionProcess, placements: form.placementAvailable === 'Yes' ? [form.placementOfficer && `Placement officer: ${form.placementOfficer}`, form.averagePackage && `Average package: ${form.averagePackage}`, form.highestPackage && `Highest package: ${form.highestPackage}`, form.recruitingCompanies && `Recruiters: ${form.recruitingCompanies}`].filter(Boolean) : [], socialVisibility: undefined, faculty, infrastructure, schoolFacilities, galleryItems, schoolVideos, achievements, schoolEvents, principalImage: existingMedia.principal || undefined, aboutImage: editedAboutImage || undefined, galleryImages: editedGalleryImages, workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed), ...(isUniversity ? { university: form.university, programs: form.university?.programs || [], facilities: form.university?.facilities || [], stats: form.university?.stats || [], aboutTitle: form.university?.aboutTitle, aboutDescription: form.university?.aboutDescription, rankingEnabled: form.university?.rankingEnabled, rank: form.university?.rank, rankingDescription: form.university?.rankingDescription, campusTitle: form.campusTitle, campusDescription: form.campusDescription, showAdmission: form.university?.showAdmission, admissionTitle: form.university?.admissionTitle, admissionDescription: form.university?.admissionDescription } : {}) },
+        attributes: { ...form, academy: academyForSave, ...(isTravelCategory ? { travelDetails, businessProfile: { categorySpecific: travelDetails } } : {}), ...(isFoodCategory ? { foodDetails, businessProfile: { businessType: foodBusinessType, categorySpecific: foodDetails } } : {}), subCategory: form.subcategory || undefined, ...(isShoppingCategory ? Object.fromEntries(Object.entries(shoppingDetails).filter(([, value]) => String(value || '').trim())) : {}), ...(isShoppingCategory && form.subcategory === 'Shopping Malls' ? { mallCollections: mallCollectionDetailsPayload, mallVideos: mallVideos.map((video) => ({ url: video.url || '', caption: video.caption || '' })) } : {}), courses: form.collegeType === 'Intermediate College' ? form.collegeGroups : form.collegePrograms, admissions: form.admissionProcess, placements: form.placementAvailable === 'Yes' ? [form.placementOfficer && `Placement officer: ${form.placementOfficer}`, form.averagePackage && `Average package: ${form.averagePackage}`, form.highestPackage && `Highest package: ${form.highestPackage}`, form.recruitingCompanies && `Recruiters: ${form.recruitingCompanies}`].filter(Boolean) : [], socialVisibility: undefined, faculty, infrastructure, schoolFacilities, galleryItems, schoolVideos, achievements, schoolEvents, principalImage: existingMedia.principal || undefined, aboutImage: editedAboutImage || undefined, galleryImages: editedGalleryImages, workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed), ...(isUniversity ? { university: form.university, programs: form.university?.programs || [], facilities: form.university?.facilities || [], stats: form.university?.stats || [], aboutTitle: form.university?.aboutTitle, aboutDescription: form.university?.aboutDescription, rankingEnabled: form.university?.rankingEnabled, rank: form.university?.rank, rankingDescription: form.university?.rankingDescription, campusTitle: form.campusTitle, campusDescription: form.campusDescription, showAdmission: form.university?.showAdmission, admissionTitle: form.university?.admissionTitle, admissionDescription: form.university?.admissionDescription } : {}) },
       };
       if (isWeddingCategory) {
         editableData.attributes.weddingDetails = weddingDetails;
@@ -722,7 +701,20 @@ export default function CreateListing() {
           categorySpecific: weddingDetails,
         };
       }
-      await (isEditing ? api.put(`/places/${editId}`, editableData) : api.post('/places', payload));
+      if (isEditing) {
+        const updatePayload = new FormData();
+        Object.entries(editableData).forEach(([key, value]) => updatePayload.append(key, value && typeof value === 'object' ? JSON.stringify(value) : value ?? ''));
+        academyPhotoFiles.forEach(({ item }) => updatePayload.append('academyGalleryImages', item.file));
+        academyVideoFiles.forEach(({ item }) => updatePayload.append('academyGalleryVideos', item.file));
+        academyCourseFiles.forEach(({ item }) => updatePayload.append('academyCourseImages', item.file));
+        if (logoFile) updatePayload.append('logo', logoFile);
+        if (academyAboutImageFile) updatePayload.append('academyAboutImage', academyAboutImageFile);
+        if (academyIntroVideoFile) updatePayload.append('academyIntroVideo', academyIntroVideoFile);
+        if (academyVideoThumbnailFile) updatePayload.append('academyVideoThumbnail', academyVideoThumbnailFile);
+        await api.put(`/places/${editId}`, updatePayload);
+      } else {
+        await api.post('/places', payload);
+      }
       setSuccess(isEditing ? 'Changes updated successfully.' : 'Listing submitted! It will appear publicly once an admin approves it.');
       setTimeout(() => navigate('/business/dashboard'), 1600);
     } catch (err) {
@@ -1143,13 +1135,13 @@ export default function CreateListing() {
             <input required={!isEditing && !coverFile} type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} className={inputClass} />
           </div>}
 
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && !isAcademy && !isSportsAcademy && <div className="col-span-2">
             <label className="text-sm text-ink/70">Gallery photos (select as many as needed)</label>
             <input type="file" accept="image/*" multiple onChange={(e) => setGalleryFiles(Array.from(e.target.files || []))} className={inputClass} />
             {galleryFiles.length > 0 && <p className="mt-1 text-xs text-ink/50">{galleryFiles.length} photos selected.</p>}
           </div>}
 
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && !isAcademy && !isSportsAcademy && <div className="col-span-2">
             <label className="text-sm text-ink/70">Facilities</label>
             <textarea rows={2} value={form.facilities} onChange={update('facilities')} placeholder="School bus, Library, Science lab, Playground" className={inputClass} />
           </div>}
@@ -1168,40 +1160,42 @@ export default function CreateListing() {
 
           {isCollege && <CollegeRegistrationFields form={form} setForm={setForm} inputClass={inputClass} faculty={faculty} setFaculty={setFaculty} achievements={achievements} setAchievements={setAchievements} principalImageFile={principalImageFile} setPrincipalImageFile={setPrincipalImageFile} logoFile={logoFile} setLogoFile={setLogoFile} footerLogoFile={footerLogoFile} setFooterLogoFile={setFooterLogoFile} galleryFiles={galleryFiles} setGalleryFiles={setGalleryFiles} schoolVideos={schoolVideos} setSchoolVideos={setSchoolVideos} />}
           {isUniversity && <UniversityRegistrationFields form={form} setForm={setForm} inputClass={inputClass} logoFile={logoFile} setLogoFile={setLogoFile} coverFile={coverFile} setCoverFile={setCoverFile} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} galleryFiles={galleryFiles} setGalleryFiles={setGalleryFiles} schoolVideos={schoolVideos} setSchoolVideos={setSchoolVideos} />}
+          {isAcademy && <AcademyRegistrationFields form={form} setForm={setForm} logoFile={logoFile} setLogoFile={setLogoFile} existingLogo={existingMedia.logo} aboutImageFile={academyAboutImageFile} setAboutImageFile={setAcademyAboutImageFile} introVideoFile={academyIntroVideoFile} setIntroVideoFile={setAcademyIntroVideoFile} videoThumbnailFile={academyVideoThumbnailFile} setVideoThumbnailFile={setAcademyVideoThumbnailFile} />}
+          {isSportsAcademy && <SportsAcademyRegistrationFields form={form} setForm={setForm} logoFile={logoFile} setLogoFile={setLogoFile} existingLogo={existingMedia.logo} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} galleryFiles={galleryFiles} setGalleryFiles={setGalleryFiles} videoFiles={videoFiles} setVideoFiles={setVideoFiles} />}
 
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2"><h2 className="font-display text-lg font-medium text-ink">Additional business details</h2><p className="mt-1 text-xs text-ink/50">Optional details for your selected category.</p></div>}
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && !isAcademy && !isSportsAcademy && <div className="col-span-2"><h2 className="font-display text-lg font-medium text-ink">Additional business details</h2><p className="mt-1 text-xs text-ink/50">Optional details for your selected category.</p></div>}
 
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2 sm:col-span-1">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && !isAcademy && !isSportsAcademy && <div className="col-span-2 sm:col-span-1">
             <label className="text-sm text-ink/70">Curriculum / board</label>
             <input value={form.board} onChange={update('board')} placeholder="CBSE, State Board, ICSE" className={inputClass} />
           </div>}
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2 sm:col-span-1">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && !isAcademy && !isSportsAcademy && <div className="col-span-2 sm:col-span-1">
             <label className="text-sm text-ink/70">Classes offered</label>
             <input value={form.classes} onChange={update('classes')} placeholder="LKG to Class 10" className={inputClass} />
           </div>}
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2 sm:col-span-1">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && !isAcademy && !isSportsAcademy && <div className="col-span-2 sm:col-span-1">
             <label className="text-sm text-ink/70">Curriculum type</label>
             <input value={form.curriculum} onChange={update('curriculum')} placeholder="English medium, Montessori" className={inputClass} />
           </div>}
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2 sm:col-span-1">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && !isAcademy && !isSportsAcademy && <div className="col-span-2 sm:col-span-1">
             <label className="text-sm text-ink/70">School type</label>
             <input value={form.type} onChange={update('type')} placeholder="Private, Government" className={inputClass} />
           </div>}
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2 sm:col-span-1">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && !isAcademy && !isSportsAcademy && <div className="col-span-2 sm:col-span-1">
             <label className="text-sm text-ink/70">Student type</label>
             <input value={form.gender} onChange={update('gender')} placeholder="Co-ed, Boys, Girls" className={inputClass} />
           </div>}
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && !isAcademy && !isSportsAcademy && <div className="col-span-2">
             <label className="text-sm text-ink/70">Admission details</label>
             <input value={form.admission} onChange={update('admission')} placeholder="Open throughout the year" className={inputClass} />
           </div>}
 
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && !isAcademy && !isSportsAcademy && <div className="col-span-2">
             <h2 className="font-display text-lg font-medium text-ink">Videos and social links</h2>
             <p className="mt-1 text-xs text-ink/50">Upload multiple videos for the school video gallery.</p>
           </div>}
 
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && <div className="col-span-2">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && !isAcademy && !isSportsAcademy && <div className="col-span-2">
             <label className="text-sm text-ink/70">School videos</label>
             <input type="file" accept="video/*" multiple onChange={(e) => setVideoFiles(Array.from(e.target.files || []))} className={inputClass} />
             <p className="mt-1 text-xs text-ink/50">Select multiple videos. Maximum 50 MB each.</p>
