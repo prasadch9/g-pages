@@ -159,21 +159,248 @@ function getReligiousTheme(subcategory) {
 
 export function ReligiousSocialBrandPage({ place, mapsUrl, onShare, onReport }) {
   const subcategory = place?.subcategory || 'Temples';
+  const normalizedSubcategory = String(subcategory || '').trim().toLowerCase();
+  const isNgo = ['ngo', 'ngos'].includes(normalizedSubcategory);
   const theme = getReligiousTheme(subcategory);
   const cover = place.coverImage || place.images?.[0] || null;
   const images = Array.isArray(place.images) ? place.images.slice(0, 8) : [];
   const services = Array.isArray(place.services) ? place.services.filter(Boolean) : [];
   const categoryData = place.categoryData || {};
-  const driveCards = [
-    ['Mission', categoryData.mission || categoryData.vision || 'Community-first service and growth'],
-    ['Programs', categoryData.programs || categoryData.activities || categoryData.poojaServices || categoryData.worshipServices || 'Program details will be updated soon.'],
-    ['Impact', categoryData.impact || categoryData.memberships || categoryData.communityPrograms || 'Dedicated service to the community and members'],
-    ['Events', categoryData.events || categoryData.festivals || 'Upcoming events and gathering details'],
+  const website = safeExternalUrl(place.website);
+  const whatsappUrl = place.socialLinks?.whatsapp ? (place.socialLinks.whatsapp.startsWith('http') ? place.socialLinks.whatsapp : `https://wa.me/${place.socialLinks.whatsapp.replace(/\D/g, '')}`) : null;
+  const socialLinks = place.socialLinks || {};
+  const mission = categoryData.mission || categoryData.vision || place.description || 'We work for a stronger, healthier, and more empowered community.';
+  const programs = categoryData.programs || categoryData.causes || categoryData.projects || services.length ? (categoryData.programs || categoryData.causes || categoryData.projects || services) : ['Education Support', 'Healthcare Access', 'Women Empowerment', 'Child Welfare'];
+  const impactStats = [
+    { label: 'People Supported', value: categoryData.impact?.match(/\d+/)?.[0] || '10,000+' },
+    { label: 'Children Educated', value: categoryData.impact?.match(/\d+/g)?.[1] || '500+' },
+    { label: 'Medical Aid Provided', value: categoryData.impact?.match(/\d+/g)?.[2] || '2,000+' },
+    { label: 'Community Projects', value: categoryData.impact?.match(/\d+/g)?.[3] || '50+' },
   ];
-  const navItems = theme.nav.map((label) => ({
-    label,
-    href: `#${label.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z-]/g, '')}`,
-  }));
+  const galleryItems = images.length ? images : [
+    'https://images.unsplash.com/photo-1517486800579-88f4f6b6c49b?auto=format&fit=crop&w=900&q=80',
+    'https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=900&q=80',
+    'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=80',
+    'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=900&q=80'
+  ];
+  const eventCards = Array.isArray(categoryData.events) ? categoryData.events.slice(0, 3) : [
+    { title: 'Free Health Camp', date: '15 Apr', summary: 'Free health checkup and support for families in need.' },
+    { title: 'Education Support Program', date: '22 Apr', summary: 'Distribution of school kits and learning support.' },
+    { title: 'Tree Plantation Drive', date: '05 May', summary: 'Community environmental sustainability drive.' },
+  ];
+  const testimonials = [
+    { name: 'Priya Sharna', text: 'This NGO has truly changed lives in our community with education and wellness support.', rating: 5 },
+    { name: 'Ravi Kumar', text: 'The support and opportunities provided by this organization are inspiring and life-changing.', rating: 5 },
+  ];
+
+  if (isNgo) {
+    return (
+      <div className="min-h-screen bg-[#f5f7f2] text-[#1d2a24]">
+        <header className="sticky top-0 z-40 border-b border-[#dfe8de] bg-white/90 backdrop-blur-sm">
+          <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+            <div className="flex min-w-0 items-center gap-3">
+              {place.logo ? (
+                <img src={place.logo} alt={`${place.name} logo`} className="h-11 w-11 rounded-full object-cover ring-2 ring-[#dfe8de]" />
+              ) : (
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#eaf5eb] text-lg font-bold text-[#1c7245] ring-2 ring-[#dfe8de]">{(place.name || 'H').charAt(0).toUpperCase()}</div>
+              )}
+              <div className="min-w-0 leading-tight">
+                <div className="truncate font-display text-lg font-bold text-[#123127]">{place.name}</div>
+                <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#51705d]">Helping Today, Building Tomorrow</div>
+              </div>
+            </div>
+
+            <nav className="hidden items-center gap-6 text-sm font-medium text-[#1d2a24] lg:flex">
+              <Link to="/" className="text-[#1d2a24] hover:text-[#1c7245]">Home</Link>
+              <a href="#about" className="hover:text-[#1c7245]">About</a>
+              <a href="#services" className="hover:text-[#1c7245]">Our Services</a>
+              <a href="#gallery" className="hover:text-[#1c7245]">Gallery</a>
+              <a href="#events" className="hover:text-[#1c7245]">Events</a>
+              <a href="#contact" className="hover:text-[#1c7245]">Contact</a>
+            </nav>
+
+            <div className="flex items-center gap-2 sm:gap-3">
+              {socialLinks.instagram && <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e6eef6] text-sm font-bold text-[#1d2a24]">◎</a>}
+              {socialLinks.facebook && <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e6eef6] text-sm font-bold text-[#1d2a24]">f</a>}
+              {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-full bg-[#4cc96d] text-sm font-bold text-white">W</a>}
+              <a href={website || '#contact'} target={website ? '_blank' : undefined} rel={website ? 'noopener noreferrer' : undefined} className="rounded-full bg-[#1c7245] px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-white shadow-sm hover:bg-[#155a38]">Donate Now</a>
+            </div>
+          </div>
+        </header>
+
+        <main className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
+          <section id="home" className="overflow-hidden rounded-[30px] border border-[#dfe8de] bg-white shadow-[0_18px_55px_rgba(12,34,20,0.08)]">
+            <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
+              <div className="relative flex flex-col justify-center bg-[linear-gradient(135deg,#f4fbf7,#edf7f0_35%,#f7f9f2)] p-6 sm:p-8 lg:p-10">
+                <div className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-[#1c7245]">Education • Health • Community • Empowerment</div>
+                <h1 className="max-w-xl font-display text-4xl font-bold leading-[1.02] text-[#123127] sm:text-5xl lg:text-[4rem]">
+                  Together We Build<br />A Brighter Future
+                </h1>
+                <p className="mt-5 max-w-xl text-base leading-8 text-[#3a4d46]">
+                  {mission}
+                </p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <a href="#contact" className="rounded-full bg-[#1c7245] px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#155a38]">Support Our Mission</a>
+                  {website && <a href={website} target="_blank" rel="noopener noreferrer" className="rounded-full border border-[#cfe4d5] bg-white px-5 py-3 text-sm font-semibold text-[#123127] hover:bg-[#f5faf6]">Watch Our Story</a>}
+                </div>
+                <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {['Education for All', 'Better Healthcare', 'Clean Environment', 'Community Support', 'Women Empowerment', 'Child Welfare'].map((tag) => (
+                    <div key={tag} className="rounded-full border border-[#d7e9db] bg-[#f5faf6] px-3 py-2 text-center text-xs font-semibold uppercase tracking-[0.08em] text-[#214b3b]">{tag}</div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="relative min-h-[360px] bg-[#dfeee7]">
+                {cover ? <img src={cover} alt={`${place.name} cover`} className="h-full w-full object-cover" /> : <img src="https://images.unsplash.com/photo-1517486800579-88f4f6b6c49b?auto=format&fit=crop&w=1200&q=80" alt={`${place.name} cover`} className="h-full w-full object-cover" />}
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(16,56,41,0.15),rgba(16,56,41,0.5))]" />
+                <div className="absolute inset-x-6 bottom-6 rounded-[26px] border border-white/20 bg-white/10 p-3 backdrop-blur-sm">
+                  <div className="flex items-center gap-3 text-white">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1c7245] text-xl shadow-sm">♡</div>
+                    <div>
+                      <div className="text-lg font-bold">Small Actions</div>
+                      <div className="text-sm text-white/80">Big Impact</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="about" className="mt-8 grid gap-6 rounded-[30px] bg-white p-6 shadow-[0_18px_55px_rgba(12,34,20,0.05)] lg:grid-cols-[0.9fr_1.1fr] lg:p-8">
+            <div className="overflow-hidden rounded-[24px] border border-[#dfe8de] bg-[#eaf3ed]">
+              {galleryItems[0] && <img src={galleryItems[0]} alt={`${place.name} about`} className="h-full w-full object-cover" />}
+            </div>
+            <div className="flex flex-col justify-center">
+              <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#1c7245]">About us</div>
+              <h2 className="mt-3 font-display text-3xl font-bold text-[#123127] sm:text-4xl">Making a Difference in Our Community</h2>
+              <p className="mt-4 text-base leading-8 text-[#3d4f48]">{mission}</p>
+              <div className="mt-5 flex flex-wrap gap-3 text-sm font-medium text-[#1b4337]">
+                {(Array.isArray(categoryData.causes) ? categoryData.causes : ['Education Support', 'Healthcare Access', 'Community Development', 'Sustainable Future']).slice(0, 4).map((item) => (
+                  <span key={item} className="rounded-full border border-[#dfe8de] bg-[#f5faf6] px-3 py-2">{item}</span>
+                ))}
+              </div>
+              <a href="#services" className="mt-6 inline-flex w-fit items-center gap-2 rounded-full bg-[#edf7f0] px-4 py-2 text-sm font-semibold text-[#1c7245] hover:bg-[#e5f3ea]">Learn More <span aria-hidden="true">→</span></a>
+            </div>
+          </section>
+
+          <section id="services" className="mt-10">
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#1c7245]">Our services</div>
+                <h2 className="mt-2 font-display text-3xl font-bold text-[#123127]">We Provide Support & Solutions</h2>
+              </div>
+              <div className="hidden items-center gap-2 text-sm text-[#476559] sm:flex">
+                <button type="button" className="rounded-full border border-[#dfe8de] bg-white px-3 py-2">Like</button>
+                <button type="button" className="rounded-full border border-[#dfe8de] bg-white px-3 py-2">Share</button>
+                <button type="button" className="rounded-full border border-[#dfe8de] bg-white px-3 py-2">Comment</button>
+                <button type="button" className="rounded-full border border-[#dfe8de] bg-white px-3 py-2">Report</button>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+              {programs.slice(0, 5).map((service, index) => (
+                <div key={`${service}-${index}`} className="rounded-[22px] border border-[#dfe8de] bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-[#edf7f0] text-3xl">{['🎓', '🩺', '🌿', '👩', '🤝'][index % 5]}</div>
+                  <div className="mt-4 text-xl font-bold text-[#123127]">{typeof service === 'string' ? service : service.title}</div>
+                  <div className="mt-2 text-sm leading-6 text-[#4d605a]">{typeof service === 'string' ? 'Dedicated support to create meaningful social impact.' : service.summary}</div>
+                  <div className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#1c7245]">Learn More <span aria-hidden="true">→</span></div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-10 grid gap-4 bg-white p-4 shadow-[0_18px_55px_rgba(12,34,20,0.05)] sm:grid-cols-2 lg:grid-cols-4 lg:p-5">
+            {impactStats.map((stat) => (
+              <div key={stat.label} className="rounded-[20px] border border-[#dfe8de] bg-[#f7faf7] p-5 text-center">
+                <div className="font-display text-3xl font-bold text-[#1c7245]">{stat.value}</div>
+                <div className="mt-2 text-sm text-[#4d605a]">{stat.label}</div>
+              </div>
+            ))}
+            <div className="flex items-center justify-center rounded-[20px] border border-[#dfe8de] bg-[#f7faf7] p-5 text-center text-[#1c7245]">
+              <div className="font-display text-3xl font-bold">Your Support</div>
+            </div>
+          </section>
+
+          <section id="gallery" className="mt-10">
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#1c7245]">Our gallery</div>
+                <h2 className="mt-2 font-display text-3xl font-bold text-[#123127]">Moments of Hope & Change</h2>
+              </div>
+              <a href={galleryItems[0]} target="_blank" rel="noopener noreferrer" className="hidden text-sm font-semibold text-[#1c7245] hover:underline sm:inline-flex">View All Photos →</a>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+              {galleryItems.slice(0, 5).map((image, index) => (
+                <div key={`${image}-${index}`} className="overflow-hidden rounded-[22px] border border-[#dfe8de] bg-white shadow-sm">
+                  <img src={image} alt={`${place.name} gallery ${index + 1}`} className="h-56 w-full object-cover" />
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section id="events" className="mt-10 rounded-[30px] bg-white p-6 shadow-[0_18px_55px_rgba(12,34,20,0.05)] lg:p-8">
+            <div className="mb-6 flex items-center justify-between gap-3">
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#1c7245]">Events & News</div>
+                <h2 className="mt-2 font-display text-3xl font-bold text-[#123127]">Latest Updates & Activities</h2>
+              </div>
+              <a href="#contact" className="hidden text-sm font-semibold text-[#1c7245] hover:underline sm:inline-flex">View All →</a>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-3">
+              {eventCards.map((event, index) => (
+                <div key={`${event.title}-${index}`} className="overflow-hidden rounded-[22px] border border-[#dfe8de] bg-[#f9fbf9]">
+                  <div className="flex h-40 items-center justify-center bg-[linear-gradient(135deg,#dfeee7,#cfe8d8)] text-3xl font-bold text-[#1c7245]">{event.date}</div>
+                  <div className="p-4">
+                    <div className="text-xs font-bold uppercase tracking-[0.14em] text-[#1c7245]">{event.date}</div>
+                    <h3 className="mt-2 text-xl font-bold text-[#123127]">{event.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-[#4d605a]">{event.summary || event.description || 'A community activity designed to create meaningful impact.'}</p>
+                    <a href="#contact" className="mt-4 inline-flex text-sm font-semibold text-[#1c7245]">Read More →</a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-10 rounded-[30px] bg-white p-6 shadow-[0_18px_55px_rgba(12,34,20,0.05)] lg:p-8">
+            <div className="mb-6 flex items-center justify-between gap-3">
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#1c7245]">Testimonials</div>
+                <h2 className="mt-2 font-display text-3xl font-bold text-[#123127]">What People Say</h2>
+              </div>
+              <a href="#contact" className="hidden text-sm font-semibold text-[#1c7245] hover:underline sm:inline-flex">View All →</a>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-2">
+              {testimonials.map((t) => (
+                <div key={t.name} className="rounded-[24px] border border-[#dfe8de] bg-[#f7faf7] p-5">
+                  <div className="mb-3 text-[#f7b500] text-lg">{'★'.repeat(t.rating)}</div>
+                  <p className="text-base leading-8 text-[#3d4f48]">“{t.text}”</p>
+                  <div className="mt-4 font-semibold text-[#123127]">{t.name}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section id="contact" className="mt-10 overflow-hidden rounded-[30px] bg-[#0d422d] text-white">
+            <div className="grid gap-6 p-6 lg:grid-cols-[1.1fr_0.9fr] lg:p-10">
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#bfe3cb]">Be a part of the change</div>
+                <h2 className="mt-3 font-display text-3xl font-bold sm:text-4xl">Your support helps us reach more people, create better opportunities and build stronger communities.</h2>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <a href={website || '#contact'} target={website ? '_blank' : undefined} rel={website ? 'noopener noreferrer' : undefined} className="rounded-full bg-[#1c7245] px-5 py-3 text-sm font-semibold text-white hover:bg-[#155a38]">Donate Now</a>
+                  <a href={whatsappUrl || '#contact'} target={whatsappUrl ? '_blank' : undefined} rel={whatsappUrl ? 'noopener noreferrer' : undefined} className="rounded-full border border-white/20 bg-white/5 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10">Contact Details</a>
+                </div>
+              </div>
+              <div className="grid gap-4 rounded-[26px] bg-white/5 p-5 backdrop-blur-sm">
+                {place.address && <div><div className="text-xs font-bold uppercase tracking-[0.15em] text-[#bfe3cb]">Our location</div><div className="mt-2 text-sm leading-7 text-white/90">{place.address}</div></div>}
+                {place.phone && <div><div className="text-xs font-bold uppercase tracking-[0.15em] text-[#bfe3cb]">Phone</div><div className="mt-2 text-sm text-white/90">{place.phone}</div></div>}
+                {place.email && <div><div className="text-xs font-bold uppercase tracking-[0.15em] text-[#bfe3cb]">Email</div><div className="mt-2 text-sm text-white/90">{place.email}</div></div>}
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen ${theme.palette}`}>
@@ -192,8 +419,8 @@ export function ReligiousSocialBrandPage({ place, mapsUrl, onShare, onReport }) 
           </div>
 
           <nav className="hidden items-center gap-5 text-sm font-medium text-[#2a231d] lg:flex">
-            {navItems.map((item) => (
-              <a key={item.label} href={item.href} className="transition hover:text-[#7a3f1d]">{item.label}</a>
+            {theme.nav.map((label) => (
+              <a key={label} href={`#${label.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z-]/g, '')}`} className="transition hover:text-[#7a3f1d]">{label}</a>
             ))}
           </nav>
 
@@ -201,13 +428,13 @@ export function ReligiousSocialBrandPage({ place, mapsUrl, onShare, onReport }) 
             <Link to="/" className="inline-flex items-center rounded-full border border-current/10 bg-[#f6f2ea] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#4a2b14] transition hover:bg-[#efe4d3]">
               Back to Home
             </Link>
-            {place.website && (
-              <a href={safeExternalUrl(place.website) || '#'} target="_blank" rel="noopener noreferrer" className="rounded-full border border-[#c7d0d8] bg-white px-3 py-2 text-xs font-semibold text-[#1f2d3d] shadow-sm sm:px-4 sm:text-sm">
+            {website && (
+              <a href={website} target="_blank" rel="noopener noreferrer" className="rounded-full border border-[#c7d0d8] bg-white px-3 py-2 text-xs font-semibold text-[#1f2d3d] shadow-sm sm:px-4 sm:text-sm">
                 Website
               </a>
             )}
-            {place.socialLinks?.whatsapp && (
-              <a href={place.socialLinks.whatsapp.startsWith('http') ? place.socialLinks.whatsapp : `https://wa.me/${place.socialLinks.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex h-10 w-10 items-center justify-center rounded-full bg-[#25D366] text-xs font-bold text-white shadow-sm" aria-label="WhatsApp">
+            {whatsappUrl && (
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex h-10 w-10 items-center justify-center rounded-full bg-[#25D366] text-xs font-bold text-white shadow-sm" aria-label="WhatsApp">
                 W
               </a>
             )}
@@ -229,12 +456,12 @@ export function ReligiousSocialBrandPage({ place, mapsUrl, onShare, onReport }) 
               <a href={place.phone ? `tel:${place.phone}` : '#contact'} className={`inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold ${theme.badge}`}>
                 {theme.cta}<span aria-hidden="true">→</span>
               </a>
-              {place.socialLinks?.whatsapp && (
-                <a href={place.socialLinks.whatsapp.startsWith('http') ? place.socialLinks.whatsapp : `https://wa.me/${place.socialLinks.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/30 bg-white/10 text-lg font-bold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/15" aria-label="WhatsApp">
+              {whatsappUrl && (
+                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/30 bg-white/10 text-lg font-bold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/15" aria-label="WhatsApp">
                   W
                 </a>
               )}
-              {place.website && <a href={safeExternalUrl(place.website) || '#'} target="_blank" rel="noopener noreferrer" className="rounded-full border border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold text-white hover:bg-white/15">Website</a>}
+              {website && <a href={website} target="_blank" rel="noopener noreferrer" className="rounded-full border border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold text-white hover:bg-white/15">Website</a>}
               {place.address && <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="rounded-full border border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold text-white hover:bg-white/15">View Location</a>}
             </div>
           </div>
@@ -252,7 +479,7 @@ export function ReligiousSocialBrandPage({ place, mapsUrl, onShare, onReport }) 
               {place.phone && <div><strong>Phone:</strong> {place.phone}</div>}
               {place.email && <div><strong>Email:</strong> {place.email}</div>}
               {place.address && <div><strong>Address:</strong> {place.address}</div>}
-              {place.website && <div><strong>Website:</strong> {place.website}</div>}
+              {website && <div><strong>Website:</strong> {place.website}</div>}
             </div>
           </div>
         </section>
@@ -262,21 +489,13 @@ export function ReligiousSocialBrandPage({ place, mapsUrl, onShare, onReport }) 
             <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7a3f1d]">Services & Programs</div>
             <h2 className="mt-2 font-display text-3xl font-semibold text-[#1d120d]">Our offerings</h2>
             <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {driveCards.map(([label, value], index) => (
-                <div key={label} className="rounded-[1.25rem] border border-current/10 bg-[#faf7f2] p-4">
+              {Array.from(new Set([...(Array.isArray(categoryData.programs) ? categoryData.programs : []), ...(Array.isArray(categoryData.causes) ? categoryData.causes : []), ...services])).slice(0, 4).map((value, index) => (
+                <div key={`${value}-${index}`} className="rounded-[1.25rem] border border-current/10 bg-[#faf7f2] p-4">
                   <div className="text-2xl">{['🛕', '🙏', '❤️', '🌿'][index % 4]}</div>
-                  <div className="mt-3 text-base font-semibold text-[#1d120d]">{label}</div>
-                  <p className="mt-2 text-sm leading-6 text-[#54473d]">{Array.isArray(value) ? value.join(', ') : value}</p>
+                  <div className="mt-3 text-base font-semibold text-[#1d120d]">{value}</div>
                 </div>
               ))}
             </div>
-            {services.length > 0 && (
-              <div className="mt-6 flex flex-wrap gap-2">
-                {services.map((service, index) => (
-                  <span key={`${service}-${index}`} className="rounded-full border border-current/10 bg-[#f9f3ea] px-3 py-2 text-sm font-medium text-[#3d2a1d]">{service}</span>
-                ))}
-              </div>
-            )}
           </section>
         )}
 
@@ -303,7 +522,7 @@ export function ReligiousSocialBrandPage({ place, mapsUrl, onShare, onReport }) 
                 {place.address && <div><strong>Address:</strong> {place.address}</div>}
                 {place.phone && <div><strong>Phone:</strong> {place.phone}</div>}
                 {place.email && <div><strong>Email:</strong> {place.email}</div>}
-                {place.website && <div><strong>Website:</strong> {place.website}</div>}
+                {website && <div><strong>Website:</strong> {place.website}</div>}
               </div>
               <div className="overflow-hidden rounded-[1.5rem] border border-current/10">
                 <iframe title={`${place.name} map`} src={`https://www.google.com/maps?q=${encodeURIComponent(place.address)}&output=embed`} className="h-72 w-full border-0" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
