@@ -43,10 +43,18 @@ app.use(
   cors({
     origin: (origin, callback) => {
       const configuredOrigin = process.env.CLIENT_URL;
+      const allowedOrigins = [
+        configuredOrigin,
+        'https://googlepages.in',
+        'https://www.googlepages.in',
+        'http://googlepages.in',
+        'http://www.googlepages.in',
+      ].filter(Boolean);
+
       const isLocalDevelopmentOrigin = origin
         && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
 
-      if (!origin || origin === configuredOrigin || isLocalDevelopmentOrigin) {
+      if (!origin || allowedOrigins.includes(origin) || isLocalDevelopmentOrigin) {
         callback(null, true);
         return;
       }
