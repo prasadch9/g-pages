@@ -199,6 +199,8 @@ export default function CreateListing() {
         mainCategory: categoryGroup?.name || '',
         category: place.category?._id || place.category || categoryGroup?.name || '',
         subcategory,
+        pageType: place.pageType || 'static',
+        categoryData: place.categoryData || {},
         address: place.address || '',
         description: place.description || '',
         phone: place.phone || '',
@@ -374,7 +376,7 @@ export default function CreateListing() {
       const principal = attributes.principal || {};
       const admissionDetails = attributes.admissionDetails || {};
       const fees = attributes.fees || {};
-      setForm((current) => ({ ...current, name: place.name || '', category: place.category?._id || place.category || '', subcategory: place.subcategory || place.category?.name || '', mainCategory: place.categoryGroup || '', address: place.address || '', description: place.description || '', phone: place.phone || '', email: place.email || '', website: place.website || '', services: (place.services || []).join(', '), facilities: (place.facilities || []).join(', '), pageType: place.pageType || 'static', facebook: place.socialLinks?.facebook || '', instagram: place.socialLinks?.instagram || '', whatsapp: place.socialLinks?.whatsapp || '', youtube: place.socialLinks?.youtube || '', linkedin: place.socialLinks?.linkedin || '', ...place.attributes }));
+      setForm((current) => ({ ...current, name: place.name || '', category: place.category?._id || place.category || '', subcategory: place.subcategory || place.category?.name || '', mainCategory: place.categoryGroup || '', address: place.address || '', description: place.description || '', phone: place.phone || '', email: place.email || '', website: place.website || '', services: (place.services || []).join(', '), facilities: (place.facilities || []).join(', '), pageType: place.pageType || 'static', categoryData: place.categoryData || {}, facebook: place.socialLinks?.facebook || '', instagram: place.socialLinks?.instagram || '', whatsapp: place.socialLinks?.whatsapp || '', youtube: place.socialLinks?.youtube || '', linkedin: place.socialLinks?.linkedin || '', ...place.attributes }));
       setTravelDetails(place.attributes?.businessProfile?.categorySpecific || place.attributes?.travelDetails || {});
       setFoodDetails(place.attributes?.businessProfile?.categorySpecific || place.attributes?.foodDetails || {});
       setWeddingDetails(place.attributes?.businessProfile?.categorySpecific || place.attributes?.weddingDetails || {});
@@ -404,6 +406,11 @@ export default function CreateListing() {
   const weddingBusinessType = ({ 'Marriage Bureaus': 'marriage-bureau', 'Function Halls': 'function-hall', 'Event Organizers': 'event-organizer', 'Catering Services': 'catering-service', 'Flower Decoration': 'flower-decoration', 'Fashion Designers': 'fashion-designer', 'Beauty Parlours': 'beauty-parlour', 'Saloon & Spa': 'saloon-spa' })[form.subcategory] || 'event-organizer';
   const isAcademy = ['academy', 'academies', 'training institute', 'training institutes', 'training institution', 'training institutions'].includes(categoryName);
   const isSportsAcademy = ['sports academy', 'sports academies'].includes(categoryName);
+  const userCategoryConfig = getCategoryConfig(form.subcategory || selectedCategory?.name);
+  const updateCategoryData = (field, value) => setForm((current) => ({
+    ...current,
+    categoryData: { ...(current.categoryData || {}), [field]: value },
+  }));
 
   const selectMainCategory = (e) => {
     setTravelDetails({});
@@ -682,6 +689,7 @@ export default function CreateListing() {
         categoryGroup: form.mainCategory,
         subcategory: form.subcategory,
         pageType: form.pageType,
+        categoryData: form.categoryData || {},
         location: { ...location, area: location.area || null },
         address: form.address,
         description: form.description,

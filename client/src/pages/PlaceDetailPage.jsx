@@ -448,12 +448,16 @@ export default function PlaceDetailPage() {
     'packers & movers', 'packers and movers', 'packers-movers',
     'logistics', 'moving', 'logistics & moving', 'logistics-moving'
   ];
+  const groupLower = (place.businessGroup || place.categoryGroup || '').toLowerCase();
   const isBusinessProfessionalSubcategory = premiumBusinessCategoryNames.includes(categorySlug)
     || premiumBusinessCategoryNames.includes(categoryName)
-    || premiumBusinessCategoryNames.includes((place.subcategory || '').toLowerCase());
+    || premiumBusinessCategoryNames.includes((place.subcategory || '').toLowerCase())
+    || groupLower === 'business & professional services'
+    || groupLower === 'logistics & moving';
   const isReligiousSocialCategory = ['religious-social', 'temples', 'churches', 'trusts', 'ngos', 'associations'].includes(categorySlug)
     || ['religious-social', 'temples', 'churches', 'trusts', 'ngos', 'associations'].includes(categoryName)
-    || ['temples', 'churches', 'trusts', 'ngos', 'associations'].includes((place.subcategory || '').toLowerCase());
+    || ['temples', 'churches', 'trusts', 'ngos', 'associations'].includes((place.subcategory || '').toLowerCase())
+    || groupLower === 'religious & social';
 
   if (isReligiousSocialCategory) {
     return <><ReligiousSocialBrandPage place={place} mapsUrl={mapsUrl} onShare={handleShare} onReport={() => setShowReport(true)} />{showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}</>;
