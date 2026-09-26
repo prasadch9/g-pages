@@ -3,7 +3,7 @@ const Category = require('../models/Category');
 const Favorite = require('../models/Favorite');
 const slugify = require('slugify');
 const { AppError } = require('../middleware/errorHandler');
-const { getCategoryGroup } = require('../config/categoryModules');
+const { CATEGORY_GROUPS, getCategoryGroup } = require('../config/categoryModules');
 
 const PUBLIC_PLACE_FILTER = { status: 'approved', applicationStatus: 'approved', isPublished: true };
 
@@ -177,6 +177,7 @@ const createPlace = async (req, res, next) => {
     const body = { ...req.body };
     const category = await Category.findById(body.category).select('name group');
     if (!category) return next(new AppError('Select a valid category.', 400));
+    const selectedCategoryGroup = CATEGORY_GROUPS[body.categoryGroup]?.includes(category.name) ? body.categoryGroup : null;
     const pageType = body.pageType === 'dynamic' ? 'dynamic' : 'static';
     body.location = parseMultipartValue(body.location, body.location);
     body.socialLinks = parseMultipartValue(body.socialLinks, {});
@@ -189,8 +190,19 @@ const createPlace = async (req, res, next) => {
     const aboutImage = filesFor('aboutImage')[0] ? publicUploadUrl(req, filesFor('aboutImage')[0]) : body.aboutImage;
     const coverImage = filesFor('coverImage')[0] ? publicUploadUrl(req, filesFor('coverImage')[0]) : body.coverImage;
     const images = filesFor('images').map((file) => publicUploadUrl(req, file));
-    const uploadedVideos = [...filesFor('video'), ...filesFor('videos'), ...filesFor('schoolVideoFiles')].map((file) => publicUploadUrl(req, file));
-    const linkedVideos = (body.attributes?.schoolVideos || []).filter((item) => item?.type !== 'upload' && item?.url).map((item) => item.url);
+    const smallScaleImages = filesFor('smallScaleImages').map((file) => publicUploadUrl(req, file));
+    const smallScaleVideos = filesFor('smallScaleVideos').map((file) => publicUploadUrl(req, file));
+    const foodProcessingImages = filesFor('foodProcessingImages').map((file) => publicUploadUrl(req, file));
+    const foodProcessingVideos = filesFor('foodProcessingVideos').map((file) => publicUploadUrl(req, file));
+    const tradingBusinessImages = filesFor('tradingBusinessImages').map((file) => publicUploadUrl(req, file));
+    const tradingBusinessVideos = filesFor('tradingBusinessVideos').map((file) => publicUploadUrl(req, file));
+    const uploadedVideos = [...filesFor('video'), ...filesFor('videos'), ...filesFor('schoolVideoFiles'), ...filesFor('smallScaleVideos'), ...filesFor('foodProcessingVideos'), ...filesFor('tradingBusinessVideos')].map((file) => publicUploadUrl(req, file));
+    const linkedVideos = [
+      ...(body.attributes?.schoolVideos || []).filter((item) => item?.type !== 'upload' && item?.url).map((item) => item.url),
+      ...(body.attributes?.smallScaleIndustries?.galleryVideos || []).filter((item) => item?.url && item.uploadIndex === undefined).map((item) => item.url),
+      ...(body.attributes?.foodProcessing?.galleryVideos || []).filter((item) => item?.url && item.uploadIndex === undefined).map((item) => item.url),
+      ...(body.attributes?.tradingBusinesses?.galleryVideos || []).filter((item) => item?.url && item.uploadIndex === undefined).map((item) => item.url),
+    ];
     const video = [...uploadedVideos, ...linkedVideos, ...(Array.isArray(body.video) ? body.video : body.video ? [body.video] : [])];
     const facilityImages = filesFor('facilityImages').map((file) => publicUploadUrl(req, file));
     const galleryImages = filesFor('galleryImages').map((file) => publicUploadUrl(req, file));
@@ -221,6 +233,64 @@ const createPlace = async (req, res, next) => {
         galleryVideos: (body.attributes.academy.galleryVideos || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? academyGalleryVideos[uploadIndex] || item.url : item.url })),
         courses: (body.attributes.academy.courses || []).map(({ uploadIndex, ...item }) => ({ ...item, image: uploadIndex !== undefined ? academyCourseImages[uploadIndex] || item.image : item.image })),
       } } : {}),
+      ...(body.attributes?.smallScaleIndustries ? { smallScaleIndustries: {
+        ...body.attributes.smallScaleIndustries,
+        products: (body.attributes.smallScaleIndustries.products || []).map(({ imageUploadIndex, ...item }) => ({
+          ...item,
+          image: imageUploadIndex !== undefined ? smallScaleImages[imageUploadIndex] || item.image : item.image,
+        })),
+        galleryImages: (body.attributes.smallScaleIndustries.galleryImages || []).map(({ uploadIndex, ...item }) => ({
+          ...item,
+          url: uploadIndex !== undefined ? smallScaleImages[uploadIndex] || item.url : item.url,
+        })),
+        galleryVideos: (body.attributes.smallScaleIndustries.galleryVideos || []).map(({ uploadIndex, ...item }) => ({
+          ...item,
+          url: uploadIndex !== undefined ? smallScaleVideos[uploadIndex] || item.url : item.url,
+        })),
+      } } : {}),
+      ...(body.attributes?.foodProcessing ? { foodProcessing: {
+        ...body.attributes.foodProcessing,
+        products: (body.attributes.foodProcessing.products || []).map(({ imageUploadIndex, ...item }) => ({
+          ...item,
+          image: imageUploadIndex !== undefined ? foodProcessingImages[imageUploadIndex] || item.image : item.image,
+        })),
+        processSteps: (body.attributes.foodProcessing.processSteps || []).map(({ imageUploadIndex, ...item }) => ({
+          ...item,
+          image: imageUploadIndex !== undefined ? foodProcessingImages[imageUploadIndex] || item.image : item.image,
+        })),
+        galleryImages: (body.attributes.foodProcessing.galleryImages || []).map(({ uploadIndex, ...item }) => ({
+          ...item,
+          url: uploadIndex !== undefined ? foodProcessingImages[uploadIndex] || item.url : item.url,
+        })),
+        galleryVideos: (body.attributes.foodProcessing.galleryVideos || []).map(({ uploadIndex, ...item }) => ({
+          ...item,
+          url: uploadIndex !== undefined ? foodProcessingVideos[uploadIndex] || item.url : item.url,
+        })),
+      } } : {}),
+      ...(body.attributes?.tradingBusinesses ? { tradingBusinesses: {
+        ...body.attributes.tradingBusinesses,
+        promoBackgroundImage: body.attributes.tradingBusinesses.promoBackgroundUploadIndex !== undefined
+          ? tradingBusinessImages[body.attributes.tradingBusinesses.promoBackgroundUploadIndex] || body.attributes.tradingBusinesses.promoBackgroundUrl
+          : body.attributes.tradingBusinesses.promoBackgroundUrl || body.attributes.tradingBusinesses.promoBackgroundImage,
+        promoBackgroundUploadIndex: undefined,
+        productCategories: (body.attributes.tradingBusinesses.productCategories || []).map((item) => {
+          if (!item || typeof item !== 'object') return item;
+          const { imageUploadIndex, ...categoryItem } = item;
+          return { ...categoryItem, image: imageUploadIndex !== undefined ? tradingBusinessImages[imageUploadIndex] || item.image : item.image };
+        }),
+        catalogue: (body.attributes.tradingBusinesses.catalogue || []).map(({ imageUploadIndex, ...item }) => ({
+          ...item,
+          image: imageUploadIndex !== undefined ? tradingBusinessImages[imageUploadIndex] || item.image : item.image,
+        })),
+        galleryImages: (body.attributes.tradingBusinesses.galleryImages || []).map(({ uploadIndex, ...item }) => ({
+          ...item,
+          url: uploadIndex !== undefined ? tradingBusinessImages[uploadIndex] || item.url : item.url,
+        })),
+        galleryVideos: (body.attributes.tradingBusinesses.galleryVideos || []).map(({ uploadIndex, ...item }) => ({
+          ...item,
+          url: uploadIndex !== undefined ? tradingBusinessVideos[uploadIndex] || item.url : item.url,
+        })),
+      } } : {}),
       ...schoolMedia,
       principalImage,
       aboutImage,
@@ -230,7 +300,7 @@ const createPlace = async (req, res, next) => {
     const coordinates = await geocodeAddress(body.address);
     const place = await Place.create({
       ...body,
-      categoryGroup: category.group || getCategoryGroup(category.name),
+      categoryGroup: selectedCategoryGroup || category.group || getCategoryGroup(category.name),
       subcategory: category.name,
       pageType,
       images: [...(Array.isArray(body.images) ? body.images : []), ...images, ...galleryImages],
@@ -295,6 +365,82 @@ const updatePlace = async (req, res, next) => {
     const uploadedFiles = Array.isArray(req.files) ? req.files : [];
     const uploadedUrls = (field) => uploadedFiles.filter((file) => file.fieldname === field).map((file) => publicUploadUrl(req, file));
     if (uploadedUrls('logo')[0]) ownerUpdates.logo = uploadedUrls('logo')[0];
+    if (uploadedUrls('aboutImage')[0]) {
+      ownerUpdates.attributes = { ...ownerUpdates.attributes, aboutImage: uploadedUrls('aboutImage')[0] };
+    }
+    if (ownerUpdates.attributes?.smallScaleIndustries) {
+      const smallScale = ownerUpdates.attributes.smallScaleIndustries;
+      const images = uploadedUrls('smallScaleImages');
+      const videos = uploadedUrls('smallScaleVideos');
+      ownerUpdates.attributes.smallScaleIndustries = {
+        ...smallScale,
+        products: (smallScale.products || []).map(({ imageUploadIndex, ...item }) => ({
+          ...item,
+          image: imageUploadIndex !== undefined ? images[imageUploadIndex] || item.image : item.image,
+        })),
+        galleryImages: (smallScale.galleryImages || []).map(({ uploadIndex, ...item }) => ({
+          ...item,
+          url: uploadIndex !== undefined ? images[uploadIndex] || item.url : item.url,
+        })),
+        galleryVideos: (smallScale.galleryVideos || []).map(({ uploadIndex, ...item }) => ({
+          ...item,
+          url: uploadIndex !== undefined ? videos[uploadIndex] || item.url : item.url,
+        })),
+      };
+    }
+    if (ownerUpdates.attributes?.foodProcessing) {
+      const foodProcessing = ownerUpdates.attributes.foodProcessing;
+      const images = uploadedUrls('foodProcessingImages');
+      const videos = uploadedUrls('foodProcessingVideos');
+      ownerUpdates.attributes.foodProcessing = {
+        ...foodProcessing,
+        products: (foodProcessing.products || []).map(({ imageUploadIndex, ...item }) => ({
+          ...item,
+          image: imageUploadIndex !== undefined ? images[imageUploadIndex] || item.image : item.image,
+        })),
+        processSteps: (foodProcessing.processSteps || []).map(({ imageUploadIndex, ...item }) => ({
+          ...item,
+          image: imageUploadIndex !== undefined ? images[imageUploadIndex] || item.image : item.image,
+        })),
+        galleryImages: (foodProcessing.galleryImages || []).map(({ uploadIndex, ...item }) => ({
+          ...item,
+          url: uploadIndex !== undefined ? images[uploadIndex] || item.url : item.url,
+        })),
+        galleryVideos: (foodProcessing.galleryVideos || []).map(({ uploadIndex, ...item }) => ({
+          ...item,
+          url: uploadIndex !== undefined ? videos[uploadIndex] || item.url : item.url,
+        })),
+      };
+    }
+    if (ownerUpdates.attributes?.tradingBusinesses) {
+      const trading = ownerUpdates.attributes.tradingBusinesses;
+      const images = uploadedUrls('tradingBusinessImages');
+      const videos = uploadedUrls('tradingBusinessVideos');
+      ownerUpdates.attributes.tradingBusinesses = {
+        ...trading,
+        promoBackgroundImage: trading.promoBackgroundUploadIndex !== undefined
+          ? images[trading.promoBackgroundUploadIndex] || trading.promoBackgroundUrl
+          : trading.promoBackgroundUrl || trading.promoBackgroundImage,
+        promoBackgroundUploadIndex: undefined,
+        productCategories: (trading.productCategories || []).map((item) => {
+          if (!item || typeof item !== 'object') return item;
+          const { imageUploadIndex, ...categoryItem } = item;
+          return { ...categoryItem, image: imageUploadIndex !== undefined ? images[imageUploadIndex] || item.image : item.image };
+        }),
+        catalogue: (trading.catalogue || []).map(({ imageUploadIndex, ...item }) => ({
+          ...item,
+          image: imageUploadIndex !== undefined ? images[imageUploadIndex] || item.image : item.image,
+        })),
+        galleryImages: (trading.galleryImages || []).map(({ uploadIndex, ...item }) => ({
+          ...item,
+          url: uploadIndex !== undefined ? images[uploadIndex] || item.url : item.url,
+        })),
+        galleryVideos: (trading.galleryVideos || []).map(({ uploadIndex, ...item }) => ({
+          ...item,
+          url: uploadIndex !== undefined ? videos[uploadIndex] || item.url : item.url,
+        })),
+      };
+    }
     if (ownerUpdates.attributes?.academy) {
       const academy = ownerUpdates.attributes.academy;
       const photos = uploadedUrls('academyGalleryImages');
@@ -325,7 +471,7 @@ const updatePlace = async (req, res, next) => {
     }
     const updateFields = { ...ownerUpdates };
     const newImages = uploadedUrls('images');
-    const newVideos = uploadedUrls('videos');
+    const newVideos = [...uploadedUrls('videos'), ...uploadedUrls('smallScaleVideos'), ...uploadedUrls('foodProcessingVideos'), ...uploadedUrls('tradingBusinessVideos')];
     if (uploadedUrls('coverImage')[0]) updateFields.coverImage = uploadedUrls('coverImage')[0];
     if (newImages.length) updateFields.images = [...(place.images || []), ...newImages];
     if (newVideos.length) {

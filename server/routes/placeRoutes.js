@@ -27,8 +27,8 @@ const upload = multer({
     const mimeType = String(file.mimetype || '').toLowerCase();
     const imageExtensions = new Set(['.jpg', '.jpeg', '.jpe', '.jfif', '.png', '.gif', '.webp', '.avif', '.heic', '.heif', '.svg', '.bmp', '.tif', '.tiff']);
     const videoExtensions = new Set(['.mp4', '.webm', '.ogg', '.ogv', '.mov', '.m4v', '.avi', '.mkv', '.3gp', '.flv']);
-    const imageFields = new Set(['logo', 'footerLogo', 'coverImage', 'aboutImage', 'images', 'facilityImages', 'principalImage', 'principalGallery', 'facultyImages', 'infrastructureImages', 'galleryImages', 'eventImages', 'academyGalleryImages', 'academyAboutImage', 'academyVideoThumbnail', 'academyCourseImages']);
-    const videoFields = new Set(['video', 'videos', 'schoolVideoFiles', 'academyGalleryVideos', 'academyIntroVideo']);
+    const imageFields = new Set(['logo', 'footerLogo', 'coverImage', 'aboutImage', 'images', 'facilityImages', 'principalImage', 'principalGallery', 'facultyImages', 'infrastructureImages', 'galleryImages', 'eventImages', 'academyGalleryImages', 'academyAboutImage', 'academyVideoThumbnail', 'academyCourseImages', 'smallScaleImages', 'foodProcessingImages', 'tradingBusinessImages']);
+    const videoFields = new Set(['video', 'videos', 'schoolVideoFiles', 'academyGalleryVideos', 'academyIntroVideo', 'smallScaleVideos', 'foodProcessingVideos', 'tradingBusinessVideos']);
     const isImage = mimeType.startsWith('image/') || imageExtensions.has(extension);
     const isVideo = mimeType.startsWith('video/') || videoExtensions.has(extension);
 

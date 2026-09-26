@@ -11,6 +11,8 @@ import UniversityPage from '../components/UniversityPage';
 import TrainingInstitutionPage from '../components/TrainingInstitutionPage';
 import AcademyPage from '../components/AcademyPage';
 import SportsAcademyPage from '../components/SportsAcademyPage';
+import IndustrialManufacturingPage from '../components/IndustrialManufacturingPage';
+import TradingBusinessPage from '../components/TradingBusinessPage';
 import SolarPage from './SolarPage';
 
 const DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
@@ -411,6 +413,9 @@ export default function PlaceDetailPage() {
   const isAcademyCategory = ['academies', 'academy'].includes(trainingCategory);
   const isSportsAcademyCategory = ['sports-academies', 'sports-academy'].includes(trainingCategory);
   const isTrainingInstitution = ['training-institutes', 'training-institute', 'academies', 'academy', 'sports-academies', 'sports-academy'].includes(trainingCategory);
+  const isTradingBusinessCategory = ['trading-businesses', 'trading-business'].includes(trainingCategory) || ['trading-businesses', 'trading-business'].includes((place.category?.slug || '').toLowerCase()) || ['trading businesses', 'trading business'].includes((place.category?.name || '').toLowerCase());
+  const isFoodProcessingCategory = ['food-processing', 'food-processing-business', 'food processing'].includes(trainingCategory) || ['food-processing', 'food-processing-business', 'food processing'].includes((place.category?.slug || '').toLowerCase()) || ['food-processing', 'food-processing-business', 'food processing'].includes((place.category?.name || '').toLowerCase().replace(/\s+/g, '-'));
+  const isSmallScaleIndustriesCategory = ['small-scale-industries', 'small-scale-industry', 'small-scale-industrial', 'small scale industries', 'small scale industry'].includes(trainingCategory) || ['small-scale-industries', 'small-scale-industry', 'small-scale-industrial', 'small scale industries', 'small scale industry'].includes((place.category?.slug || '').toLowerCase()) || ['small-scale-industries', 'small-scale-industry', 'small-scale-industrial', 'small scale industries', 'small scale industry'].includes((place.category?.name || '').toLowerCase().replace(/\s+/g, '-'));
   const isSolarCategory = ['solar'].includes((place.category?.slug || '').toLowerCase()) || ['solar'].includes((place.category?.name || '').toLowerCase());
 
   // School listings always use the full school website layout so their
@@ -449,6 +454,34 @@ export default function PlaceDetailPage() {
           : <TrainingInstitutionPage place={place} onReport={() => setShowReport(true)} />}
       {showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}
     </>;
+  }
+
+  if (isTradingBusinessCategory) {
+    return (
+      <>
+        <TradingBusinessPage
+          place={place}
+          mapsUrl={mapsUrl}
+          onShare={handleShare}
+          onReport={() => setShowReport(true)}
+        />
+        {showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}
+      </>
+    );
+  }
+
+  if (isFoodProcessingCategory || isSmallScaleIndustriesCategory) {
+    return (
+      <>
+        <IndustrialManufacturingPage
+          place={place}
+          mapsUrl={mapsUrl}
+          onShare={handleShare}
+          onReport={() => setShowReport(true)}
+        />
+        {showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}
+      </>
+    );
   }
 
   if (isSolarCategory) {
