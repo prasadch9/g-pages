@@ -12,6 +12,8 @@ import WeddingBusinessSpecificFields from '../../components/business/WeddingBusi
 import mediaUrl from '../../utils/mediaUrl';
 import AcademyRegistrationFields from '../../components/AcademyRegistrationFields';
 import SportsAcademyRegistrationFields from '../../components/SportsAcademyRegistrationFields';
+import HealthcareBusinessEditor from './HealthcareBusinessEditor';
+import PropertyBusinessForm from './PropertyBusinessForm';
 
 const initialLocation = { state: '', district: '', city: '', area: '', areaText: '' };
 const MALL_DAYS = [['mon', 'Monday'], ['tue', 'Tuesday'], ['wed', 'Wednesday'], ['thu', 'Thursday'], ['fri', 'Friday'], ['sat', 'Saturday'], ['sun', 'Sunday']];
@@ -140,6 +142,7 @@ export default function CreateListing() {
   const id = editId;
   const isEditing = Boolean(editId);
   const [categories, setCategories] = useState([]);
+  const [editBusinessPlace, setEditBusinessPlace] = useState(null);
   const [location, setLocation] = useState(initialLocation);
   const [form, setForm] = useState(initialForm);
   const [travelDetails, setTravelDetails] = useState({});
@@ -184,6 +187,7 @@ export default function CreateListing() {
     if (!id) return;
     api.get(`/places/${id}`).then(({ data }) => {
       const place = data.data;
+      setEditBusinessPlace(place);
       const subcategory = place.attributes?.subCategory || place.category?.name || '';
       const existingVideos = place.attributes?.mallVideos?.length
         ? place.attributes.mallVideos
@@ -239,6 +243,15 @@ export default function CreateListing() {
 
   const isAutomotiveCategory = selectedCategoryName.toLowerCase().includes('automotive') || form.subcategory.toLowerCase().includes('automotive');
   const isShoppingCategory = selectedCategoryName.toLowerCase() === 'shopping & retail' || form.subcategory.toLowerCase().includes('shopping');
+  const healthcareSubcategory = typeof form.subcategory === 'string' ? form.subcategory.trim().toLowerCase() : form.subcategory?.name?.trim().toLowerCase() || '';
+  const isHospitalHealthcare = form.mainCategory === 'Healthcare & Medical' && ['hospitals', 'multispeciality hospitals'].includes(healthcareSubcategory) && Boolean(form.category);
+  const isSpecialistHealthcare = form.mainCategory === 'Healthcare & Medical' && ['cardiology', 'ent', 'dental', 'hearing solutions'].includes(healthcareSubcategory) && Boolean(form.category);
+  const isFitnessHealthcare = form.mainCategory === 'Healthcare & Medical' && ['fitness centre', 'fitness center', 'fitness centres', 'fitness centers'].includes(healthcareSubcategory) && Boolean(form.category);
+  const isDedicatedHealthcare = isHospitalHealthcare || isSpecialistHealthcare || isFitnessHealthcare;
+  const isDedicatedRealEstate = form.mainCategory === 'Real Estate & Construction' && healthcareSubcategory === 'real estate' && Boolean(form.category);
+  const isDedicatedConstructionRoofing = form.mainCategory === 'Real Estate & Construction' && ['construction', 'roofing'].includes(healthcareSubcategory) && Boolean(form.category);
+  const isDedicatedShopStudio = form.mainCategory === 'Real Estate & Construction' && ['furniture shops', 'tiles shops', 'interiors & decorations'].includes(healthcareSubcategory) && Boolean(form.category);
+  const isDedicatedBusinessForm = isDedicatedHealthcare || isDedicatedRealEstate || isDedicatedConstructionRoofing || isDedicatedShopStudio;
   const shoppingFields = SHOPPING_DETAILS[form.subcategory] || [];
 
   const update = (field) => (e) => setForm((current) => ({ ...current, [field]: e.target.value }));
@@ -369,10 +382,14 @@ export default function CreateListing() {
       const place = data.data.find((item) => item._id === editId);
       if (!place) throw new Error('Listing not found.');
       const attributes = place.attributes || {};
+      const rawSubcategory = attributes.subCategory || (typeof place.subcategory === 'object' ? place.subcategory?.name : place.subcategory) || place.category?.name || '';
+      const editSubcategory = /^[a-f\d]{24}$/i.test(rawSubcategory) ? place.category?.name || '' : rawSubcategory;
+      const editCategoryGroup = place.categoryGroup || CATEGORY_GROUPS.find((group) => group.children.some((child) => child.toLowerCase() === String(editSubcategory).toLowerCase()))?.name || '';
+      setEditBusinessPlace(place);
       const principal = attributes.principal || {};
       const admissionDetails = attributes.admissionDetails || {};
       const fees = attributes.fees || {};
-      setForm((current) => ({ ...current, name: place.name || '', category: place.category?._id || place.category || '', subcategory: place.subcategory || place.category?.name || '', mainCategory: place.categoryGroup || '', address: place.address || '', description: place.description || '', phone: place.phone || '', email: place.email || '', website: place.website || '', services: (place.services || []).join(', '), facilities: (place.facilities || []).join(', '), pageType: place.pageType || 'static', facebook: place.socialLinks?.facebook || '', instagram: place.socialLinks?.instagram || '', whatsapp: place.socialLinks?.whatsapp || '', youtube: place.socialLinks?.youtube || '', linkedin: place.socialLinks?.linkedin || '', ...place.attributes }));
+      setForm((current) => ({ ...current, name: place.name || '', category: place.category?._id || place.category || '', subcategory: editSubcategory, mainCategory: editCategoryGroup, address: place.address || '', description: place.description || '', phone: place.phone || '', email: place.email || '', website: place.website || '', services: (place.services || []).join(', '), facilities: (place.facilities || []).join(', '), pageType: place.pageType || 'static', facebook: place.socialLinks?.facebook || '', instagram: place.socialLinks?.instagram || '', whatsapp: place.socialLinks?.whatsapp || '', youtube: place.socialLinks?.youtube || '', linkedin: place.socialLinks?.linkedin || '', ...place.attributes }));
       setTravelDetails(place.attributes?.businessProfile?.categorySpecific || place.attributes?.travelDetails || {});
       setFoodDetails(place.attributes?.businessProfile?.categorySpecific || place.attributes?.foodDetails || {});
       setWeddingDetails(place.attributes?.businessProfile?.categorySpecific || place.attributes?.weddingDetails || {});
@@ -743,7 +760,7 @@ export default function CreateListing() {
           {isEditing ? 'Update your listing directly. Your current publication status will stay unchanged.' : 'Submitted listings go live after a quick admin review — usually within 24 hours.'}
         </p>
 
-        <form noValidate={isEditing} onSubmit={handleSubmit} className="school-form mt-8 grid grid-cols-2 gap-4">
+        <form noValidate={isEditing} onSubmit={isDedicatedBusinessForm ? (event) => event.preventDefault() : handleSubmit} className="school-form mt-8 grid grid-cols-2 gap-4">
           {isSchool && <div className="col-span-2 rounded-xl border border-[#d8c9f3] bg-[#faf8ff] p-5 sm:p-7"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#6950a8]">Social media display options</p><div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{[['facebook', 'Facebook'], ['instagram', 'Instagram'], ['youtube', 'YouTube'], ['linkedin', 'LinkedIn']].map(([field, label]) => <label key={field} className="flex items-center gap-2 rounded-lg border border-[#e5dcf7] bg-white px-3 py-2.5 text-sm text-ink/75"><input type="checkbox" checked={form.socialVisibility[field]} onChange={(e) => setForm({ ...form, socialVisibility: { ...form.socialVisibility, [field]: e.target.checked } })} className="h-4 w-4 accent-[#6950a8]" />Show {label} on public page</label>)}</div><p className="mt-2 text-xs text-ink/50">Add the corresponding URL in the Social media section below.</p></div>}
 
           <div className="col-span-2 sm:col-span-1">
@@ -755,12 +772,24 @@ export default function CreateListing() {
           </div>
           <div className="col-span-2 sm:col-span-1">
             <label className="text-sm font-semibold text-ink">Subcategory</label>
-            <select required disabled={!selectedGroup} value={form.subcategory} onChange={selectSubcategory} className={`${inputClass} disabled:cursor-not-allowed disabled:bg-slate-50`}>
+            <select required disabled={!selectedGroup} value={typeof form.subcategory === 'string' ? form.subcategory : form.subcategory?.name || ''} onChange={selectSubcategory} className={`${inputClass} disabled:cursor-not-allowed disabled:bg-slate-50`}>
               <option value="">{selectedGroup ? 'Select subcategory' : 'Choose main category first'}</option>
               {selectedGroup?.children.filter((name) => categories.some((category) => category.name.toLowerCase() === name.toLowerCase())).map((name) => <option key={name} value={name}>{name}</option>)}
             </select>
             <p className="mt-1 text-xs text-ink/45">Your public page modules will follow this choice.</p>
           </div>
+          {isDedicatedHealthcare ? <div className="col-span-2">
+            <HealthcareBusinessEditor
+              key={`${editId || 'new'}-${healthcareSubcategory}`}
+              place={editBusinessPlace || { category: form.category, location, attributes: { businessProfile: { businessType: 'healthcare' } } }}
+              create={!isEditing}
+              categoryId={form.category}
+              subcategoryId={editBusinessPlace?.subcategory?._id || editBusinessPlace?.subcategory || undefined}
+              subcategoryName={typeof form.subcategory === 'string' ? form.subcategory : form.subcategory?.name || editBusinessPlace?.category?.name || ''}
+              onBack={() => navigate('/business/dashboard')}
+              embedded
+            />
+          </div> : isDedicatedRealEstate ? <div className="col-span-2"><PropertyBusinessForm key={`${editId || 'new'}-real-estate`} place={editBusinessPlace} categoryId={form.category} propertyType="real-estate" onBack={() => navigate('/business/dashboard')} embedded /></div> : isDedicatedConstructionRoofing ? <div className="col-span-2"><PropertyBusinessForm key={`${editId || 'new'}-${healthcareSubcategory}-${editBusinessPlace?._id || 'loading'}`} place={editBusinessPlace || { category: form.category, location, attributes: { businessProfile: { businessType: healthcareSubcategory } } }} categoryId={form.category} propertyType={healthcareSubcategory} onBack={() => navigate('/business/dashboard')} embedded /></div> : isDedicatedShopStudio ? <div className="col-span-2"><PropertyBusinessForm key={`${editId || 'new'}-${healthcareSubcategory}-${editBusinessPlace?._id || 'loading'}`} place={editBusinessPlace || { category: form.category, location, attributes: { businessProfile: { businessType: healthcareSubcategory } } }} categoryId={form.category} propertyType={healthcareSubcategory === 'furniture shops' ? 'furniture' : healthcareSubcategory === 'tiles shops' ? 'tiles' : 'interiors'} onBack={() => navigate('/business/dashboard')} embedded /></div> : <>
           {!isAutomotiveCategory && !isShoppingCategory && <div className="col-span-2">
             <label className="text-sm text-ink/70">Business name</label>
             <input required value={form.name} onChange={update('name')} className={inputClass} />
@@ -1223,6 +1252,7 @@ export default function CreateListing() {
           >
             {submitting ? (isEditing ? 'Updating…' : 'Submitting…') : (isEditing ? 'Update listing' : 'Submit for approval')}
           </button>
+          </>}
         </form>
         </div>
       </div>

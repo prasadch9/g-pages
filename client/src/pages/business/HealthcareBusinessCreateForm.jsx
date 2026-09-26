@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import HealthcareBusinessEditor from './HealthcareBusinessEditor';
-import { findCategoryByName, getSubcategoriesForGroup, getStoredCategoryValues } from '../../components/business/businessTaxonomy';
+import { getSubcategoriesForGroup } from '../../components/business/businessTaxonomy';
 
 const healthcareGroup = {
   name: 'Healthcare & Medical',
@@ -26,10 +26,6 @@ export default function HealthcareBusinessCreateForm({ categories, onBack }) {
   }, [subcategoryId, subcategories]);
 
   const selected = subcategories.find((item) => item._id === subcategoryId);
-  const records = selected
-    ? getStoredCategoryValues(categories, healthcareGroup, selected.name)
-    : { category: findCategoryByName(categories, 'Healthcare & Medical') || findCategoryByName(categories, 'Hospitals'), subcategory: null };
-
   if (!selected) {
     return (
       <div className="container-page py-12">
@@ -45,8 +41,10 @@ export default function HealthcareBusinessCreateForm({ categories, onBack }) {
   }
 
   const draft = {
-    category: records.category?._id || records.category || selected._id,
-    subcategory: records.subcategory?._id || records.subcategory || undefined,
+    // Store the selected leaf category as the business category. The place API
+    // derives its categoryGroup and public subcategory label from this record.
+    category: selected._id,
+    subcategory: undefined,
     location: {},
     attributes: {
       businessProfile: {
@@ -74,11 +72,12 @@ export default function HealthcareBusinessCreateForm({ categories, onBack }) {
         </label>
       </div>
       <HealthcareBusinessEditor
+        key={selected.name}
         place={draft}
         create
         onBack={onBack}
+        subcategoryName={selected.name}
         categoryId={draft.category}
-        subcategoryId={draft.subcategory}
       />
     </div>
   );
