@@ -43,6 +43,12 @@ export function AuthProvider({ children }) {
     return data.user;
   };
 
+  const updateProfile = async (payload) => {
+    const { data } = await api.put('/auth/me', payload);
+    setUser(data.user);
+    return data.user;
+  };
+
   const logout = async () => {
     await api.post('/auth/logout');
     localStorage.removeItem('gp_token');
@@ -50,7 +56,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, googleLogin, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, googleLogin, updateProfile, logout }}>
       {children}
     </AuthContext.Provider>
   );

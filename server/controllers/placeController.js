@@ -1,6 +1,10 @@
 const Place = require('../models/Place');
 const Category = require('../models/Category');
 const Favorite = require('../models/Favorite');
+const BusinessRequest = require('../models/BusinessRequest');
+const Notification = require('../models/Notification');
+const { getBusinessGroup } = require('../config/businessConfig');
+const { storeUpload } = require('../services/mediaStorage');
 const slugify = require('slugify');
 const { AppError } = require('../middleware/errorHandler');
 const { getCategoryGroup } = require('../config/categoryModules');
@@ -35,6 +39,42 @@ async function geocodeAddress(address) {
     return results[0] ? { lat: Number(results[0].lat), lng: Number(results[0].lon) } : null;
   } catch { return null; }
 }
+
+const normalizeExternalUrl = (value) => {
+  if (!value) return null;
+  const normalized = String(value).startsWith('http') ? String(value) : `https://${value}`;
+  try {
+    const url = new URL(normalized);
+    if (!['http:', 'https:'].includes(url.protocol)) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+};
+
+const validateLinks = (payload) => {
+  const result = {};
+  const links = { ...(payload.socialLinks || {}) };
+  const website = payload.website ? normalizeExternalUrl(payload.website) : payload.website;
+  if (payload.website && !website) throw new AppError('Please provide a valid website URL.', 400);
+  if (Object.prototype.hasOwnProperty.call(payload, 'website')) result.website = website;
+  if (Object.prototype.hasOwnProperty.call(payload, 'socialLinks')) {
+    Object.entries(links).forEach(([key, value]) => {
+      if (!value) return;
+      const normalized = normalizeExternalUrl(value);
+      if (!normalized) throw new AppError(`Please provide a valid ${key} URL.`, 400);
+      links[key] = normalized;
+    });
+    result.socialLinks = links;
+  }
+  return result;
+};
+
+const parseField = (value, fallback) => {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (typeof value !== 'string') return value;
+  try { return JSON.parse(value); } catch { return value; }
+};
 
 /**
  * GET /api/places
@@ -130,11 +170,12 @@ const getPlaceById = async (req, res, next) => {
       .populate('owner', 'name email');
 
     const isOwner = place && req.user && place.owner?._id?.toString() === req.user._id.toString();
-  const isPubliclyAvailable = place
-    && place.status === 'approved'
-    && place.applicationStatus === 'approved'
-    && place.isPublished;
-  if (!place || (!isPubliclyAvailable && !isOwner)) {
+    const isAdmin = req.user?.role === 'admin';
+    const isPubliclyAvailable = place
+      && place.status === 'approved'
+      && place.applicationStatus === 'approved'
+      && place.isPublished;
+    if (!place || (!isPubliclyAvailable && !isOwner && !isAdmin)) {
       return next(new AppError('Listing not found.', 404));
     }
 
@@ -182,10 +223,13 @@ const createPlace = async (req, res, next) => {
     const body = { ...req.body };
     const category = await Category.findById(body.category).select('name group');
     if (!category) return next(new AppError('Select a valid category.', 400));
-    const pageType = body.pageType === 'dynamic' ? 'dynamic' : 'static';
+    const subcategory = body.subcategory || category.name;
+    const businessGroup = body.businessGroup || getBusinessGroup(subcategory) || null;
+    const pageType = body.pageType || 'static';
     body.location = parseMultipartValue(body.location, body.location);
     body.socialLinks = parseMultipartValue(body.socialLinks, {});
     body.attributes = parseMultipartValue(body.attributes, {});
+    body.categoryData = parseMultipartValue(body.categoryData, {});
     body.video = parseMultipartValue(body.video, body.video);
     ['services', 'facilities', 'images'].forEach((field) => { body[field] = parseMultipartValue(body[field], []); });
     const files = (Array.isArray(req.files) ? req.files : Object.entries(req.files || {}).flatMap(([fieldname, entries]) => entries.map((file) => ({ ...file, fieldname }))));
@@ -194,7 +238,7 @@ const createPlace = async (req, res, next) => {
     const footerLogo = filesFor('footerLogo')[0] ? publicUploadUrl(req, filesFor('footerLogo')[0]) : body.attributes?.footerLogo;
     const aboutImage = filesFor('aboutImage')[0] ? publicUploadUrl(req, filesFor('aboutImage')[0]) : body.aboutImage;
     const coverImage = filesFor('coverImage')[0] ? publicUploadUrl(req, filesFor('coverImage')[0]) : body.coverImage;
-    const images = filesFor('images').map((file) => publicUploadUrl(req, file));
+    const images = [...filesFor('images'), ...filesFor('photos')].map((file) => publicUploadUrl(req, file));
     const uploadedVideos = [...filesFor('video'), ...filesFor('videos'), ...filesFor('schoolVideoFiles')].map((file) => publicUploadUrl(req, file));
     const linkedVideos = (body.attributes?.schoolVideos || []).filter((item) => item?.type !== 'upload' && item?.url).map((item) => item.url);
     const video = [...uploadedVideos, ...linkedVideos, ...(Array.isArray(body.video) ? body.video : body.video ? [body.video] : [])];
@@ -233,31 +277,53 @@ const createPlace = async (req, res, next) => {
       footerLogo,
     };
     body.slug = await createUniqueSlug(body.name, body.location?.city);
-    const coordinates = await geocodeAddress(body.address);
+    const coordinates = body.address ? await (async () => {
+      try {
+        const { geocodeAddress } = require('../services/geocoding');
+        return await geocodeAddress(body.address);
+      } catch { return undefined; }
+    })() : undefined;
     const place = await Place.create({
       ...body,
       categoryGroup: category.group || getCategoryGroup(category.name),
-      subcategory: category.name,
+      subcategory,
+      businessGroup,
       pageType,
       images: [...(Array.isArray(body.images) ? body.images : []), ...images, ...galleryImages],
       logo,
       coverImage,
       video,
+      categoryData: body.categoryData || {},
       coordinates: coordinates || body.coordinates || undefined,
       owner: req.user._id,
       status: 'pending',
       applicationStatus: 'submitted',
       isPublished: false,
       submittedAt: new Date(),
+      reviewedAt: null,
+      reviewedBy: null,
+      approvedAt: null,
+      publishedAt: null,
     });
 
-    const BusinessRequest = require('../models/BusinessRequest');
     await BusinessRequest.create({
       owner: req.user._id,
       place: place._id,
       placeSnapshot: place.toObject(),
+      pageType: place.pageType,
+      businessGroup: place.businessGroup,
+      subcategory: place.subcategory,
       status: 'submitted',
       submittedAt: place.submittedAt,
+      reviewHistory: [{ action: 'application_created', actor: req.user._id, timestamp: place.submittedAt }],
+    });
+
+    await Notification.create({
+      user: req.user._id,
+      title: 'Business request submitted',
+      message: 'Your business request has been submitted for review.',
+      type: 'business_request_submitted',
+      link: '/business/dashboard',
     });
 
     res.status(201).json({
@@ -298,6 +364,7 @@ const updatePlace = async (req, res, next) => {
     ownerUpdates.facilities = parseMultipartValue(ownerUpdates.facilities, ownerUpdates.facilities);
     ownerUpdates.socialLinks = parseMultipartValue(ownerUpdates.socialLinks, ownerUpdates.socialLinks);
     ownerUpdates.attributes = parseMultipartValue(ownerUpdates.attributes, ownerUpdates.attributes);
+    ownerUpdates.categoryData = parseMultipartValue(ownerUpdates.categoryData, ownerUpdates.categoryData);
     const uploadedFiles = Array.isArray(req.files) ? req.files : [];
     const uploadedUrls = (field) => uploadedFiles.filter((file) => file.fieldname === field).map((file) => publicUploadUrl(req, file));
     if (uploadedUrls('logo')[0]) ownerUpdates.logo = uploadedUrls('logo')[0];
@@ -428,11 +495,71 @@ const getMyPlaces = async (req, res, next) => {
   }
 };
 
+const getMyBusinessRequests = async (req, res, next) => {
+  try {
+    const requests = await BusinessRequest.find({ owner: req.user._id })
+      .populate({ path: 'place', populate: [{ path: 'category', select: 'name slug' }, { path: 'location.city', select: 'name slug' }] })
+      .sort('-createdAt');
+    res.status(200).json({ success: true, data: requests });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getBusinessRequest = async (req, res, next) => {
+  try {
+    const request = await BusinessRequest.findOne({ _id: req.params.id, owner: req.user._id }).populate('place');
+    if (!request) return next(new AppError('Business request not found.', 404));
+    res.status(200).json({ success: true, data: request });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const resubmitBusinessRequest = async (req, res, next) => {
+  try {
+    const request = await BusinessRequest.findOne({ _id: req.params.id, owner: req.user._id });
+    if (!request) return next(new AppError('Business request not found.', 404));
+    if (request.status !== 'rejected') return next(new AppError('Only rejected requests can be resubmitted.', 409));
+
+    const place = await Place.findOne({ _id: request.place, owner: req.user._id });
+    if (!place) return next(new AppError('Business listing not found.', 404));
+    const submittedAt = new Date();
+    place.status = 'pending';
+    place.applicationStatus = 'resubmitted';
+    place.isPublished = false;
+    place.submittedAt = submittedAt;
+    place.rejectionReason = null;
+    await place.save();
+
+    request.status = 'resubmitted';
+    request.submittedAt = submittedAt;
+    request.rejectionReason = null;
+    request.placeSnapshot = place.toObject();
+    request.reviewHistory.push({ action: 'resubmitted', actor: req.user._id, timestamp: submittedAt });
+    await request.save();
+
+    await Notification.create({
+      user: req.user._id,
+      title: 'Business request resubmitted',
+      message: 'Your corrected business request has been resubmitted for review.',
+      type: 'business_request_resubmitted',
+      link: '/business/dashboard',
+    });
+    res.status(200).json({ success: true, message: 'Business request resubmitted.', data: request });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getPlaces,
   getPlaceById,
   getTrending,
   getMyPlaces,
+  getMyBusinessRequests,
+  getBusinessRequest,
+  resubmitBusinessRequest,
   getMyFavorites,
   createPlace,
   updatePlace,

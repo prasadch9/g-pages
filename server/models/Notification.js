@@ -29,6 +29,8 @@ const notificationSchema = new mongoose.Schema(
         'registration',
         'listing_approved',
         'listing_rejected',
+        'business_request_submitted',
+        'business_request_resubmitted',
         'review_activity',
         'enquiry',
         'account',

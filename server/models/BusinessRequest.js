@@ -21,10 +21,48 @@ const businessRequestSchema = new mongoose.Schema(
       required: true,
     },
 
+    pageType: {
+      type: String,
+      enum: ['premium', 'static', 'dynamic'],
+      default: 'premium',
+    },
+
+    businessGroup: {
+      type: String,
+      enum: ['business-professional-services', 'logistics-moving'],
+      default: null,
+    },
+
+    subcategory: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+
     status: {
       type: String,
       enum: ['draft', 'submitted', 'under_review', 'approved', 'rejected', 'resubmitted'],
       default: 'submitted',
+    },
+
+    submittedAt: {
+      type: Date,
+      default: Date.now,
+    },
+
+    approvedAt: {
+      type: Date,
+      default: null,
+    },
+
+    publishedAt: {
+      type: Date,
+      default: null,
+    },
+
+    reviewHistory: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
     },
 
     rejectionReason: {

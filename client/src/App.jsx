@@ -20,6 +20,7 @@ import SolarCreateListing from './pages/business/SolarCreateListing';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminOverview from './pages/admin/AdminOverview';
 import AdminBusinesses from './pages/admin/AdminBusinesses';
+import AdminBusinessReview from './pages/admin/AdminBusinessReview';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminCategories from './pages/admin/AdminCategories';
 import CityPage from './pages/CityPage';
@@ -35,8 +36,9 @@ export default function App() {
   const location = useLocation();
   const isPlaceRoute = location.pathname.startsWith('/place/');
   const isRestaurantProfile = /^\/business\/[^/]+$/.test(location.pathname);
+  const isConsultancyPage = location.pathname.endsWith('/consultancies');
   const isBusinessOwnerSurface = /^(\/business\/dashboard|\/business\/listings\/new(?:\/restaurant)?|\/business\/listings\/[^/]+\/edit)/.test(location.pathname);
-  const hideChrome = isPlaceRoute || isRestaurantProfile || isBusinessOwnerSurface;
+  const hideChrome = isPlaceRoute || isRestaurantProfile || isBusinessOwnerSurface || isConsultancyPage;
 
   return (
     <div className="flex min-h-screen flex-col bg-paper">
@@ -90,14 +92,6 @@ export default function App() {
             }
           />
           <Route
-            path="/business/listings/:id/edit"
-            element={
-              <ProtectedRoute roles={['business', 'admin']}>
-                <BusinessEditorPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/business/listings/new/solar"
             element={
               <ProtectedRoute roles={['business']}>
@@ -108,8 +102,8 @@ export default function App() {
           <Route
             path="/business/listings/:id/edit"
             element={
-              <ProtectedRoute roles={['business']}>
-                <CreateListing />
+              <ProtectedRoute roles={['business', 'admin']}>
+                <BusinessEditorPage />
               </ProtectedRoute>
             }
           />
@@ -135,6 +129,7 @@ export default function App() {
             <Route index element={<AdminOverview />} />
             <Route path="categories" element={<AdminCategories />} />
             <Route path="businesses" element={<AdminBusinesses />} />
+            <Route path="businesses/:id" element={<AdminBusinessReview />} />
             <Route path="users" element={<AdminUsers />} />
           </Route>
 
@@ -147,8 +142,8 @@ export default function App() {
           <Route path="*" element={<ComingSoon title="This page" />} />
         </Routes>
       </main>
-  {!hideChrome && <Footer />}
-  {!hideChrome && <WhatsAppButton />}
+      {!hideChrome && <Footer />}
+      {!hideChrome && <WhatsAppButton />}
     </div>
   );
 }

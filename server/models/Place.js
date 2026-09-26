@@ -24,11 +24,12 @@ const placeSchema = new mongoose.Schema(
       required: true,
     },
 
-    subcategory: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Category',
+    businessGroup: {
+      type: String,
       default: null,
-  },
+      trim: true,
+    },
+
     categoryGroup: {
       type: String,
       default: null,
@@ -37,13 +38,14 @@ const placeSchema = new mongoose.Schema(
 
     subcategory: {
       type: String,
+      type: mongoose.Schema.Types.Mixed,
       default: null,
-      trim: true,
+      trim: true
     },
 
     pageType: {
       type: String,
-      enum: ['static', 'dynamic'],
+      enum: ['premium', 'static', 'dynamic'],
       default: 'static',
     },
 
@@ -136,6 +138,11 @@ const placeSchema = new mongoose.Schema(
         default: null,
       },
 
+      twitter: {
+        type: String,
+        default: null,
+      },
+
       chatSupport: {
         type: String,
         default: null,
@@ -168,11 +175,47 @@ const placeSchema = new mongoose.Schema(
       default: null,
     },
 
-    videos: [
-      {
-        type: String,
-      },
-    ],
+    videos: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
+
+    albums: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
+
+    portfolio: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
+
+    testimonials: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
+
+    offers: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
+
+    events: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
+
+    categoryData: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+
+    seo: {
+      title: { type: String, default: null, trim: true, maxlength: 160 },
+      description: { type: String, default: null, trim: true, maxlength: 320 },
+      canonicalUrl: { type: String, default: null, trim: true },
+      socialImage: { type: String, default: null, trim: true },
+    },
 
     services: [
       {
@@ -371,6 +414,18 @@ placeSchema.index({
 placeSchema.index({
   status: 1,
   verified: 1,
+});
+
+placeSchema.index({
+  applicationStatus: 1,
+  isPublished: 1,
+  owner: 1,
+});
+
+placeSchema.index({
+  pageType: 1,
+  businessGroup: 1,
+  subcategory: 1,
 });
 
 // Text search

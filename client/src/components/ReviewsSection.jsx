@@ -142,37 +142,48 @@ export default function ReviewsSection({ placeId, onReviewPosted }) {
         {editingReview && <button type="button" onClick={cancelEditing} className="ml-2 mt-3 rounded border border-line px-5 py-2 text-sm text-ink/70 hover:border-ink/40">Cancel</button>}
       </form>
 
-      <div className="mt-6 flex flex-col divide-y divide-line">
+      <div className="mt-6">
         {loading && <p className="py-4 text-sm text-ink/45">Loading reviews…</p>}
         {!loading && reviews.length === 0 && (
           <p className="py-4 text-sm text-ink/45">No reviews yet — be the first to share your experience.</p>
         )}
-        {reviews.map((r) => (
-          <div key={r._id} className="py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-ink">{r.user?.name || 'Anonymous'}</p>
-                <p className="mt-1 text-xs text-ink/45">
-                  Reviewed by {r.user?.name || 'Anonymous'} on {new Date(r.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-              <span className="text-marigold-dark">{'★'.repeat(r.rating)}</span>
+        {!loading && reviews.length > 0 && (
+          <div className="overflow-x-auto pb-2">
+            <div className="flex min-w-max gap-4">
+              {reviews.map((r) => (
+                <article key={r._id} className="w-[280px] shrink-0 rounded-[22px] border border-sky-100 bg-gradient-to-br from-white to-sky-50 p-5 shadow-sm shadow-sky-100/80 sm:w-[320px]">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-sky-100 to-cyan-100 text-sm font-bold text-sky-700">
+                        {(r.user?.name || 'A').charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-ink">{r.user?.name || 'Anonymous'}</div>
+                        <div className="text-[11px] text-ink/45">{new Date(r.createdAt).toLocaleDateString()}</div>
+                      </div>
+                    </div>
+                    <div className="text-base text-amber-400">{'★'.repeat(r.rating)}</div>
+                  </div>
+
+                  <p className="mt-4 text-[14px] leading-7 text-ink/70">“{r.comment}”</p>
+
+                  {user?._id === r.user?._id && (
+                    <div className="mt-3 flex gap-3 text-xs font-medium">
+                      <button type="button" onClick={() => startEditing(r)} className="text-ink/60 hover:text-ink">Edit review</button>
+                      <button type="button" onClick={() => deleteReview(r)} className="text-vermilion hover:underline">Delete review</button>
+                    </div>
+                  )}
+
+                  {r.ownerReply?.text && (
+                    <div className="mt-4 rounded-xl bg-sky-50 p-3 text-[13px] leading-6 text-sky-800">
+                      <span className="font-semibold">Owner reply:</span> {r.ownerReply.text}
+                    </div>
+                  )}
+                </article>
+              ))}
             </div>
-            <p className="mt-1 text-[14px] text-ink/65">{r.comment}</p>
-            {user?._id === r.user?._id && (
-              <div className="mt-3 flex gap-3 text-xs font-medium">
-                <button type="button" onClick={() => startEditing(r)} className="text-ink/60 hover:text-ink">Edit review</button>
-                <button type="button" onClick={() => deleteReview(r)} className="text-vermilion hover:underline">Delete review</button>
-              </div>
-            )}
-            {r.ownerReply?.text && (
-              <div className="mt-2 rounded bg-ink/5 p-3 text-[13px] text-ink/70">
-                <span className="font-medium">Owner reply: </span>
-                {r.ownerReply.text}
-              </div>
-            )}
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

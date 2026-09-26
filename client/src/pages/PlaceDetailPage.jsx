@@ -4,6 +4,9 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import FavoriteButton from '../components/FavoriteButton';
 import ReviewsSection from '../components/ReviewsSection';
+import BusinessPageLayouts, { StaticBusinessPage, DynamicBusinessPage } from '../components/BusinessPageLayouts';
+import ReligiousSocialBrandPage from './ReligiousSocialBrandPage';
+import ConsultancyBrandPage from './ConsultancyBrandPage';
 import AutomotiveBusinessPage from '../components/AutomotiveBusinessPage';
 import ShoppingBusinessPage from '../components/ShoppingBusinessPage';
 import ShoppingMallBusinessPage from '../components/ShoppingMallBusinessPage';
@@ -11,7 +14,6 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { resolveFoodBusinessType } from '../components/public/PublicProfileShared';
 import { isHealthcareBusiness } from '../utils/healthcare';
-import BusinessPageLayouts from '../components/BusinessPageLayouts';
 import SunriseSchoolPage from '../components/SunriseSchoolPage';
 import CollegePage from '../components/CollegePage';
 import UniversityPage from '../components/UniversityPage';
@@ -19,6 +21,7 @@ import TrainingInstitutionPage from '../components/TrainingInstitutionPage';
 import AcademyPage from '../components/AcademyPage';
 import SportsAcademyPage from '../components/SportsAcademyPage';
 import SolarPage from './SolarPage';
+import SculptureBrandPage from './SculptureBrandPage';
 
 const DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
 const REPORT_REASONS = [
@@ -440,6 +443,28 @@ export default function PlaceDetailPage() {
   const gallery = place.images || [];
   const pageType = place.pageType === 'dynamic' ? 'dynamic' : 'static';
   const isSchoolCategory = ['school', 'schools'].includes((place.category?.slug || '').toLowerCase()) || ['school', 'schools'].includes((place.category?.name || '').toLowerCase());
+  const categorySlug = (place.category?.slug || '').toLowerCase();
+  const categoryName = (place.category?.name || place.subcategory || '').toLowerCase();
+  const premiumBusinessCategoryNames = [
+    'consultancies', 'agencies', 'manpower agencies', 'professions',
+    'packers & movers', 'packers and movers', 'packers-movers',
+    'logistics', 'moving', 'logistics & moving', 'logistics-moving'
+  ];
+  const groupLower = (place.businessGroup || place.categoryGroup || '').toLowerCase();
+  const isBusinessProfessionalSubcategory = premiumBusinessCategoryNames.includes(categorySlug)
+    || premiumBusinessCategoryNames.includes(categoryName)
+    || premiumBusinessCategoryNames.includes((place.subcategory || '').toLowerCase())
+    || groupLower === 'business & professional services'
+    || groupLower === 'logistics & moving';
+  const isReligiousSocialCategory = ['religious-social', 'temples', 'churches', 'trusts', 'ngos', 'associations'].includes(categorySlug)
+    || ['religious-social', 'temples', 'churches', 'trusts', 'ngos', 'associations'].includes(categoryName)
+    || ['temples', 'churches', 'trusts', 'ngos', 'associations'].includes((place.subcategory || '').toLowerCase())
+    || groupLower === 'religious & social';
+
+  if (isReligiousSocialCategory) {
+    return <><ReligiousSocialBrandPage place={place} mapsUrl={mapsUrl} onShare={handleShare} onReport={() => setShowReport(true)} />{showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}</>;
+  }
+
   const isAutomotiveCategory = ['automotive', 'automotive-dealers', 'car-showrooms', 'automobile-dealers'].includes((place.category?.slug || '').toLowerCase()) || ['automotive', 'car showrooms', 'automobile dealers'].includes((place.category?.name || '').toLowerCase());
   const isShoppingCategory = ['shopping-retail', 'shopping-malls', 'boutique', 'home-appliances', 'furniture-shops', 'mattress-shops', 'nurseries', 'fashion-stores', 'gift-stationery', 'groceries-essentials'].includes((place.category?.slug || '').toLowerCase()) || ['shopping & retail', 'shopping malls', 'boutique', 'home appliances', 'furniture shops', 'mattress shops', 'nurseries', 'fashion stores', 'gift & stationery', 'groceries & essentials'].includes((place.category?.name || '').toLowerCase());
   const isShoppingMall = (place.attributes?.subCategory || '').toLowerCase() === 'shopping malls' || ((place.category?.slug || '').toLowerCase() === 'shopping-malls' && !(place.attributes?.subCategory));
@@ -456,6 +481,25 @@ export default function PlaceDetailPage() {
   const isSportsAcademyCategory = ['sports-academies', 'sports-academy'].includes(trainingCategory);
   const isTrainingInstitution = ['training-institutes', 'training-institute', 'academies', 'academy', 'sports-academies', 'sports-academy'].includes(trainingCategory);
   const isSolarCategory = ['solar'].includes((place.category?.slug || '').toLowerCase()) || ['solar'].includes((place.category?.name || '').toLowerCase());
+  const isSculpturesArtsCategory = ['sculptures-arts', 'sculptures-(arts)', 'sculptures', 'sculpture', 'arts-creative'].includes(categorySlug)
+    || ['sculptures (arts)', 'sculptures', 'sculpture', 'arts & creative'].includes(categoryName)
+    || (place.subcategory || '').toLowerCase().includes('sculptur')
+    || groupLower === 'arts & creative'
+    || groupLower === 'arts and creative';
+
+  if (isSculpturesArtsCategory) {
+    return (
+      <>
+        <SculptureBrandPage
+          place={place}
+          mapsUrl={mapsUrl}
+          onShare={handleShare}
+          onReport={() => setShowReport(true)}
+        />
+        {showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}
+      </>
+    );
+  }
 
   // School listings always use the full school website layout so their
   // submitted academic, media, admissions, and campus sections are visible.
@@ -475,6 +519,10 @@ export default function PlaceDetailPage() {
         {showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}
       </>
     );
+  }
+
+  if (isBusinessProfessionalSubcategory) {
+    return <><ConsultancyBrandPage place={place} />{showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}</>;
   }
 
   if (isAutomotiveCategory) {

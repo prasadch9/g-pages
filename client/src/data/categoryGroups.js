@@ -1,4 +1,6 @@
 export const CATEGORY_GROUPS = [
+  { name: 'Business & Professional Services', children: ['Consultancies', 'Agencies', 'Manpower Agencies', 'Professions'] },
+  { name: 'Logistics & Moving', children: ['Packers & Movers'] },
   { name: 'Education & Learning', children: ['Schools', 'Colleges', 'Universities', 'Training Institutes', 'Academies', 'Sports Academies'] },
   { name: 'Healthcare & Medical', children: ['Hospitals', 'Multispeciality Hospitals', 'Cardiology', 'ENT', 'Dental', 'Hearing Solutions', 'Fitness Centres'] },
   { name: 'Religious & Social', children: ['Temples', 'Churches', 'Trusts', 'NGOs', 'Associations'] },
@@ -9,8 +11,6 @@ export const CATEGORY_GROUPS = [
   { name: 'Shopping & Retail', children: ['Shopping Malls', 'Boutique', 'Home Appliances', 'Furniture Shops', 'Mattress Shops', 'Nurseries'] },
   { name: 'Automotive', children: ['Car Showrooms'] },
   { name: 'Industries & Manufacturing', children: ['Small Scale Industries', 'Food Processing', 'Trading Businesses', 'Solar'] },
-  { name: 'Business & Professional Services', children: ['Consultancies', 'Agencies', 'Manpower Agencies', 'Professions'] },
-  { name: 'Logistics & Moving', children: ['Packers & Movers'] },
   { name: 'Arts & Creative', children: ['Sculptures (Arts)'] },
 ];
 

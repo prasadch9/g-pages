@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
+import { Link } from 'react-router-dom';
 
 const TABS = ['pending', 'approved', 'rejected', 'suspended'];
 
@@ -125,12 +126,13 @@ export default function AdminBusinesses() {
               <div>
                 <div className="font-display text-[15px] font-medium text-ink">{place.name}</div>
                 <div className="text-xs text-ink/45">
-                  {place.category?.name} · {place.location?.city?.name} · {place.pageType || 'static'} page · owner: {place.owner?.name} ({place.owner?.email})
+                  {place.category?.name} {place.subcategory ? `· ${place.subcategory}` : ''} · {place.pageType ? `${place.pageType} page` : 'business page'} · {place.location?.city?.name} · owner: {place.owner?.name} ({place.owner?.email})
                 </div>
                 <p className="mt-1 max-w-lg text-sm text-ink/60">{place.address}</p>
               </div>
 
               <div className="flex shrink-0 gap-2">
+                <Link to={`/admin/businesses/${place._id}`} className="rounded border border-cyan-600 px-3 py-1.5 text-sm font-medium text-cyan-700 hover:bg-cyan-50">View</Link>
                 {status === 'pending' && (
                   <>
                   <button

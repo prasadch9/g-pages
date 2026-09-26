@@ -1,0 +1,207 @@
+export const BUSINESS_CATEGORY_GROUPS = [
+  { slug: 'education-learning', name: 'Education & Learning', children: ['Schools', 'Colleges', 'Universities', 'Training Institutes', 'Academies', 'Sports Academies'] },
+  { slug: 'healthcare-medical', name: 'Healthcare & Medical', children: ['Hospitals', 'Multispeciality Hospitals', 'Cardiology', 'ENT', 'Dental', 'Hearing Solutions', 'Fitness Centres'] },
+  { slug: 'religious-social', name: 'Religious & Social', children: ['Temples', 'Churches', 'Trusts', 'NGOs', 'Associations'] },
+  { slug: 'marriage-wedding', name: 'Marriage & Wedding', children: ['Marriage Bureaus', 'Function Halls', 'Event Organizers', 'Catering Services', 'Flower Decoration', 'Fashion Designers', 'Beauty Parlours', 'Saloon & Spa'] },
+  { slug: 'travel-hospitality', name: 'Travel & Hospitality', children: ['Tours & Travels', 'Hotels & Residencies', 'Resorts', 'Party Zones'] },
+  { slug: 'real-estate-construction', name: 'Real Estate & Construction', children: ['Real Estate', 'Construction', 'Roofing', 'Interiors & Decorations', 'Tiles Shops', 'Furniture Shops'] },
+  { slug: 'food-dining', name: 'Food & Dining', children: ['Restaurants', 'Coffee Shops', 'Sweet Shops & Bakery', 'Catering Services', 'Food Processing'] },
+  { slug: 'shopping-retail', name: 'Shopping & Retail', children: ['Shopping Malls', 'Boutique', 'Home Appliances', 'Furniture Shops', 'Mattress Shops', 'Nurseries'] },
+  { slug: 'automotive', name: 'Automotive', children: ['Car Showrooms'] },
+  { slug: 'industries-manufacturing', name: 'Industries & Manufacturing', children: ['Small Scale Industries', 'Food Processing', 'Trading Businesses'] },
+  { slug: 'business-professional-services', name: 'Business & Professional Services', children: ['Consultancies', 'Agencies', 'Manpower Agencies', 'Professions'] },
+  { slug: 'logistics-moving', name: 'Logistics & Moving', children: ['Packers & Movers'] },
+  { slug: 'arts-creative', name: 'Arts & Creative', children: ['Sculptures (Arts)'] },
+];
+
+export const CATEGORY_MODULES = {
+  Schools: ['Admissions', 'Classes', 'Academic Programs', 'Faculty', 'Campus', 'Facilities', 'Sports', 'Activities', 'Events', 'Achievements'],
+  Hospitals: ['Departments', 'Doctors', 'Specialities', 'Diagnostics', 'Facilities', 'Appointment', 'Emergency'],
+  Restaurants: ['Menu', 'Food Items', 'Ambience', 'Offers', 'Events', 'Reservation'],
+  'Real Estate': ['Properties', 'Featured Listings', 'Projects', 'Amenities'],
+  'Packers & Movers': ['Moving Services', 'Service Areas', 'Fleet', 'Packing Process', 'Quote'],
+  Consultancies: ['Expertise', 'Consulting Services', 'Team', 'Case Studies', 'Certifications', 'Industries Served'],
+  Agencies: ['Services', 'Portfolio', 'Campaigns', 'Projects', 'Team', 'Clients', 'Case Studies'],
+  'Manpower Agencies': ['Recruitment Services', 'Employer Services', 'Candidate Services', 'Industries Served', 'Service Locations', 'Team'],
+  Professions: ['Professional Services', 'Expertise', 'Qualifications', 'Certifications', 'Portfolio', 'Appointment'],
+  'Sculptures (Arts)': ['Artist Profile', 'Collections', 'Artworks', 'Exhibitions', 'Projects'],
+};
+
+Object.assign(CATEGORY_MODULES, {
+  Colleges: ['Courses', 'Departments', 'Faculty', 'Campus', 'Facilities', 'Admissions', 'Placements', 'Clubs', 'Events'],
+  Universities: ['Programs', 'Departments', 'Faculty', 'Research', 'Campus', 'Admissions', 'Scholarships', 'Placements', 'Innovation'],
+  'Training Institutes': ['Courses', 'Trainers', 'Certifications', 'Training Modes', 'Schedules', 'Projects', 'Placements'],
+  Academies: ['Programs', 'Trainers', 'Levels', 'Schedules', 'Facilities', 'Activities', 'Events', 'Achievements'],
+  'Sports Academies': ['Sports', 'Coaches', 'Training Programs', 'Age Groups', 'Schedule', 'Facilities', 'Tournaments', 'Achievements'],
+  'Multispeciality Hospitals': ['Departments', 'Specialists', 'Doctors', 'Diagnostics', 'Facilities', 'Procedures', 'Appointment', 'Emergency'],
+  Cardiology: ['Cardiology Services', 'Specialists', 'Diagnostics', 'Procedures', 'Facilities', 'Appointment', 'Patient Information'],
+  ENT: ['ENT Services', 'Specialists', 'Diagnostics', 'Treatments', 'Appointment', 'Facilities'],
+  Dental: ['Dental Services', 'Dentists', 'Treatments', 'Facilities', 'Appointment'],
+  'Hearing Solutions': ['Hearing Services', 'Hearing Tests', 'Specialists', 'Hearing Products', 'Appointment', 'Facilities'],
+  'Fitness Centres': ['Memberships', 'Fitness Programs', 'Trainers', 'Classes', 'Timetable', 'Facilities'],
+  Temples: ['History', 'Deity Information', 'Timings', 'Pooja Services', 'Festivals', 'Events', 'Announcements'],
+  Churches: ['About', 'Worship Services', 'Timings', 'Events', 'Ministries', 'Announcements'],
+  Trusts: ['Mission', 'Vision', 'Programs', 'Projects', 'Impact', 'Events'],
+  NGOs: ['Mission', 'Causes', 'Programs', 'Projects', 'Impact', 'Volunteers', 'Events', 'Support CTA'],
+  Associations: ['About', 'Members', 'Activities', 'Programs', 'Events', 'Announcements'],
+  'Marriage Bureaus': ['Services', 'Process', 'Programs', 'Team', 'Testimonials', 'Enquiry'],
+  'Function Halls': ['Venue', 'Capacity', 'Facilities', 'Packages', 'Gallery', 'Video Tour', 'Booking'],
+  'Event Organizers': ['Services', 'Packages', 'Portfolio', 'Events', 'Team', 'Testimonials'],
+  'Catering Services': ['Menus', 'Packages', 'Cuisine', 'Services', 'Events Served', 'Enquiry'],
+  'Flower Decoration': ['Decoration Services', 'Themes', 'Portfolio', 'Packages', 'Enquiry'],
+  'Fashion Designers': ['Collections', 'Services', 'Portfolio', 'Custom Designs', 'Designer Profile', 'Enquiry'],
+  'Beauty Parlours': ['Services', 'Treatments', 'Packages', 'Team', 'Offers', 'Appointment'],
+  'Saloon & Spa': ['Hair Services', 'Spa Treatments', 'Packages', 'Team', 'Offers', 'Appointment'],
+  'Tours & Travels': ['Tour Packages', 'Destinations', 'Itineraries', 'Transport', 'Services', 'Booking'],
+  'Hotels & Residencies': ['Rooms', 'Amenities', 'Dining', 'Location', 'Offers', 'Policies', 'Booking'],
+  Resorts: ['Rooms', 'Amenities', 'Activities', 'Dining', 'Events', 'Video Tour', 'Offers', 'Booking'],
+  'Party Zones': ['Party Spaces', 'Packages', 'Amenities', 'Themes', 'Offers', 'Booking'],
+  Construction: ['Services', 'Projects', 'Capabilities', 'Materials', 'Team', 'Certifications'],
+  Roofing: ['Roofing Services', 'Materials', 'Projects', 'Service Areas', 'Portfolio', 'Testimonials'],
+  'Interiors & Decorations': ['Services', 'Design Styles', 'Portfolio', 'Projects', 'Team', 'Materials'],
+  'Tiles Shops': ['Tile Categories', 'Brands', 'Collections', 'Product Showcase', 'Offers'],
+  'Furniture Shops': ['Furniture Categories', 'Collections', 'Brands', 'Products', 'Offers'],
+  'Coffee Shops': ['Menu', 'Signature Drinks', 'Ambience', 'Offers', 'Events'],
+  'Sweet Shops & Bakery': ['Products', 'Collections', 'Signature Items', 'Seasonal Specials', 'Offers'],
+  'Food Processing': ['Products', 'Processing Capabilities', 'Facilities', 'Certifications', 'Packaging', 'B2B Enquiry'],
+  'Shopping Malls': ['Stores', 'Facilities', 'Events', 'Offers', 'Directions', 'Social Media'],
+  Boutique: ['Collections', 'Designers', 'Portfolio', 'Categories', 'Offers', 'Social Media'],
+  'Home Appliances': ['Product Categories', 'Brands', 'Featured Products', 'Offers', 'Services'],
+  'Mattress Shops': ['Mattress Categories', 'Brands', 'Featured Products', 'Offers', 'Store Information'],
+  Nurseries: ['Plants', 'Categories', 'Gardening Products', 'Services', 'Seasonal Offers'],
+  'Car Showrooms': ['Brands', 'Car Models', 'Featured Vehicles', 'New Vehicles', 'Test Drive', 'Offers'],
+  'Small Scale Industries': ['Products', 'Manufacturing Capabilities', 'Machinery', 'Infrastructure', 'Certifications', 'Industries Served', 'B2B Enquiry'],
+  'Trading Businesses': ['Product Categories', 'Brands', 'Supply Capabilities', 'Markets Served', 'Catalogue', 'B2B Enquiry'],
+});
+
+export const subcategoryGroup = (subcategory) => BUSINESS_CATEGORY_GROUPS.find((group) => group.children.includes(subcategory));
+
+const listField = (key, label, placeholder) => ({ key, label, type: 'list', placeholder });
+const textField = (key, label, placeholder) => ({ key, label, type: 'text', placeholder });
+
+export const CATEGORY_CONFIGS = {
+  Temples: {
+    fields: [
+      textField('deityName', 'Deity / main idol', 'Sri Rama, Shiva, Vinayaka...'),
+      listField('poojaServices', 'Pooja / seva services', 'Abhishekam, archana, special pooja'),
+      listField('festivals', 'Festivals', 'Ugadi, Navaratri, Maha Shivaratri'),
+      listField('timings', 'Daily timings', 'Morning 6:00 AM - 12:00 PM'),
+      listField('announcements', 'Announcements', 'Festival updates and temple notices'),
+      textField('history', 'History', 'Brief heritage or historical note'),
+    ],
+    modules: ['deityName', 'poojaServices', 'festivals', 'timings', 'history', 'announcements', 'events'],
+  },
+  Churches: {
+    fields: [
+      textField('pastorName', 'Pastor / leader', 'Name of the church leader'),
+      listField('worshipServices', 'Worship services', 'Sunday service, prayer meeting, youth fellowship'),
+      listField('ministries', 'Ministries', 'Women ministry, youth, choir'),
+      listField('events', 'Events', 'Bible study, prayer nights, community programs'),
+      listField('timings', 'Service timings', 'Sunday 8:30 AM, Wednesday 7:00 PM'),
+      listField('communityPrograms', 'Community programs', 'Food drive, social outreach, care groups'),
+    ],
+    modules: ['pastorName', 'worshipServices', 'ministries', 'timings', 'communityPrograms', 'events'],
+  },
+  Trusts: {
+    fields: [
+      textField('mission', 'Mission', 'Mission statement for the trust'),
+      textField('vision', 'Vision', 'Vision statement for the trust'),
+      listField('programs', 'Programs', 'Education support, medical relief, food aid'),
+      listField('projects', 'Projects', 'Current schemes and initiatives'),
+      listField('impact', 'Impact', 'Families served, scholarships, outreach results'),
+      listField('donationPurpose', 'Donation purpose', 'Education, healthcare, relief work'),
+      listField('events', 'Events', 'Fundraisers, camps, awareness drives'),
+    ],
+    modules: ['mission', 'vision', 'programs', 'projects', 'impact', 'donationPurpose', 'events'],
+  },
+  NGOs: {
+    fields: [
+      textField('mission', 'Mission', 'Core mission of the organization'),
+      listField('causes', 'Causes', 'Education, environment, women empowerment'),
+      listField('projects', 'Projects', 'Current initiatives and outreach'),
+      listField('impact', 'Impact', 'Lives impacted, villages reached, programs delivered'),
+      listField('volunteerOpportunities', 'Volunteer opportunities', 'Teaching, field work, digital support'),
+      listField('supportOptions', 'Support options', 'Donate, sponsor, volunteer'),
+      listField('events', 'Events', 'Awareness camps, fundraising events'),
+    ],
+    modules: ['mission', 'causes', 'projects', 'impact', 'volunteerOpportunities', 'supportOptions', 'events'],
+  },
+  Associations: {
+    fields: [
+      textField('about', 'About the association', 'Purpose and identity of the association'),
+      listField('memberships', 'Memberships', 'Regular members, sponsoring members, volunteers'),
+      listField('activities', 'Activities', 'Meetings, community work, member events'),
+      listField('programs', 'Programs', 'Cultural, educational, welfare programs'),
+      listField('events', 'Events', 'Meetups, conferences, community gatherings'),
+      listField('committee', 'Committee / leadership', 'President, vice president, coordinators'),
+    ],
+    modules: ['about', 'memberships', 'activities', 'programs', 'events', 'committee'],
+  },
+  Consultancies: {
+    fields: [
+      textField('consultancyType', 'Consultancy type', 'Management, legal, education...'),
+      listField('areasOfExpertise', 'Areas of expertise', 'Strategy, finance, technology'),
+      listField('industriesServed', 'Industries served', 'Healthcare, manufacturing, retail'),
+      listField('consultingServices', 'Consulting services', 'Business planning, audits, implementation'),
+      listField('serviceLocations', 'Service locations', 'Vijayawada, Hyderabad, Online'),
+    ],
+    modules: ['expertise', 'consultingServices', 'industriesServed', 'team', 'certifications', 'caseStudies', 'portfolio', 'testimonials', 'offers'],
+  },
+  Agencies: {
+    fields: [
+      textField('agencyType', 'Agency type', 'Creative, marketing, digital...'),
+      listField('agencyServices', 'Agency services', 'Branding, campaigns, web development'),
+      listField('clientIndustries', 'Client industries', 'Technology, healthcare, retail'),
+      listField('serviceLocations', 'Service locations', 'Vijayawada, Hyderabad, Remote'),
+    ],
+    modules: ['services', 'projects', 'portfolio', 'campaigns', 'clients', 'caseStudies', 'team', 'testimonials'],
+  },
+  'Manpower Agencies': {
+    fields: [
+      listField('recruitmentServices', 'Recruitment services', 'Permanent hiring, contract staffing'),
+      listField('employerServices', 'Employer services', 'Screening, payroll, workforce planning'),
+      listField('candidateServices', 'Candidate services', 'Career guidance, interview preparation'),
+      listField('jobCategories', 'Job categories', 'IT, healthcare, construction'),
+      listField('industriesServed', 'Industries served', 'Technology, logistics, hospitality'),
+      textField('serviceCoverage', 'Service coverage', 'Domestic, international, or both'),
+    ],
+    modules: ['recruitmentServices', 'employerServices', 'candidateServices', 'jobCategories', 'industriesServed', 'recruitmentProcess', 'serviceLocations', 'team', 'successStatistics', 'testimonials'],
+  },
+  Professions: {
+    fields: [
+      textField('professionType', 'Profession type', 'Architect, lawyer, designer...'),
+      textField('professionalTitle', 'Professional title', 'Your title or designation'),
+      listField('professionalServices', 'Professional services', 'Consultations, representation, design'),
+      listField('areasOfExpertise', 'Areas of expertise', 'Contracts, tax, residential design'),
+      listField('qualifications', 'Qualifications', 'Degrees, licenses, memberships'),
+      textField('experience', 'Experience', 'Describe relevant experience'),
+      listField('serviceLocations', 'Service locations', 'Local, statewide, online'),
+    ],
+    modules: ['professionalServices', 'expertise', 'qualifications', 'certifications', 'experience', 'portfolio', 'projects', 'testimonials', 'appointment'],
+  },
+  'Packers & Movers': {
+    fields: [
+      listField('movingServices', 'Moving services', 'Residential, office, commercial moving'),
+      listField('serviceAreas', 'Service areas', 'Vijayawada, Hyderabad, Bengaluru'),
+      listField('fleet', 'Fleet', 'Mini trucks, container trucks, lift vans'),
+      listField('storageOptions', 'Storage / warehousing', 'Short-term, long-term, climate controlled'),
+      listField('movingProcess', 'Moving process', 'Survey, packing, transport, delivery'),
+      textField('insuranceCoverage', 'Insurance / coverage', 'Describe available coverage'),
+    ],
+    modules: ['movingServices', 'serviceAreas', 'fleet', 'movingProcess', 'storageOptions', 'safety', 'insuranceCoverage', 'projects', 'offers', 'packages', 'quote'],
+  },
+  'Sculptures (Arts)': {
+    fields: [
+      textField('masterArtist', 'Master Sculptor / Sthapathi', 'e.g. Master Sthapathi K. Viswanatha Achari'),
+      textField('artLineage', 'Artistic Lineage', 'e.g. 4th Generation Traditional Shilpa Shastra'),
+      listField('sculptureStyles', 'Sculpture styles', 'Temple Vigrahas, Bronze casting, Modern stone art'),
+      listField('materials', 'Materials used', 'Krishna Shila, Makrana Marble, Panchaloha Bronze, Sandstone'),
+      textField('sculptureSizes', 'Sculpture sizes', 'Miniatures to Monumental Statues (40+ ft)'),
+      listField('commissionProcess', 'Commission process', 'Design, maquette, carving, finishing, installation'),
+      listField('exhibitions', 'Exhibitions & awards', 'National crafts expos, Master Artisan awards'),
+    ],
+    modules: ['artistProfile', 'collections', 'artworks', 'exhibitions', 'projects', 'materials', 'process', 'quote'],
+  },
+};
+
+export const getCategoryConfig = (subcategory) => CATEGORY_CONFIGS[subcategory] || { fields: [], modules: [] };

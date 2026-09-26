@@ -28,6 +28,8 @@ app.set('trust proxy', 1);
 const publicApiOrigin = (process.env.PUBLIC_API_URL || '').replace(/\/$/, '');
 const imageSources = ["'self'", 'data:', 'blob:', 'https:', ...(publicApiOrigin ? [publicApiOrigin] : ['http://localhost:5000'])];
 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { maxAge: '1d' }));
+
 // --- Security & core middleware ---
 app.use(
   helmet({
@@ -88,6 +90,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/enquiries', enquiryRoutes);
+app.use('/api/business-chat', chatRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/uploads', uploadRoutes);

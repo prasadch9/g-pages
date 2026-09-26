@@ -602,7 +602,7 @@ const run = async () => {
                 category.name === 'Hospitals' ? { specialization: 'Multi-Specialty', emergency: 'true' } :
                 category.name === 'Restaurants' ? { cuisine: categoryIndex % 2 ? 'South Indian' : 'Multi-Cuisine', priceRange: '₹₹' } : {},
               rating: { average: Number((4.1 + (categoryIndex % 8) / 10).toFixed(1)), count: 18 + categoryIndex * 4 },
-              verified: true, status: 'approved', owner: demoOwner._id,
+              verified: true, status: 'approved', applicationStatus: 'approved', isPublished: true, owner: demoOwner._id,
               views: 120 + categoryIndex * 17, favoritesCount: 8 + categoryIndex,
             },
           },

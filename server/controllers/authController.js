@@ -224,6 +224,71 @@ const getMe = async (req, res, next) => {
   }
 };
 
+/** PUT /api/auth/me — allows the current user to update their own profile. */
+const updateMe = async (req, res, next) => {
+  try {
+    const { name, email, mobile, password, location, avatar, role } = req.body;
+    const updates = {};
+
+    if (name !== undefined) updates.name = String(name).trim();
+    if (email !== undefined) updates.email = String(email).trim().toLowerCase();
+    if (mobile !== undefined) updates.mobile = String(mobile).trim();
+    if (avatar !== undefined) updates.avatar = avatar || null;
+    if (role !== undefined) {
+      if (!['user', 'business'].includes(role)) {
+        return next(new AppError('Only user or business roles can be assigned from this profile.', 400));
+      }
+      updates.role = role;
+    }
+    if (location !== undefined) {
+      updates.location = {
+        state: location?.state || null,
+        district: location?.district || null,
+        city: location?.city || null,
+      };
+    }
+    if (password) {
+      updates.passwordHash = await bcrypt.hash(password, 12);
+    }
+
+    if (updates.name !== undefined && !updates.name) {
+      return next(new AppError('Name cannot be empty.', 400));
+    }
+
+    if (updates.email) {
+      const existingUser = await User.findOne({ email: updates.email, _id: { $ne: req.user._id } });
+      if (existingUser) {
+        return next(new AppError('This email is already in use by another account.', 409));
+      }
+    }
+
+    if (updates.mobile) {
+      if (!/^[6-9]\d{9}$/.test(updates.mobile)) {
+        return next(new AppError('Please provide a valid 10-digit mobile number.', 400));
+      }
+
+      const existingUser = await User.findOne({ mobile: updates.mobile, _id: { $ne: req.user._id } });
+      if (existingUser) {
+        return next(new AppError('This mobile number is already in use by another account.', 409));
+      }
+    }
+
+    Object.assign(req.user, updates);
+    await req.user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully.',
+      user: req.user.toSafeObject(),
+    });
+  } catch (error) {
+    if (error?.name === 'ValidationError') {
+      return next(new AppError(Object.values(error.errors)[0]?.message || 'Profile update failed.', 400));
+    }
+    next(error);
+  }
+};
+
 /** POST /api/auth/logout */
 const logout = async (req, res, next) => {
   try {
@@ -234,4 +299,4 @@ const logout = async (req, res, next) => {
   }
 };
 
-module.exports = { register, login, googleLogin, forgotPassword, resetPassword, getMe, logout };
+module.exports = { register, login, googleLogin, forgotPassword, resetPassword, getMe, updateMe, logout };

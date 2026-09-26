@@ -20,6 +20,10 @@ const CATEGORY_IMAGES = {
   theatres: ['https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=240&q=80', 'Theatre'],
   'tourist-places': ['https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=240&q=80', 'Tourist place'],
   temples: ['https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=240&q=80', 'Temple'],
+  churches: ['https://images.unsplash.com/photo-1548625361-125964f4502d?auto=format&fit=crop&w=240&q=80', 'Church'],
+  trusts: ['https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?auto=format&fit=crop&w=240&q=80', 'Trust'],
+  ngos: ['https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=240&q=80', 'NGO & Social Foundation'],
+  associations: ['https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=240&q=80', 'Community Association'],
   parks: ['https://images.unsplash.com/photo-1588714477688-cf28a50e94f7?auto=format&fit=crop&w=240&q=80', 'Park'],
   'it-companies': ['https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=240&q=80', 'IT office'],
   'coaching-centers': ['https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=240&q=80', 'Learning center'],
@@ -27,6 +31,9 @@ const CATEGORY_IMAGES = {
   'automobile-dealers': ['https://images.unsplash.com/photo-1562141961-b7f7c7d1b5a6?auto=format&fit=crop&w=240&q=80', 'Automobile showroom'],
   'government-offices': ['https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=240&q=80', 'Government office'],
   'real-estate': ['https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=240&q=80', 'Real estate property'],
+  'sculptures-arts': ['https://images.unsplash.com/photo-1544967082-d9d25d867d66?auto=format&fit=crop&w=240&q=80', 'Sculptures & Fine Arts Studio'],
+  'packers-and-movers': ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=240&q=80', 'Packers & Movers'],
+  'packers-movers': ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=240&q=80', 'Packers & Movers'],
 };
 
 export default function CategoryPlacesPage() {

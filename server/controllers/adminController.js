@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const Place = require('../models/Place');
 const Category = require('../models/Category');
@@ -149,7 +150,11 @@ const getBusinesses = async (req, res, next) => {
   try {
     const { status, page = 1, limit = 20 } = req.query;
     const filter = {};
-    if (status) filter.status = status;
+    if (status) {
+      filter.$or = status === 'pending'
+        ? [{ applicationStatus: { $in: ['submitted', 'under_review', 'resubmitted'] } }, { status: 'pending' }]
+        : [{ applicationStatus: status }, { status }];
+    }
 
     const skip = (Number(page) - 1) * Number(limit);
     const [places, total] = await Promise.all([
@@ -173,6 +178,20 @@ const getBusinesses = async (req, res, next) => {
   }
 };
 
+const getBusinessById = async (req, res, next) => {
+  try {
+    const place = await Place.findById(req.params.id)
+      .populate('category', 'name slug filters')
+      .populate('owner', 'name email mobile')
+      .populate('location.state location.district location.city location.area', 'name slug');
+    if (!place) return next(new AppError('Listing not found.', 404));
+    const request = await BusinessRequest.findOne({ place: place._id }).sort('-createdAt');
+    res.status(200).json({ success: true, data: { place, request } });
+  } catch (error) {
+    next(error);
+  }
+};
+
 /** PUT /api/admin/businesses/:id/approve */
 const approveBusiness = async (req, res, next) => {
   try {
@@ -182,6 +201,7 @@ const approveBusiness = async (req, res, next) => {
     if (!reviewableStates.includes(existingPlace.applicationStatus)) {
       return next(new AppError('This listing is not ready for approval.', 409));
     }
+    const reviewedAt = new Date();
     const place = await Place.findByIdAndUpdate(
       req.params.id,
       {
@@ -191,9 +211,9 @@ const approveBusiness = async (req, res, next) => {
         verified: true,
         rejectionReason: null,
         reviewedBy: req.user._id,
-        reviewedAt: new Date(),
-        approvedAt: new Date(),
-        publishedAt: new Date(),
+        reviewedAt,
+        approvedAt: reviewedAt,
+        publishedAt: reviewedAt,
       },
       { new: true }
     );
@@ -202,9 +222,10 @@ const approveBusiness = async (req, res, next) => {
       {
         status: 'approved',
         reviewedBy: req.user._id,
-        reviewedAt: place.reviewedAt,
-        approvedAt: place.approvedAt,
-        publishedAt: place.publishedAt,
+        reviewedAt,
+        approvedAt: reviewedAt,
+        publishedAt: reviewedAt,
+        $push: { reviewHistory: { action: 'approved', actor: req.user._id, timestamp: reviewedAt } },
       }
     );
 
@@ -228,6 +249,7 @@ const rejectBusiness = async (req, res, next) => {
     const { reason } = req.body;
     if (!reason) return next(new AppError('A rejection reason is required.', 400));
 
+    const reviewedAt = new Date();
     const place = await Place.findByIdAndUpdate(
       req.params.id,
       {
@@ -236,7 +258,7 @@ const rejectBusiness = async (req, res, next) => {
         isPublished: false,
         rejectionReason: reason,
         reviewedBy: req.user._id,
-        reviewedAt: new Date(),
+        reviewedAt,
       },
       { new: true }
     );
@@ -244,7 +266,13 @@ const rejectBusiness = async (req, res, next) => {
 
     await BusinessRequest.findOneAndUpdate(
       { place: place._id },
-      { status: 'rejected', rejectionReason: reason, reviewedBy: req.user._id, reviewedAt: new Date() }
+      {
+        status: 'rejected',
+        rejectionReason: reason,
+        reviewedBy: req.user._id,
+        reviewedAt,
+        $push: { reviewHistory: { action: 'rejected', actor: req.user._id, reason, timestamp: reviewedAt } },
+      }
     );
 
     await Notification.create({
@@ -349,6 +377,7 @@ module.exports = {
   setUserRole,
   deleteUser,
   getBusinesses,
+  getBusinessById,
   approveBusiness,
   rejectBusiness,
   suspendBusiness,
