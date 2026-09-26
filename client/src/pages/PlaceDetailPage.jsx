@@ -4,7 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import FavoriteButton from '../components/FavoriteButton';
 import ReviewsSection from '../components/ReviewsSection';
-import BusinessPageLayouts, { StaticBusinessPage, DynamicBusinessPage, ReligiousSocialBrandPage } from '../components/BusinessPageLayouts';
+import BusinessPageLayouts, { StaticBusinessPage, DynamicBusinessPage } from '../components/BusinessPageLayouts';
+import ReligiousSocialBrandPage from './ReligiousSocialBrandPage';
 import ConsultancyBrandPage from './ConsultancyBrandPage';
 import AutomotiveBusinessPage from '../components/AutomotiveBusinessPage';
 import ShoppingBusinessPage from '../components/ShoppingBusinessPage';
@@ -20,6 +21,7 @@ import TrainingInstitutionPage from '../components/TrainingInstitutionPage';
 import AcademyPage from '../components/AcademyPage';
 import SportsAcademyPage from '../components/SportsAcademyPage';
 import SolarPage from './SolarPage';
+import SculptureBrandPage from './SculptureBrandPage';
 
 const DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
 const REPORT_REASONS = [
@@ -479,6 +481,25 @@ export default function PlaceDetailPage() {
   const isSportsAcademyCategory = ['sports-academies', 'sports-academy'].includes(trainingCategory);
   const isTrainingInstitution = ['training-institutes', 'training-institute', 'academies', 'academy', 'sports-academies', 'sports-academy'].includes(trainingCategory);
   const isSolarCategory = ['solar'].includes((place.category?.slug || '').toLowerCase()) || ['solar'].includes((place.category?.name || '').toLowerCase());
+  const isSculpturesArtsCategory = ['sculptures-arts', 'sculptures-(arts)', 'sculptures', 'sculpture', 'arts-creative'].includes(categorySlug)
+    || ['sculptures (arts)', 'sculptures', 'sculpture', 'arts & creative'].includes(categoryName)
+    || (place.subcategory || '').toLowerCase().includes('sculptur')
+    || groupLower === 'arts & creative'
+    || groupLower === 'arts and creative';
+
+  if (isSculpturesArtsCategory) {
+    return (
+      <>
+        <SculptureBrandPage
+          place={place}
+          mapsUrl={mapsUrl}
+          onShare={handleShare}
+          onReport={() => setShowReport(true)}
+        />
+        {showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}
+      </>
+    );
+  }
 
   // School listings always use the full school website layout so their
   // submitted academic, media, admissions, and campus sections are visible.

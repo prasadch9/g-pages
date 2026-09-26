@@ -33,6 +33,7 @@ import BusinessEditorPage from './pages/business/BusinessEditorPage';
 import WhatsAppButton from './components/WhatsAppButton';
 
 export default function App() {
+  const location = useLocation();
   const isPlaceRoute = location.pathname.startsWith('/place/');
   const isRestaurantProfile = /^\/business\/[^/]+$/.test(location.pathname);
   const isConsultancyPage = location.pathname.endsWith('/consultancies');

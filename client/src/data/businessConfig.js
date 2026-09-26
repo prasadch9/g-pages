@@ -190,6 +190,18 @@ export const CATEGORY_CONFIGS = {
     ],
     modules: ['movingServices', 'serviceAreas', 'fleet', 'movingProcess', 'storageOptions', 'safety', 'insuranceCoverage', 'projects', 'offers', 'packages', 'quote'],
   },
+  'Sculptures (Arts)': {
+    fields: [
+      textField('masterArtist', 'Master Sculptor / Sthapathi', 'e.g. Master Sthapathi K. Viswanatha Achari'),
+      textField('artLineage', 'Artistic Lineage', 'e.g. 4th Generation Traditional Shilpa Shastra'),
+      listField('sculptureStyles', 'Sculpture styles', 'Temple Vigrahas, Bronze casting, Modern stone art'),
+      listField('materials', 'Materials used', 'Krishna Shila, Makrana Marble, Panchaloha Bronze, Sandstone'),
+      textField('sculptureSizes', 'Sculpture sizes', 'Miniatures to Monumental Statues (40+ ft)'),
+      listField('commissionProcess', 'Commission process', 'Design, maquette, carving, finishing, installation'),
+      listField('exhibitions', 'Exhibitions & awards', 'National crafts expos, Master Artisan awards'),
+    ],
+    modules: ['artistProfile', 'collections', 'artworks', 'exhibitions', 'projects', 'materials', 'process', 'quote'],
+  },
 };
 
 export const getCategoryConfig = (subcategory) => CATEGORY_CONFIGS[subcategory] || { fields: [], modules: [] };
