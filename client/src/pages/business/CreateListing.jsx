@@ -1140,7 +1140,7 @@ export default function CreateListing() {
             </>
           )}
 
-          {!isAutomotiveCategory && !isShoppingCategory && !isSchool && !isCollege && !isUniversity && (
+          {!isAutomotiveCategory && !isShoppingCategory && !isSchool && !isCollege && !isUniversity && !isAnyBizProfForm && (
             <>
               {!isFoodCategory && !isWeddingCategory && <div className="col-span-2">
                 <label className="text-sm text-ink/70">Business name</label>
@@ -1313,13 +1313,13 @@ export default function CreateListing() {
             <input required={!isEditing && !coverFile} type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} className={inputClass} />
           </div>}
 
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && !isAcademy && !isSportsAcademy && <div className="col-span-2">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && !isAcademy && !isSportsAcademy && !isAnyBizProfForm && <div className="col-span-2">
             <label className="text-sm text-ink/70">Gallery photos (select as many as needed)</label>
             <input type="file" accept="image/*" multiple onChange={(e) => setGalleryFiles(Array.from(e.target.files || []))} className={inputClass} />
             {galleryFiles.length > 0 && <p className="mt-1 text-xs text-ink/50">{galleryFiles.length} photos selected.</p>}
           </div>}
 
-          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && !isAcademy && !isSportsAcademy && <div className="col-span-2">
+          {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && !isAcademy && !isSportsAcademy && !isAnyBizProfForm && <div className="col-span-2">
             <label className="text-sm text-ink/70">Facilities</label>
             <textarea rows={2} value={form.facilities} onChange={update('facilities')} placeholder="School bus, Library, Science lab, Playground" className={inputClass} />
           </div>}
@@ -1341,43 +1341,6 @@ export default function CreateListing() {
           {isAcademy && <AcademyRegistrationFields form={form} setForm={setForm} logoFile={logoFile} setLogoFile={setLogoFile} existingLogo={existingMedia.logo} aboutImageFile={academyAboutImageFile} setAboutImageFile={setAcademyAboutImageFile} introVideoFile={academyIntroVideoFile} setIntroVideoFile={setAcademyIntroVideoFile} videoThumbnailFile={academyVideoThumbnailFile} setVideoThumbnailFile={setAcademyVideoThumbnailFile} />}
           {isSportsAcademy && <SportsAcademyRegistrationFields form={form} setForm={setForm} logoFile={logoFile} setLogoFile={setLogoFile} existingLogo={existingMedia.logo} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} galleryFiles={galleryFiles} setGalleryFiles={setGalleryFiles} videoFiles={videoFiles} setVideoFiles={setVideoFiles} />}
 
-          {isSchool && <div className="col-span-2"><h2 className="font-display text-lg font-medium text-ink">Additional school details</h2><p className="mt-1 text-xs text-ink/50">Optional details for your selected category.</p></div>}
-
-          {isSchool && <div className="col-span-2 sm:col-span-1">
-            <label className="text-sm text-ink/70">Curriculum / board</label>
-            <input value={form.board} onChange={update('board')} placeholder="CBSE, State Board, ICSE" className={inputClass} />
-          </div>}
-          {isSchool && <div className="col-span-2 sm:col-span-1">
-            <label className="text-sm text-ink/70">Classes offered</label>
-            <input value={form.classes} onChange={update('classes')} placeholder="LKG to Class 10" className={inputClass} />
-          </div>}
-          {isSchool && <div className="col-span-2 sm:col-span-1">
-            <label className="text-sm text-ink/70">Curriculum type</label>
-            <input value={form.curriculum} onChange={update('curriculum')} placeholder="English medium, Montessori" className={inputClass} />
-          </div>}
-          {isSchool && <div className="col-span-2 sm:col-span-1">
-            <label className="text-sm text-ink/70">School type</label>
-            <input value={form.type} onChange={update('type')} placeholder="Private, Government" className={inputClass} />
-          </div>}
-          {isSchool && <div className="col-span-2 sm:col-span-1">
-            <label className="text-sm text-ink/70">Student type</label>
-            <input value={form.gender} onChange={update('gender')} placeholder="Co-ed, Boys, Girls" className={inputClass} />
-          </div>}
-          {isSchool && <div className="col-span-2">
-            <label className="text-sm text-ink/70">Admission details</label>
-            <input value={form.admission} onChange={update('admission')} placeholder="Open throughout the year" className={inputClass} />
-          </div>}
-
-          {isSchool && <div className="col-span-2">
-            <h2 className="font-display text-lg font-medium text-ink">Videos and social links</h2>
-            <p className="mt-1 text-xs text-ink/50">Upload multiple videos for the school video gallery.</p>
-          </div>}
-
-          {isSchool && <div className="col-span-2">
-            <label className="text-sm text-ink/70">School videos</label>
-            <input type="file" accept="video/*" multiple onChange={(e) => setVideoFiles(Array.from(e.target.files || []))} className={inputClass} />
-            <p className="mt-1 text-xs text-ink/50">Select multiple videos. Maximum 50 MB each.</p>
-          </div>}
           {!isSchool && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && !isAnyBizProfForm && <div className="col-span-2 sm:col-span-1">
             <label className="text-sm text-ink/70">Facebook URL</label>
             <input value={form.facebook} onChange={update('facebook')} placeholder="https://facebook.com/Ã¢â‚¬Â¦" className={inputClass} />
