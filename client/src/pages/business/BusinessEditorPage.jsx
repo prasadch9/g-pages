@@ -45,10 +45,12 @@ export default function BusinessEditorPage() {
   if (!place) return <div className="container-page py-20 text-center text-ink/50">Loading business editor...</div>;
 
   const type = resolveType(place);
+  const categoryGroup = String(place.businessGroup || place.categoryGroup || '').toLowerCase();
+  const isIndustriesManufacturing = /industr(y|ies)|manufactur/.test(categoryGroup);
   if (type === 'restaurant') return <RestaurantEditor place={place} />;
   if (type === 'coffee-shop') return <CoffeeShopEditor place={place} />;
   if (type === 'bakery') return <BakeryEditor place={place} />;
   if (type === 'catering') return <CateringEditor place={place} />;
-  if (type === 'food-processing') return <FoodProcessingEditor place={place} />;
+  if (type === 'food-processing' && !isIndustriesManufacturing) return <FoodProcessingEditor place={place} />;
   return <CreateListing />;
 }

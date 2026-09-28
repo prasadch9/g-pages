@@ -20,6 +20,8 @@ import UniversityPage from '../components/UniversityPage';
 import TrainingInstitutionPage from '../components/TrainingInstitutionPage';
 import AcademyPage from '../components/AcademyPage';
 import SportsAcademyPage from '../components/SportsAcademyPage';
+import IndustrialManufacturingPage from '../components/IndustrialManufacturingPage';
+import TradingBusinessPage from '../components/TradingBusinessPage';
 import SolarPage from './SolarPage';
 import SculptureBrandPage from './SculptureBrandPage';
 
@@ -480,6 +482,10 @@ export default function PlaceDetailPage() {
   const isAcademyCategory = ['academies', 'academy'].includes(trainingCategory);
   const isSportsAcademyCategory = ['sports-academies', 'sports-academy'].includes(trainingCategory);
   const isTrainingInstitution = ['training-institutes', 'training-institute', 'academies', 'academy', 'sports-academies', 'sports-academy'].includes(trainingCategory);
+  const isIndustryManufacturingGroup = /industr(y|ies)|manufactur/.test(String(place.businessGroup || place.categoryGroup || '').toLowerCase());
+  const isTradingBusinessCategory = isIndustryManufacturingGroup && ['trading-businesses', 'trading-business'].includes(trainingCategory);
+  const isFoodProcessingCategory = isIndustryManufacturingGroup && ['food-processing', 'food-processing-business'].includes(trainingCategory);
+  const isSmallScaleIndustriesCategory = isIndustryManufacturingGroup && ['small-scale-industries', 'small-scale-industry', 'small-scale-industrial'].includes(trainingCategory);
   const isSolarCategory = ['solar'].includes((place.category?.slug || '').toLowerCase()) || ['solar'].includes((place.category?.name || '').toLowerCase());
   const isSculpturesArtsCategory = ['sculptures-arts', 'sculptures-(arts)', 'sculptures', 'sculpture', 'arts-creative'].includes(categorySlug)
     || ['sculptures (arts)', 'sculptures', 'sculpture', 'arts & creative'].includes(categoryName)
@@ -566,7 +572,7 @@ export default function PlaceDetailPage() {
     );
   }
 
-  if (foodBusinessType || isHealthcareBusiness(place)) return <Navigate to={`/business/${place._id}`} replace />;
+  if ((foodBusinessType && !isIndustryManufacturingGroup) || isHealthcareBusiness(place)) return <Navigate to={`/business/${place._id}`} replace />;
   if (isCollegeCategory) {
     return <CollegePage place={place} mapsUrl={mapsUrl} onShare={handleShare} onReport={() => setShowReport(true)} />;
   }
@@ -584,6 +590,14 @@ export default function PlaceDetailPage() {
           : <TrainingInstitutionPage place={place} onReport={() => setShowReport(true)} />}
       {showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}
     </>;
+  }
+
+  if (isTradingBusinessCategory) {
+    return <><TradingBusinessPage place={place} mapsUrl={mapsUrl} onShare={handleShare} onReport={() => setShowReport(true)} />{showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}</>;
+  }
+
+  if (isFoodProcessingCategory || isSmallScaleIndustriesCategory) {
+    return <><IndustrialManufacturingPage place={place} mapsUrl={mapsUrl} onShare={handleShare} onReport={() => setShowReport(true)} />{showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}</>;
   }
 
   if (isSolarCategory) {

@@ -247,6 +247,12 @@ const createPlace = async (req, res, next) => {
     const academyGalleryImages = filesFor('academyGalleryImages').map((file) => publicUploadUrl(req, file));
     const academyGalleryVideos = filesFor('academyGalleryVideos').map((file) => publicUploadUrl(req, file));
     const academyCourseImages = filesFor('academyCourseImages').map((file) => publicUploadUrl(req, file));
+    const smallScaleImages = filesFor('smallScaleImages').map((file) => publicUploadUrl(req, file));
+    const smallScaleVideos = filesFor('smallScaleVideos').map((file) => publicUploadUrl(req, file));
+    const foodProcessingImages = filesFor('foodProcessingImages').map((file) => publicUploadUrl(req, file));
+    const foodProcessingVideos = filesFor('foodProcessingVideos').map((file) => publicUploadUrl(req, file));
+    const tradingBusinessImages = filesFor('tradingBusinessImages').map((file) => publicUploadUrl(req, file));
+    const tradingBusinessVideos = filesFor('tradingBusinessVideos').map((file) => publicUploadUrl(req, file));
     const academyAboutImage = filesFor('academyAboutImage')[0] ? publicUploadUrl(req, filesFor('academyAboutImage')[0]) : undefined;
     const academyIntroVideo = filesFor('academyIntroVideo')[0] ? publicUploadUrl(req, filesFor('academyIntroVideo')[0]) : undefined;
     const academyVideoThumbnail = filesFor('academyVideoThumbnail')[0] ? publicUploadUrl(req, filesFor('academyVideoThumbnail')[0]) : undefined;
@@ -270,6 +276,32 @@ const createPlace = async (req, res, next) => {
         galleryPhotos: (body.attributes.academy.galleryPhotos || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? academyGalleryImages[uploadIndex] || item.url : item.url })),
         galleryVideos: (body.attributes.academy.galleryVideos || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? academyGalleryVideos[uploadIndex] || item.url : item.url })),
         courses: (body.attributes.academy.courses || []).map(({ uploadIndex, ...item }) => ({ ...item, image: uploadIndex !== undefined ? academyCourseImages[uploadIndex] || item.image : item.image })),
+      } } : {}),
+      ...(body.attributes?.smallScaleIndustries ? { smallScaleIndustries: {
+        ...body.attributes.smallScaleIndustries,
+        products: (body.attributes.smallScaleIndustries.products || []).map(({ imageUploadIndex, ...item }) => ({ ...item, image: imageUploadIndex !== undefined ? smallScaleImages[imageUploadIndex] || item.image : item.image })),
+        galleryImages: (body.attributes.smallScaleIndustries.galleryImages || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? smallScaleImages[uploadIndex] || item.url : item.url })),
+        galleryVideos: (body.attributes.smallScaleIndustries.galleryVideos || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? smallScaleVideos[uploadIndex] || item.url : item.url })),
+      } } : {}),
+      ...(body.attributes?.foodProcessing ? { foodProcessing: {
+        ...body.attributes.foodProcessing,
+        products: (body.attributes.foodProcessing.products || []).map(({ imageUploadIndex, ...item }) => ({ ...item, image: imageUploadIndex !== undefined ? foodProcessingImages[imageUploadIndex] || item.image : item.image })),
+        processSteps: (body.attributes.foodProcessing.processSteps || []).map(({ imageUploadIndex, ...item }) => ({ ...item, image: imageUploadIndex !== undefined ? foodProcessingImages[imageUploadIndex] || item.image : item.image })),
+        galleryImages: (body.attributes.foodProcessing.galleryImages || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? foodProcessingImages[uploadIndex] || item.url : item.url })),
+        galleryVideos: (body.attributes.foodProcessing.galleryVideos || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? foodProcessingVideos[uploadIndex] || item.url : item.url })),
+      } } : {}),
+      ...(body.attributes?.tradingBusinesses ? { tradingBusinesses: {
+        ...body.attributes.tradingBusinesses,
+        promoBackgroundImage: body.attributes.tradingBusinesses.promoBackgroundUploadIndex !== undefined ? tradingBusinessImages[body.attributes.tradingBusinesses.promoBackgroundUploadIndex] || body.attributes.tradingBusinesses.promoBackgroundUrl : body.attributes.tradingBusinesses.promoBackgroundUrl || body.attributes.tradingBusinesses.promoBackgroundImage,
+        promoBackgroundUploadIndex: undefined,
+        productCategories: (body.attributes.tradingBusinesses.productCategories || []).map((item) => {
+          if (!item || typeof item !== 'object') return item;
+          const { imageUploadIndex, ...categoryItem } = item;
+          return { ...categoryItem, image: imageUploadIndex !== undefined ? tradingBusinessImages[imageUploadIndex] || item.image : item.image };
+        }),
+        catalogue: (body.attributes.tradingBusinesses.catalogue || []).map(({ imageUploadIndex, ...item }) => ({ ...item, image: imageUploadIndex !== undefined ? tradingBusinessImages[imageUploadIndex] || item.image : item.image })),
+        galleryImages: (body.attributes.tradingBusinesses.galleryImages || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? tradingBusinessImages[uploadIndex] || item.url : item.url })),
+        galleryVideos: (body.attributes.tradingBusinesses.galleryVideos || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? tradingBusinessVideos[uploadIndex] || item.url : item.url })),
       } } : {}),
       ...schoolMedia,
       principalImage,
@@ -386,6 +418,48 @@ const updatePlace = async (req, res, next) => {
         courses: (academy.courses || []).map(({ uploadIndex, ...item }) => ({ ...item, image: uploadIndex !== undefined ? courseImages[uploadIndex] || item.image : item.image })),
       };
     }
+    if (uploadedUrls('aboutImage')[0]) ownerUpdates.attributes = { ...ownerUpdates.attributes, aboutImage: uploadedUrls('aboutImage')[0] };
+    if (ownerUpdates.attributes?.smallScaleIndustries) {
+      const details = ownerUpdates.attributes.smallScaleIndustries;
+      const images = uploadedUrls('smallScaleImages');
+      const videos = uploadedUrls('smallScaleVideos');
+      ownerUpdates.attributes.smallScaleIndustries = {
+        ...details,
+        products: (details.products || []).map(({ imageUploadIndex, ...item }) => ({ ...item, image: imageUploadIndex !== undefined ? images[imageUploadIndex] || item.image : item.image })),
+        galleryImages: (details.galleryImages || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? images[uploadIndex] || item.url : item.url })),
+        galleryVideos: (details.galleryVideos || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? videos[uploadIndex] || item.url : item.url })),
+      };
+    }
+    if (ownerUpdates.attributes?.foodProcessing) {
+      const details = ownerUpdates.attributes.foodProcessing;
+      const images = uploadedUrls('foodProcessingImages');
+      const videos = uploadedUrls('foodProcessingVideos');
+      ownerUpdates.attributes.foodProcessing = {
+        ...details,
+        products: (details.products || []).map(({ imageUploadIndex, ...item }) => ({ ...item, image: imageUploadIndex !== undefined ? images[imageUploadIndex] || item.image : item.image })),
+        processSteps: (details.processSteps || []).map(({ imageUploadIndex, ...item }) => ({ ...item, image: imageUploadIndex !== undefined ? images[imageUploadIndex] || item.image : item.image })),
+        galleryImages: (details.galleryImages || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? images[uploadIndex] || item.url : item.url })),
+        galleryVideos: (details.galleryVideos || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? videos[uploadIndex] || item.url : item.url })),
+      };
+    }
+    if (ownerUpdates.attributes?.tradingBusinesses) {
+      const details = ownerUpdates.attributes.tradingBusinesses;
+      const images = uploadedUrls('tradingBusinessImages');
+      const videos = uploadedUrls('tradingBusinessVideos');
+      ownerUpdates.attributes.tradingBusinesses = {
+        ...details,
+        promoBackgroundImage: details.promoBackgroundUploadIndex !== undefined ? images[details.promoBackgroundUploadIndex] || details.promoBackgroundUrl : details.promoBackgroundUrl || details.promoBackgroundImage,
+        promoBackgroundUploadIndex: undefined,
+        productCategories: (details.productCategories || []).map((item) => {
+          if (!item || typeof item !== 'object') return item;
+          const { imageUploadIndex, ...categoryItem } = item;
+          return { ...categoryItem, image: imageUploadIndex !== undefined ? images[imageUploadIndex] || item.image : item.image };
+        }),
+        catalogue: (details.catalogue || []).map(({ imageUploadIndex, ...item }) => ({ ...item, image: imageUploadIndex !== undefined ? images[imageUploadIndex] || item.image : item.image })),
+        galleryImages: (details.galleryImages || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? images[uploadIndex] || item.url : item.url })),
+        galleryVideos: (details.galleryVideos || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? videos[uploadIndex] || item.url : item.url })),
+      };
+    }
     if (requestedName && requestedName !== place.name) {
       ownerUpdates.name = requestedName;
     }
@@ -398,7 +472,7 @@ const updatePlace = async (req, res, next) => {
     }
     const updateFields = { ...ownerUpdates };
     const newImages = uploadedUrls('images');
-    const newVideos = uploadedUrls('videos');
+    const newVideos = [...uploadedUrls('videos'), ...uploadedUrls('smallScaleVideos'), ...uploadedUrls('foodProcessingVideos'), ...uploadedUrls('tradingBusinessVideos')];
     if (uploadedUrls('coverImage')[0]) updateFields.coverImage = uploadedUrls('coverImage')[0];
     if (newImages.length) updateFields.images = [...(place.images || []), ...newImages];
     if (newVideos.length) {

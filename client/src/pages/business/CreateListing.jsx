@@ -26,6 +26,9 @@ import TrustRegistrationFields from '../../components/business/TrustRegistration
 import NgoRegistrationFields from '../../components/business/NgoRegistrationFields';
 import AssociationRegistrationFields from '../../components/business/AssociationRegistrationFields';
 import SculptureRegistrationFields from '../../components/business/SculptureRegistrationFields';
+import SmallScaleIndustriesFields from '../../components/SmallScaleIndustriesFields';
+import FoodProcessingFields from '../../components/FoodProcessingFields';
+import TradingBusinessesFields from '../../components/TradingBusinessesFields';
 
 const initialLocation = { state: '', district: '', city: '', area: '', areaText: '' };
 const MALL_DAYS = [['mon', 'Monday'], ['tue', 'Tuesday'], ['wed', 'Wednesday'], ['thu', 'Thursday'], ['fri', 'Friday'], ['sat', 'Saturday'], ['sun', 'Sunday']];
@@ -43,6 +46,9 @@ const initialForm = {
   services: '',
   facilities: '',
   categoryData: {},
+  smallScaleIndustries: { aboutUs: '', aboutImageUrl: '', products: [], manufacturingCapabilities: [], whyChooseUs: [], industriesServed: '', certifications: '', galleryImages: [], galleryVideos: [] },
+  foodProcessing: { aboutUs: '', aboutImageUrl: '', products: [], processSteps: [], whyChooseUs: [], stats: [], testimonials: [], certifications: '', galleryImages: [], galleryVideos: [] },
+  tradingBusinesses: { aboutUs: '', aboutImageUrl: '', promoBackgroundUrl: '', productCategories: [], brands: [], supplyCapabilities: [], marketsServed: [], catalogue: [], galleryImages: [], galleryVideos: [] },
   board: '',
   curriculum: '',
   classes: '',
@@ -405,6 +411,19 @@ export default function CreateListing() {
       const admissionDetails = attributes.admissionDetails || {};
       const fees = attributes.fees || {};
       setForm((current) => ({ ...current, name: place.name || '', category: place.category?._id || place.category || '', subcategory: editSubcategory, mainCategory: editCategoryGroup, address: place.address || '', description: place.description || '', phone: place.phone || '', email: place.email || '', website: place.website || '', services: (place.services || []).join(', '), facilities: (place.facilities || []).join(', '), pageType: place.pageType || 'static', facebook: place.socialLinks?.facebook || '', instagram: place.socialLinks?.instagram || '', whatsapp: place.socialLinks?.whatsapp || '', youtube: place.socialLinks?.youtube || '', linkedin: place.socialLinks?.linkedin || '', ...place.attributes, categoryData: place.categoryData || {} }));
+      setForm((current) => ({
+        ...current,
+        smallScaleIndustries: {
+          ...initialForm.smallScaleIndustries,
+          ...(attributes.smallScaleIndustries || {}),
+          aboutUs: attributes.smallScaleIndustries?.aboutUs || attributes.aboutUs || place.description || '',
+          aboutImageUrl: attributes.smallScaleIndustries?.aboutImageUrl || attributes.aboutImage || '',
+          galleryImages: (attributes.smallScaleIndustries?.galleryImages || attributes.galleryImages || place.images || []).map((item) => typeof item === 'string' ? { title: '', url: item, file: null } : item),
+          galleryVideos: (attributes.smallScaleIndustries?.galleryVideos || []).map((item) => typeof item === 'string' ? { title: '', url: item, file: null } : item),
+        },
+        foodProcessing: { ...initialForm.foodProcessing, ...(attributes.foodProcessing || {}), aboutUs: attributes.foodProcessing?.aboutUs || attributes.aboutUs || place.description || '', aboutImageUrl: attributes.foodProcessing?.aboutImageUrl || attributes.aboutImage || '', galleryImages: (attributes.foodProcessing?.galleryImages || []).map((item) => typeof item === 'string' ? { title: '', url: item, file: null } : item), galleryVideos: (attributes.foodProcessing?.galleryVideos || []).map((item) => typeof item === 'string' ? { title: '', url: item, file: null } : item) },
+        tradingBusinesses: { ...initialForm.tradingBusinesses, ...(attributes.tradingBusinesses || {}), aboutUs: attributes.tradingBusinesses?.aboutUs || attributes.aboutUs || place.description || '', aboutImageUrl: attributes.tradingBusinesses?.aboutImageUrl || attributes.aboutImage || '', promoBackgroundUrl: attributes.tradingBusinesses?.promoBackgroundUrl || attributes.tradingBusinesses?.promoBackgroundImage || '', galleryImages: (attributes.tradingBusinesses?.galleryImages || []).map((item) => typeof item === 'string' ? { title: '', url: item, file: null } : item), galleryVideos: (attributes.tradingBusinesses?.galleryVideos || []).map((item) => typeof item === 'string' ? { title: '', url: item, file: null } : item) },
+      }));
       setTravelDetails(place.attributes?.businessProfile?.categorySpecific || place.attributes?.travelDetails || {});
       setFoodDetails(place.attributes?.businessProfile?.categorySpecific || place.attributes?.foodDetails || {});
       setWeddingDetails(place.attributes?.businessProfile?.categorySpecific || place.attributes?.weddingDetails || {});
@@ -417,7 +436,7 @@ export default function CreateListing() {
       setSchoolVideos(attributes.schoolVideos || []);
       setAchievements(attributes.achievements || []);
       setSchoolEvents(attributes.schoolEvents || []);
-      setExistingMedia({ logo: place.logo || '', cover: place.coverImage || '', about: attributes.aboutImage || '', principal: attributes.principalImage || '', images: [...new Set([...(place.images || []), ...(attributes.galleryImages || [])])], videos: Array.isArray(place.video) ? place.video : place.video ? [place.video] : [], faculty: attributes.facultyImages || [], infrastructure: attributes.infrastructureImages || [], facilities: attributes.facilityImages || [], events: attributes.eventImages || [], principalGallery: attributes.principalGallery || [] });
+      setExistingMedia({ logo: place.logo || '', cover: place.coverImage || '', about: attributes.aboutImage || attributes.smallScaleIndustries?.aboutImageUrl || attributes.foodProcessing?.aboutImageUrl || attributes.tradingBusinesses?.aboutImageUrl || '', principal: attributes.principalImage || '', images: [...new Set([...(place.images || []), ...(attributes.galleryImages || [])])], videos: Array.isArray(place.video) ? place.video : place.video ? [place.video] : [], faculty: attributes.facultyImages || [], infrastructure: attributes.infrastructureImages || [], facilities: attributes.facilityImages || [], events: attributes.eventImages || [], principalGallery: attributes.principalGallery || [] });
     }).catch((err) => setError(err.message));
   }, [editId]);
 
@@ -434,6 +453,11 @@ export default function CreateListing() {
   const weddingBusinessType = ({ 'Marriage Bureaus': 'marriage-bureau', 'Function Halls': 'function-hall', 'Event Organizers': 'event-organizer', 'Catering Services': 'catering-service', 'Flower Decoration': 'flower-decoration', 'Fashion Designers': 'fashion-designer', 'Beauty Parlours': 'beauty-parlour', 'Saloon & Spa': 'saloon-spa' })[form.subcategory] || 'event-organizer';
   const isAcademy = ['academy', 'academies', 'training institute', 'training institutes', 'training institution', 'training institutions'].includes(categoryName);
   const isSportsAcademy = ['sports academy', 'sports academies'].includes(categoryName);
+  const isIndustriesManufacturing = /industr(y|ies)|manufactur/.test(form.mainCategory.toLowerCase());
+  const isSmallScaleIndustries = isIndustriesManufacturing && ['small scale industries', 'small-scale-industries', 'small scale industry'].includes(categoryName);
+  const isFoodProcessingForManufacturing = isIndustriesManufacturing && ['food processing', 'food-processing', 'food processing business'].includes(categoryName);
+  const isTradingBusinessesForManufacturing = isIndustriesManufacturing && ['trading businesses', 'trading business'].includes(categoryName);
+  const isDedicatedIndustryForm = isSmallScaleIndustries || isFoodProcessingForManufacturing || isTradingBusinessesForManufacturing;
   const subcatLower = (form.subcategory || '').toLowerCase().trim();
   const mainCatLower = (form.mainCategory || '').toLowerCase().trim();
   const isBizProfGroup = mainCatLower.includes('business') || mainCatLower.includes('professional');
@@ -533,7 +557,7 @@ export default function CreateListing() {
       return;
     }
 
-    if (!isSchool && !uploadedFiles.aboutImage) {
+    if (!isSchool && !isDedicatedIndustryForm && !uploadedFiles.aboutImage) {
       setError('About us image is required.');
       return;
     }
@@ -557,6 +581,48 @@ export default function CreateListing() {
         galleryVideos: (form.academy?.galleryVideos || []).map(({ file, ...item }, index) => ({ ...item, uploadIndex: file ? (form.academy.galleryVideos.slice(0, index + 1).filter((entry) => entry.file).length - 1) : undefined })),
         courses: (form.academy?.courses || []).map(({ file, ...item }, index) => ({ ...item, uploadIndex: file ? (form.academy.courses.slice(0, index + 1).filter((entry) => entry.file).length - 1) : undefined })),
       } : form.academy;
+      const smallScaleData = form.smallScaleIndustries || initialForm.smallScaleIndustries;
+      const smallScaleImageFiles = [...(smallScaleData.products || []).map((item) => item.imageFile).filter(Boolean), ...(smallScaleData.galleryImages || []).map((item) => item.file).filter(Boolean)];
+      const smallScaleVideoFiles = (smallScaleData.galleryVideos || []).map((item) => item.file).filter(Boolean);
+      let smallScaleImageIndex = 0;
+      let smallScaleVideoIndex = 0;
+      const smallScaleForSave = isSmallScaleIndustries ? {
+        ...smallScaleData,
+        aboutImageUrl: aboutImageFile ? '' : smallScaleData.aboutImageUrl,
+        products: (smallScaleData.products || []).map(({ imageFile, imageUrl, ...item }) => ({ ...item, image: imageFile ? undefined : imageUrl || item.image, imageUploadIndex: imageFile ? smallScaleImageIndex++ : undefined })),
+        galleryImages: (smallScaleData.galleryImages || []).map(({ file, ...item }) => ({ ...item, uploadIndex: file ? smallScaleImageIndex++ : undefined })),
+        galleryVideos: (smallScaleData.galleryVideos || []).map(({ file, ...item }) => ({ ...item, uploadIndex: file ? smallScaleVideoIndex++ : undefined })),
+      } : undefined;
+      const foodProcessingData = form.foodProcessing || initialForm.foodProcessing;
+      const foodProcessingImageFiles = [...(foodProcessingData.products || []).map((item) => item.imageFile).filter(Boolean), ...(foodProcessingData.processSteps || []).map((item) => item.imageFile).filter(Boolean), ...(foodProcessingData.galleryImages || []).map((item) => item.file).filter(Boolean)];
+      const foodProcessingVideoFiles = (foodProcessingData.galleryVideos || []).map((item) => item.file).filter(Boolean);
+      let foodProcessingImageIndex = 0;
+      let foodProcessingVideoIndex = 0;
+      const foodProcessingForSave = isFoodProcessingForManufacturing ? {
+        ...foodProcessingData,
+        aboutImageUrl: aboutImageFile ? '' : foodProcessingData.aboutImageUrl,
+        products: (foodProcessingData.products || []).map(({ imageFile, imageUrl, ...item }) => ({ ...item, image: imageFile ? undefined : imageUrl || item.image, imageUploadIndex: imageFile ? foodProcessingImageIndex++ : undefined })),
+        processSteps: (foodProcessingData.processSteps || []).map(({ imageFile, imageUrl, ...item }) => ({ ...item, image: imageFile ? undefined : imageUrl || item.image, imageUploadIndex: imageFile ? foodProcessingImageIndex++ : undefined })),
+        galleryImages: (foodProcessingData.galleryImages || []).map(({ file, ...item }) => ({ ...item, uploadIndex: file ? foodProcessingImageIndex++ : undefined })),
+        galleryVideos: (foodProcessingData.galleryVideos || []).map(({ file, ...item }) => ({ ...item, uploadIndex: file ? foodProcessingVideoIndex++ : undefined })),
+      } : undefined;
+      const tradingData = form.tradingBusinesses || initialForm.tradingBusinesses;
+      const tradingBusinessImageFiles = [tradingData.promoBackgroundFile, ...(tradingData.productCategories || []).map((item) => item.imageFile).filter(Boolean), ...(tradingData.catalogue || []).map((item) => item.imageFile).filter(Boolean), ...(tradingData.galleryImages || []).map((item) => item.file).filter(Boolean)].filter(Boolean);
+      const tradingBusinessVideoFiles = (tradingData.galleryVideos || []).map((item) => item.file).filter(Boolean);
+      let tradingBusinessImageIndex = 0;
+      let tradingBusinessVideoIndex = 0;
+      const promoBackgroundUploadIndex = tradingData.promoBackgroundFile ? tradingBusinessImageIndex++ : undefined;
+      const tradingBusinessesForSave = isTradingBusinessesForManufacturing ? {
+        ...tradingData,
+        promoBackgroundUrl: tradingData.promoBackgroundFile ? '' : tradingData.promoBackgroundUrl,
+        promoBackgroundUploadIndex,
+        promoBackgroundFile: undefined,
+        aboutImageUrl: aboutImageFile ? '' : tradingData.aboutImageUrl,
+        productCategories: (tradingData.productCategories || []).map((item) => typeof item === 'string' ? item : ({ ...item, image: item.imageFile ? undefined : item.imageUrl || item.image, imageUploadIndex: item.imageFile ? tradingBusinessImageIndex++ : undefined })),
+        catalogue: (tradingData.catalogue || []).map(({ imageFile, imageUrl, ...item }) => ({ ...item, image: imageFile ? undefined : imageUrl || item.image, imageUploadIndex: imageFile ? tradingBusinessImageIndex++ : undefined })),
+        galleryImages: (tradingData.galleryImages || []).map(({ file, ...item }) => ({ ...item, uploadIndex: file ? tradingBusinessImageIndex++ : undefined })),
+        galleryVideos: (tradingData.galleryVideos || []).map(({ file, ...item }) => ({ ...item, uploadIndex: file ? tradingBusinessVideoIndex++ : undefined })),
+      } : undefined;
       const payload = new FormData();
       const galleryUrls = [];
       const appendImage = (field, value, filename) => {
@@ -617,6 +683,9 @@ export default function CreateListing() {
           ...(isShoppingCategory && form.subcategory === 'Shopping Malls' ? { mallCollections: mallCollectionDetailsPayload, mallVideos: mallVideos.map((video) => ({ url: video.url || '', caption: video.caption || '' })) } : {}),
           workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed),
           academy: academyForSave,
+          smallScaleIndustries: smallScaleForSave,
+          foodProcessing: foodProcessingForSave,
+          tradingBusinesses: tradingBusinessesForSave,
           courses: form.collegeType === 'Intermediate College' ? form.collegeGroups : form.collegePrograms,
           admissions: form.admissionProcess,
           placements: form.placementAvailable === 'Yes' ? [
@@ -728,6 +797,12 @@ export default function CreateListing() {
       academyPhotoFiles.forEach(({ item }) => payload.append('academyGalleryImages', item.file));
       academyVideoFiles.forEach(({ item }) => payload.append('academyGalleryVideos', item.file));
       academyCourseFiles.forEach(({ item }) => payload.append('academyCourseImages', item.file));
+      smallScaleImageFiles.forEach((file) => payload.append('smallScaleImages', file));
+      smallScaleVideoFiles.forEach((file) => payload.append('smallScaleVideos', file));
+      foodProcessingImageFiles.forEach((file) => payload.append('foodProcessingImages', file));
+      foodProcessingVideoFiles.forEach((file) => payload.append('foodProcessingVideos', file));
+      tradingBusinessImageFiles.forEach((file) => payload.append('tradingBusinessImages', file));
+      tradingBusinessVideoFiles.forEach((file) => payload.append('tradingBusinessVideos', file));
 
       let editedLogo = uploadedFiles.logo;
       let editedCoverImage = uploadedFiles.coverImage;
@@ -765,7 +840,7 @@ export default function CreateListing() {
         images: editedGalleryImages,
         videos: editedVideoUrls,
         workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed),
-        attributes: { ...form, academy: academyForSave, ...(isTravelCategory ? { travelDetails, businessProfile: { categorySpecific: travelDetails } } : {}), ...(isFoodCategory ? { foodDetails, businessProfile: { businessType: foodBusinessType, categorySpecific: foodDetails } } : {}), subCategory: form.subcategory || undefined, ...(isShoppingCategory ? Object.fromEntries(Object.entries(shoppingDetails).filter(([, value]) => String(value || '').trim())) : {}), ...(isShoppingCategory && form.subcategory === 'Shopping Malls' ? { mallCollections: mallCollectionDetailsPayload, mallVideos: mallVideos.map((video) => ({ url: video.url || '', caption: video.caption || '' })) } : {}), courses: form.collegeType === 'Intermediate College' ? form.collegeGroups : form.collegePrograms, admissions: form.admissionProcess, placements: form.placementAvailable === 'Yes' ? [form.placementOfficer && `Placement officer: ${form.placementOfficer}`, form.averagePackage && `Average package: ${form.averagePackage}`, form.highestPackage && `Highest package: ${form.highestPackage}`, form.recruitingCompanies && `Recruiters: ${form.recruitingCompanies}`].filter(Boolean) : [], socialVisibility: undefined, faculty, infrastructure, schoolFacilities, galleryItems, schoolVideos, achievements, schoolEvents, principalImage: existingMedia.principal || undefined, aboutImage: editedAboutImage || undefined, galleryImages: editedGalleryImages, workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed), ...(isUniversity ? { university: form.university, programs: form.university?.programs || [], facilities: form.university?.facilities || [], stats: form.university?.stats || [], aboutTitle: form.university?.aboutTitle, aboutDescription: form.university?.aboutDescription, rankingEnabled: form.university?.rankingEnabled, rank: form.university?.rank, rankingDescription: form.university?.rankingDescription, campusTitle: form.campusTitle, campusDescription: form.campusDescription, showAdmission: form.university?.showAdmission, admissionTitle: form.university?.admissionTitle, admissionDescription: form.university?.admissionDescription } : {}) },
+        attributes: { ...form, academy: academyForSave, smallScaleIndustries: smallScaleForSave, foodProcessing: foodProcessingForSave, tradingBusinesses: tradingBusinessesForSave, ...(isTravelCategory ? { travelDetails, businessProfile: { categorySpecific: travelDetails } } : {}), ...(isFoodCategory ? { foodDetails, businessProfile: { businessType: foodBusinessType, categorySpecific: foodDetails } } : {}), subCategory: form.subcategory || undefined, ...(isShoppingCategory ? Object.fromEntries(Object.entries(shoppingDetails).filter(([, value]) => String(value || '').trim())) : {}), ...(isShoppingCategory && form.subcategory === 'Shopping Malls' ? { mallCollections: mallCollectionDetailsPayload, mallVideos: mallVideos.map((video) => ({ url: video.url || '', caption: video.caption || '' })) } : {}), courses: form.collegeType === 'Intermediate College' ? form.collegeGroups : form.collegePrograms, admissions: form.admissionProcess, placements: form.placementAvailable === 'Yes' ? [form.placementOfficer && `Placement officer: ${form.placementOfficer}`, form.averagePackage && `Average package: ${form.averagePackage}`, form.highestPackage && `Highest package: ${form.highestPackage}`, form.recruitingCompanies && `Recruiters: ${form.recruitingCompanies}`].filter(Boolean) : [], socialVisibility: undefined, faculty, infrastructure, schoolFacilities, galleryItems, schoolVideos, achievements, schoolEvents, principalImage: existingMedia.principal || undefined, aboutImage: editedAboutImage || undefined, galleryImages: editedGalleryImages, workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed), ...(isUniversity ? { university: form.university, programs: form.university?.programs || [], facilities: form.university?.facilities || [], stats: form.university?.stats || [], aboutTitle: form.university?.aboutTitle, aboutDescription: form.university?.aboutDescription, rankingEnabled: form.university?.rankingEnabled, rank: form.university?.rank, rankingDescription: form.university?.rankingDescription, campusTitle: form.campusTitle, campusDescription: form.campusDescription, showAdmission: form.university?.showAdmission, admissionTitle: form.university?.admissionTitle, admissionDescription: form.university?.admissionDescription } : {}) },
       };
       if (isWeddingCategory) {
         editableData.attributes.weddingDetails = weddingDetails;
@@ -781,7 +856,14 @@ export default function CreateListing() {
         academyPhotoFiles.forEach(({ item }) => updatePayload.append('academyGalleryImages', item.file));
         academyVideoFiles.forEach(({ item }) => updatePayload.append('academyGalleryVideos', item.file));
         academyCourseFiles.forEach(({ item }) => updatePayload.append('academyCourseImages', item.file));
+        smallScaleImageFiles.forEach((file) => updatePayload.append('smallScaleImages', file));
+        smallScaleVideoFiles.forEach((file) => updatePayload.append('smallScaleVideos', file));
+        foodProcessingImageFiles.forEach((file) => updatePayload.append('foodProcessingImages', file));
+        foodProcessingVideoFiles.forEach((file) => updatePayload.append('foodProcessingVideos', file));
+        tradingBusinessImageFiles.forEach((file) => updatePayload.append('tradingBusinessImages', file));
+        tradingBusinessVideoFiles.forEach((file) => updatePayload.append('tradingBusinessVideos', file));
         if (logoFile) updatePayload.append('logo', logoFile);
+        if (aboutImageFile && isDedicatedIndustryForm) updatePayload.append('aboutImage', aboutImageFile);
         if (academyAboutImageFile) updatePayload.append('academyAboutImage', academyAboutImageFile);
         if (academyIntroVideoFile) updatePayload.append('academyIntroVideo', academyIntroVideoFile);
         if (academyVideoThumbnailFile) updatePayload.append('academyVideoThumbnail', academyVideoThumbnailFile);
@@ -846,7 +928,19 @@ export default function CreateListing() {
               onBack={() => navigate('/business/dashboard')}
               embedded
             />
-          </div> : isDedicatedRealEstate ? <div className="col-span-2"><PropertyBusinessForm key={`${editId || 'new'}-real-estate`} place={editBusinessPlace} categoryId={form.category} propertyType="real-estate" onBack={() => navigate('/business/dashboard')} embedded /></div> : isDedicatedConstructionRoofing ? <div className="col-span-2"><PropertyBusinessForm key={`${editId || 'new'}-${healthcareSubcategory}-${editBusinessPlace?._id || 'loading'}`} place={editBusinessPlace || { category: form.category, location, attributes: { businessProfile: { businessType: healthcareSubcategory } } }} categoryId={form.category} propertyType={healthcareSubcategory} onBack={() => navigate('/business/dashboard')} embedded /></div> : isDedicatedShopStudio ? <div className="col-span-2"><PropertyBusinessForm key={`${editId || 'new'}-${healthcareSubcategory}-${editBusinessPlace?._id || 'loading'}`} place={editBusinessPlace || { category: form.category, location, attributes: { businessProfile: { businessType: healthcareSubcategory } } }} categoryId={form.category} propertyType={healthcareSubcategory === 'furniture shops' ? 'furniture' : healthcareSubcategory === 'tiles shops' ? 'tiles' : 'interiors'} onBack={() => navigate('/business/dashboard')} embedded /></div> : <>
+          </div> : isDedicatedRealEstate ? <div className="col-span-2"><PropertyBusinessForm key={`${editId || 'new'}-real-estate`} place={editBusinessPlace} categoryId={form.category} propertyType="real-estate" onBack={() => navigate('/business/dashboard')} embedded /></div> : isDedicatedConstructionRoofing ? <div className="col-span-2"><PropertyBusinessForm key={`${editId || 'new'}-${healthcareSubcategory}-${editBusinessPlace?._id || 'loading'}`} place={editBusinessPlace || { category: form.category, location, attributes: { businessProfile: { businessType: healthcareSubcategory } } }} categoryId={form.category} propertyType={healthcareSubcategory} onBack={() => navigate('/business/dashboard')} embedded /></div> : isDedicatedShopStudio ? <div className="col-span-2"><PropertyBusinessForm key={`${editId || 'new'}-${healthcareSubcategory}-${editBusinessPlace?._id || 'loading'}`} place={editBusinessPlace || { category: form.category, location, attributes: { businessProfile: { businessType: healthcareSubcategory } } }} categoryId={form.category} propertyType={healthcareSubcategory === 'furniture shops' ? 'furniture' : healthcareSubcategory === 'tiles shops' ? 'tiles' : 'interiors'} onBack={() => navigate('/business/dashboard')} embedded /></div> : isDedicatedIndustryForm ? <>
+          <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Business name</label><input required value={form.name} onChange={update('name')} className={inputClass} /></div>
+          <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Phone</label><input value={form.phone} onChange={update('phone')} className={inputClass} /></div>
+          <LocationCascadeFields value={location} onChange={setLocation} />
+          <div className="col-span-2"><label className="text-sm text-ink/70">Address</label><input required value={form.address} onChange={update('address')} className={inputClass} /></div>
+          <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Email</label><input type="email" value={form.email} onChange={update('email')} className={inputClass} /></div>
+          <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Website</label><input type="url" value={form.website} onChange={update('website')} placeholder="https://" className={inputClass} /></div>
+          {renderSingleImageUpload('coverImage', 'Cover image', false)}
+          {isSmallScaleIndustries && <SmallScaleIndustriesFields form={form} setForm={setForm} inputClass={inputClass} logoFile={logoFile} setLogoFile={setLogoFile} existingLogo={existingMedia.logo} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} existingAboutImage={existingMedia.about} />}
+          {isFoodProcessingForManufacturing && <FoodProcessingFields form={form} setForm={setForm} inputClass={inputClass} logoFile={logoFile} setLogoFile={setLogoFile} existingLogo={existingMedia.logo} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} existingAboutImage={existingMedia.about} />}
+          {isTradingBusinessesForManufacturing && <TradingBusinessesFields form={form} setForm={setForm} inputClass={inputClass} logoFile={logoFile} setLogoFile={setLogoFile} existingLogo={existingMedia.logo} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} existingAboutImage={existingMedia.about} />}
+          <div className="col-span-2 grid gap-4 sm:grid-cols-2"><label className="text-sm text-ink/70">Facebook URL<input value={form.facebook} onChange={update('facebook')} placeholder="https://facebook.com/" className={inputClass} /></label><label className="text-sm text-ink/70">Instagram URL<input value={form.instagram} onChange={update('instagram')} placeholder="https://instagram.com/" className={inputClass} /></label><label className="text-sm text-ink/70">WhatsApp<input value={form.whatsapp} onChange={update('whatsapp')} placeholder="https://wa.me/" className={inputClass} /></label></div>
+          </> : <>
           {selectedGroup && (
             <div className="col-span-2 rounded-2xl border border-line bg-gradient-to-r from-slate-50 to-blue-50/30 p-4 shadow-sm">
               <span className="text-xs font-bold uppercase tracking-wider text-ink/60">Choose subcategory:</span>
