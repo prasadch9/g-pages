@@ -8,7 +8,6 @@ import BusinessPageLayouts, { StaticBusinessPage, DynamicBusinessPage } from '..
 import ReligiousSocialBrandPage from './ReligiousSocialBrandPage';
 import ConsultancyBrandPage from './ConsultancyBrandPage';
 import AutomotiveBusinessPage from '../components/AutomotiveBusinessPage';
-import ShoppingBusinessPage from '../components/ShoppingBusinessPage';
 import ShoppingMallBusinessPage from '../components/ShoppingMallBusinessPage';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -24,6 +23,13 @@ import IndustrialManufacturingPage from '../components/IndustrialManufacturingPa
 import TradingBusinessPage from '../components/TradingBusinessPage';
 import SolarPage from './SolarPage';
 import SculptureBrandPage from './SculptureBrandPage';
+import {
+  FurnitureDetailLayout,
+  HomeAppliancesDetailLayout,
+  MattressDetailLayout,
+  NurseryDetailLayout,
+} from '../components/public/ChandhuuRetailDetailLayouts';
+import { ChandhuuRetailGenericLayout } from '../components/public/ChandhuuRetailGenericLayout';
 
 const DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
 const REPORT_REASONS = [
@@ -470,6 +476,16 @@ export default function PlaceDetailPage() {
   const isAutomotiveCategory = ['automotive', 'automotive-dealers', 'car-showrooms', 'automobile-dealers'].includes((place.category?.slug || '').toLowerCase()) || ['automotive', 'car showrooms', 'automobile dealers'].includes((place.category?.name || '').toLowerCase());
   const isShoppingCategory = ['shopping-retail', 'shopping-malls', 'boutique', 'home-appliances', 'furniture-shops', 'mattress-shops', 'nurseries', 'fashion-stores', 'gift-stationery', 'groceries-essentials'].includes((place.category?.slug || '').toLowerCase()) || ['shopping & retail', 'shopping malls', 'boutique', 'home appliances', 'furniture shops', 'mattress shops', 'nurseries', 'fashion stores', 'gift & stationery', 'groceries & essentials'].includes((place.category?.name || '').toLowerCase());
   const isShoppingMall = (place.attributes?.subCategory || '').toLowerCase() === 'shopping malls' || ((place.category?.slug || '').toLowerCase() === 'shopping-malls' && !(place.attributes?.subCategory));
+  const retailSubcategory = String(place.subcategory?.name || place.attributes?.subCategory || place.category?.name || '').toLowerCase();
+  const chandhuuRetailLayout = /home appliances|appliance|refrigerator|washing machine|air conditioner|led tv|microwave/.test(retailSubcategory)
+    ? HomeAppliancesDetailLayout
+    : /furniture|wardrobe|sofa|bedroom|dining room|office furniture/.test(retailSubcategory)
+      ? FurnitureDetailLayout
+      : /mattress|sleep|bed/.test(retailSubcategory)
+        ? MattressDetailLayout
+        : /nursery|plant|garden|gardening|flower|seed|soil/.test(retailSubcategory)
+          ? NurseryDetailLayout
+          : null;
   const foodBusinessType = resolveFoodBusinessType(place);
   const businessType = place.attributes?.businessProfile?.businessType;
   const isRestaurant = businessType === 'restaurant'
@@ -549,6 +565,7 @@ export default function PlaceDetailPage() {
   }
 
   if (isShoppingCategory) {
+    const RetailPage = !isShoppingMall ? chandhuuRetailLayout : null;
     return (
       <>
         {isShoppingMall ? <ShoppingMallBusinessPage
@@ -558,14 +575,18 @@ export default function PlaceDetailPage() {
           onShare={handleShare}
           onReport={() => setShowReport(true)}
           onReviewPosted={handleReviewPosted}
-        /> : <ShoppingBusinessPage
+        /> : RetailPage ? <RetailPage
           place={place}
           mapsUrl={mapsUrl}
           socialLinks={socialLinks}
           onShare={handleShare}
           onReport={() => setShowReport(true)}
-          onDelete={user?.role === 'admin' ? handleAdminDelete : null}
-          onReviewPosted={handleReviewPosted}
+        /> : <ChandhuuRetailGenericLayout
+          place={place}
+          mapsUrl={mapsUrl}
+          socialLinks={socialLinks}
+          onShare={handleShare}
+          onReport={() => setShowReport(true)}
         />}
         {showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}
       </>
