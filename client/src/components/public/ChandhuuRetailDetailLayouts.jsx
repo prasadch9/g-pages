@@ -960,5 +960,3 @@ export function FurnitureDetailLayout({ place, mapsUrl, socialLinks, onShare, on
     </div>
   );
 }
-
-

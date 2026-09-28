@@ -239,9 +239,7 @@ export function ChandhuuRetailGenericLayout({ place, mapsUrl, socialLinks = {}, 
         )}
       </div>
 
-      
+
     </div>
   );
 }
-
-
