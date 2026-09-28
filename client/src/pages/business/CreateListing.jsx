@@ -111,6 +111,34 @@ const SHOPPING_DETAILS = {
   Nurseries: [['productCategories', 'Plant categories', 'Indoor Plants, Outdoor Plants, Flowering Plants, Fruit Plants, Medicinal Plants, Succulents, Ornamental Plants, Trees'], ['gardenProducts', 'Gardening products', 'Pots, Seeds, Soil, Fertilizers, Gardening Tools, Plant Accessories'], ['specialtyServices', 'Nursery services', 'Landscaping, Garden Maintenance, Plant Delivery, Gardening Consultation']],
 };
 
+// Keep retail data compatible with the category-specific profile shape used by
+// the chandhuu-work forms. Shopping Malls retain their existing attributes.
+const shoppingProfileDetails = (subcategory, details) => {
+  const list = (value) => splitList(value);
+  switch (subcategory) {
+    case 'Boutique': return { shopType: details.shopType || '', priceRange: details.priceRange || '', collections: list(details.collections), occasions: list(details.specialtyServices), services: list(details.services), features: list(details.featuredBrands) };
+    case 'Home Appliances': return { storeType: details.storeType || '', brandFocus: details.featuredBrands || '', products: list(details.productCategories), services: list(details.specialtyServices), features: list(details.offer) };
+    case 'Furniture Shops': return { furnitureStyle: details.furnitureStyle || '', priceRange: details.priceRange || '', collections: list(details.productCategories), services: list(details.specialtyServices), features: [...list(details.materials), ...list(details.featuredBrands)] };
+    case 'Mattress Shops': return { sleepCategory: details.sleepCategory || '', sizes: list(details.sizes), products: list(details.productCategories), services: list(details.specialtyServices), features: [...list(details.featuredBrands), ...list(details.offer)] };
+    case 'Nurseries': return { nurseryType: details.nurseryType || '', plantCategory: details.plantCategory || '', products: [...list(details.productCategories), ...list(details.gardenProducts)], services: list(details.specialtyServices), features: [] };
+    default: return {};
+  }
+};
+
+const shoppingDetailsFromPlace = (attributes = {}) => {
+  const specific = attributes.businessProfile?.categorySpecific || {};
+  const subcategory = attributes.subCategory;
+  const asText = (value) => Array.isArray(value) ? value.join(', ') : value || '';
+  const mapped = {
+    Boutique: { collections: specific.collections, specialtyServices: specific.occasions || specific.services, featuredBrands: specific.features },
+    'Home Appliances': { productCategories: specific.products, featuredBrands: specific.brandFocus, specialtyServices: specific.services, offer: specific.features },
+    'Furniture Shops': { productCategories: specific.collections, specialtyServices: specific.services, materials: specific.features },
+    'Mattress Shops': { productCategories: specific.products, sizes: specific.sizes, specialtyServices: specific.services, featuredBrands: specific.features },
+    Nurseries: { productCategories: specific.products, gardenProducts: specific.features, specialtyServices: specific.services },
+  }[subcategory] || {};
+  return { ...Object.fromEntries(Object.entries(attributes).filter(([key]) => key !== 'subCategory')), ...Object.fromEntries(Object.entries(mapped).map(([key, value]) => [key, asText(value)])) };
+};
+
 Object.values(SHOPPING_DETAILS).forEach((fields) => {
   const offerField = fields.find(([key]) => key === 'offer');
   if (offerField) {
@@ -235,7 +263,7 @@ export default function CreateListing() {
         chatSupport: place.socialLinks?.chatSupport || '',
         videoUrls: existingVideos.map((video) => typeof video === 'string' ? video : video.url).filter(Boolean).join('\n'),
       });
-      setShoppingDetails(Object.fromEntries(Object.entries(place.attributes || {}).filter(([key]) => key !== 'subCategory')));
+      setShoppingDetails(shoppingDetailsFromPlace(place.attributes || {}));
       setMallCollectionDetails(place.attributes?.mallCollections || (place.images || []).map((image) => ({ image, tag: 'New', caption: '', features: '' })));
       setMallVideos(existingVideos.map((video) => typeof video === 'string' ? { url: video, caption: '' } : video));
       setWorkingHours(place.workingHours || []);
@@ -680,6 +708,7 @@ export default function CreateListing() {
           ...(isWeddingCategory ? { weddingDetails, businessProfile: { businessType: weddingBusinessType, categorySpecific: weddingDetails } } : {}),
           subCategory: form.subcategory || undefined,
           ...(isShoppingCategory ? Object.fromEntries(Object.entries(shoppingDetails).filter(([, value]) => String(value || '').trim())) : {}),
+          ...(isShoppingCategory && form.subcategory !== 'Shopping Malls' ? { businessProfile: { ...(form.businessProfile || {}), businessType: form.subcategory, categorySpecific: shoppingProfileDetails(form.subcategory, shoppingDetails) } } : {}),
           ...(isShoppingCategory && form.subcategory === 'Shopping Malls' ? { mallCollections: mallCollectionDetailsPayload, mallVideos: mallVideos.map((video) => ({ url: video.url || '', caption: video.caption || '' })) } : {}),
           workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed),
           academy: academyForSave,
@@ -840,7 +869,7 @@ export default function CreateListing() {
         images: editedGalleryImages,
         videos: editedVideoUrls,
         workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed),
-        attributes: { ...form, academy: academyForSave, smallScaleIndustries: smallScaleForSave, foodProcessing: foodProcessingForSave, tradingBusinesses: tradingBusinessesForSave, ...(isTravelCategory ? { travelDetails, businessProfile: { categorySpecific: travelDetails } } : {}), ...(isFoodCategory ? { foodDetails, businessProfile: { businessType: foodBusinessType, categorySpecific: foodDetails } } : {}), subCategory: form.subcategory || undefined, ...(isShoppingCategory ? Object.fromEntries(Object.entries(shoppingDetails).filter(([, value]) => String(value || '').trim())) : {}), ...(isShoppingCategory && form.subcategory === 'Shopping Malls' ? { mallCollections: mallCollectionDetailsPayload, mallVideos: mallVideos.map((video) => ({ url: video.url || '', caption: video.caption || '' })) } : {}), courses: form.collegeType === 'Intermediate College' ? form.collegeGroups : form.collegePrograms, admissions: form.admissionProcess, placements: form.placementAvailable === 'Yes' ? [form.placementOfficer && `Placement officer: ${form.placementOfficer}`, form.averagePackage && `Average package: ${form.averagePackage}`, form.highestPackage && `Highest package: ${form.highestPackage}`, form.recruitingCompanies && `Recruiters: ${form.recruitingCompanies}`].filter(Boolean) : [], socialVisibility: undefined, faculty, infrastructure, schoolFacilities, galleryItems, schoolVideos, achievements, schoolEvents, principalImage: existingMedia.principal || undefined, aboutImage: editedAboutImage || undefined, galleryImages: editedGalleryImages, workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed), ...(isUniversity ? { university: form.university, programs: form.university?.programs || [], facilities: form.university?.facilities || [], stats: form.university?.stats || [], aboutTitle: form.university?.aboutTitle, aboutDescription: form.university?.aboutDescription, rankingEnabled: form.university?.rankingEnabled, rank: form.university?.rank, rankingDescription: form.university?.rankingDescription, campusTitle: form.campusTitle, campusDescription: form.campusDescription, showAdmission: form.university?.showAdmission, admissionTitle: form.university?.admissionTitle, admissionDescription: form.university?.admissionDescription } : {}) },
+        attributes: { ...form, academy: academyForSave, smallScaleIndustries: smallScaleForSave, foodProcessing: foodProcessingForSave, tradingBusinesses: tradingBusinessesForSave, ...(isTravelCategory ? { travelDetails, businessProfile: { categorySpecific: travelDetails } } : {}), ...(isFoodCategory ? { foodDetails, businessProfile: { businessType: foodBusinessType, categorySpecific: foodDetails } } : {}), subCategory: form.subcategory || undefined, ...(isShoppingCategory ? Object.fromEntries(Object.entries(shoppingDetails).filter(([, value]) => String(value || '').trim())) : {}), ...(isShoppingCategory && form.subcategory !== 'Shopping Malls' ? { businessProfile: { ...(form.businessProfile || {}), businessType: form.subcategory, categorySpecific: shoppingProfileDetails(form.subcategory, shoppingDetails) } } : {}), ...(isShoppingCategory && form.subcategory === 'Shopping Malls' ? { mallCollections: mallCollectionDetailsPayload, mallVideos: mallVideos.map((video) => ({ url: video.url || '', caption: video.caption || '' })) } : {}), courses: form.collegeType === 'Intermediate College' ? form.collegeGroups : form.collegePrograms, admissions: form.admissionProcess, placements: form.placementAvailable === 'Yes' ? [form.placementOfficer && `Placement officer: ${form.placementOfficer}`, form.averagePackage && `Average package: ${form.averagePackage}`, form.highestPackage && `Highest package: ${form.highestPackage}`, form.recruitingCompanies && `Recruiters: ${form.recruitingCompanies}`].filter(Boolean) : [], socialVisibility: undefined, faculty, infrastructure, schoolFacilities, galleryItems, schoolVideos, achievements, schoolEvents, principalImage: existingMedia.principal || undefined, aboutImage: editedAboutImage || undefined, galleryImages: editedGalleryImages, workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed), ...(isUniversity ? { university: form.university, programs: form.university?.programs || [], facilities: form.university?.facilities || [], stats: form.university?.stats || [], aboutTitle: form.university?.aboutTitle, aboutDescription: form.university?.aboutDescription, rankingEnabled: form.university?.rankingEnabled, rank: form.university?.rank, rankingDescription: form.university?.rankingDescription, campusTitle: form.campusTitle, campusDescription: form.campusDescription, showAdmission: form.university?.showAdmission, admissionTitle: form.university?.admissionTitle, admissionDescription: form.university?.admissionDescription } : {}) },
       };
       if (isWeddingCategory) {
         editableData.attributes.weddingDetails = weddingDetails;
