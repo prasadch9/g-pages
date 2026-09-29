@@ -5,31 +5,31 @@ import api from '../services/api';
 import FavoriteButton from '../components/FavoriteButton';
 import ReviewsSection from '../components/ReviewsSection';
 import BusinessPageLayouts, { StaticBusinessPage, DynamicBusinessPage } from '../components/BusinessPageLayouts';
-import ReligiousSocialBrandPage from './ReligiousSocialBrandPage';
-import ConsultancyBrandPage from './ConsultancyBrandPage';
-import AutomotiveBusinessPage from '../components/AutomotiveBusinessPage';
-import ShoppingMallBusinessPage from '../components/ShoppingMallBusinessPage';
+import ReligiousSocialBrandPage from './religious-social/ReligiousSocialBrandPage';
+import ConsultancyBrandPage from './business-professional/consultancies/ConsultancyBrandPage';
+import AutomotiveBusinessPage from './automotive/car-showrooms/AutomotiveBusinessPage';
+import ShoppingMallBusinessPage from './shopping-retail/shopping-malls/ShoppingMallBusinessPage';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { resolveFoodBusinessType } from '../components/public/PublicProfileShared';
-import { isHealthcareBusiness } from '../utils/healthcare';
-import SchoolExperience from '../components/SchoolExperience';
-import CollegePage from '../components/CollegePage';
-import UniversityPage from '../components/UniversityPage';
-import TrainingInstitutionPage from '../components/TrainingInstitutionPage';
-import AcademyPage from '../components/AcademyPage';
-import SportsAcademyPage from '../components/SportsAcademyPage';
-import IndustrialManufacturingPage from '../components/IndustrialManufacturingPage';
-import TradingBusinessPage from '../components/TradingBusinessPage';
-import SolarPage from './SolarPage';
-import SculptureBrandPage from './SculptureBrandPage';
+import { isHealthcareBusiness } from './healthcare-medical/healthcareUtils';
+import SchoolExperience from './education-learning/schools/components/SchoolExperience';
+import CollegePage from './education-learning/colleges/CollegePage';
+import UniversityPage from './education-learning/universities/UniversityPage';
+import TrainingInstitutionPage from './education-learning/training-institutes/TrainingInstitutionPage';
+import AcademyPage from './education-learning/academies/AcademyPage';
+import SportsAcademyPage from './education-learning/sports-academies/SportsAcademyPage';
+import IndustrialManufacturingPage from './industries-manufacturing/IndustrialManufacturingPage';
+import TradingBusinessPage from './industries-manufacturing/trading-businesses/TradingBusinessPage';
+import SolarPage from './industries-manufacturing/solar/SolarPage';
+import SculptureBrandPage from './arts-creative/sculptures/SculptureBrandPage';
 import {
   FurnitureDetailLayout,
   HomeAppliancesDetailLayout,
   MattressDetailLayout,
   NurseryDetailLayout,
-} from '../components/public/ChandhuuRetailDetailLayouts';
-import { ChandhuuRetailGenericLayout } from '../components/public/ChandhuuRetailGenericLayout';
+} from './shopping-retail/ChandhuuRetailDetailLayouts';
+import { ChandhuuRetailGenericLayout } from './shopping-retail/ChandhuuRetailGenericLayout';
 
 const DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
 const REPORT_REASONS = [

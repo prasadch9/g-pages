@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { resolveFoodBusinessType, resolvePropertyBusinessType, resolveWeddingBusinessType } from './public/PublicProfileShared';
-import { isHealthcareBusiness } from '../utils/healthcare';
+import { isHealthcareBusiness } from '../pages/healthcare-medical/healthcareUtils';
 
 const FALLBACK_IMAGES = {
   schools: 'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=900&q=80',

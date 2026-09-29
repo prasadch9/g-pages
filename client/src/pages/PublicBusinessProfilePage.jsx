@@ -1,36 +1,36 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import api from '../services/api';
-import RestaurantProfilePage from './RestaurantProfilePage';
-import CoffeeShopProfilePage from './CoffeeShopProfilePage';
-import BakeryProfilePage from './BakeryProfilePage';
-import CateringProfilePage from './CateringProfilePage';
-import FoodProcessingProfilePage from './FoodProcessingProfilePage';
-import FoodBusinessWebsite from '../components/public/FoodBusinessWebsite';
-import WeddingBusinessWebsite from '../components/public/WeddingBusinessWebsite';
-import FunctionHallPublicPage from '../components/public/FunctionHallPublicPage';
-import EventOrganizerPublicPage from '../components/public/EventOrganizerPublicPage';
-import CateringServicesPublicPage from '../components/public/CateringServicesPublicPage';
-import FlowerDecorationPublicPage from '../components/public/FlowerDecorationPublicPage';
-import FashionDesignerPublicPage from '../components/public/FashionDesignerPublicPage';
-import BeautyParlourPublicPage from '../components/public/BeautyParlourPublicPage';
-import SaloonSpaPublicPage from '../components/public/SaloonSpaPublicPage';
-import HomeAppliancesPublicPage from '../components/public/HomeAppliancesPublicPage';
-import FurnitureShopPublicPage from '../components/public/FurnitureShopPublicPage';
-import MattressShopPublicPage from '../components/public/MattressShopPublicPage';
+import RestaurantProfilePage from './food-dining/restaurants/RestaurantProfilePage';
+import CoffeeShopProfilePage from './food-dining/coffee-shops/CoffeeShopProfilePage';
+import BakeryProfilePage from './food-dining/bakery/BakeryProfilePage';
+import CateringProfilePage from './food-dining/catering/CateringProfilePage';
+import FoodProcessingProfilePage from './food-dining/food-processing/FoodProcessingProfilePage';
+import FoodBusinessWebsite from './food-dining/FoodBusinessWebsite';
+import WeddingBusinessWebsite from './marriage-wedding/WeddingBusinessWebsite';
+import FunctionHallPublicPage from './marriage-wedding/function-halls/FunctionHallPublicPage';
+import EventOrganizerPublicPage from './marriage-wedding/event-organizers/EventOrganizerPublicPage';
+import CateringServicesPublicPage from './marriage-wedding/catering/CateringServicesPublicPage';
+import FlowerDecorationPublicPage from './marriage-wedding/flower-decoration/FlowerDecorationPublicPage';
+import FashionDesignerPublicPage from './marriage-wedding/fashion-designers/FashionDesignerPublicPage';
+import BeautyParlourPublicPage from './marriage-wedding/beauty-parlours/BeautyParlourPublicPage';
+import SaloonSpaPublicPage from './marriage-wedding/salon-spa/SaloonSpaPublicPage';
+import HomeAppliancesPublicPage from './shopping-retail/home-appliances/HomeAppliancesPublicPage';
+import FurnitureShopPublicPage from './shopping-retail/furniture-shops/FurnitureShopPublicPage';
+import MattressShopPublicPage from './shopping-retail/mattress-shops/MattressShopPublicPage';
 import {
   BoutiquePublicPage,
   ShoppingMallPublicPage,
   NurseryPublicPage,
-} from '../components/public/ShoppingRetailPublicPages';
-import PropertyBusinessWebsite from '../components/public/PropertyBusinessWebsite';
-import HealthcareWebsite from '../components/public/HealthcareWebsite';
-import ToursTravelWebsite from '../components/public/ToursTravelWebsite';
-import HotelResidencyWebsite from '../components/public/HotelResidencyWebsite';
-import ResortWebsite from '../components/public/ResortWebsite';
-import PartyZoneWebsite from '../components/public/PartyZoneWebsite';
+} from './shopping-retail/ShoppingRetailPublicPages';
+import PropertyBusinessWebsite from './real-estate-construction/PropertyBusinessWebsite';
+import HealthcareWebsite from './healthcare-medical/hospitals/HealthcareWebsite';
+import ToursTravelWebsite from './travel-hospitality/tours-travels/ToursTravelWebsite';
+import HotelResidencyWebsite from './travel-hospitality/hotels/HotelResidencyWebsite';
+import ResortWebsite from './travel-hospitality/resorts/ResortWebsite';
+import PartyZoneWebsite from './travel-hospitality/party-zones/PartyZoneWebsite';
 import { ProfileLoading, resolveFoodBusinessType, resolvePropertyBusinessType, resolveWeddingBusinessType } from '../components/public/PublicProfileShared';
-import { isHealthcareBusiness } from '../utils/healthcare';
+import { isHealthcareBusiness } from './healthcare-medical/healthcareUtils';
 
 const normalizeCategoryLabel = (value) => String(value?.name || value?.slug || value || '')
   .trim()

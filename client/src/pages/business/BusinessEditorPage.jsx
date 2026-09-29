@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../../services/api';
-import RestaurantEditor from './RestaurantEditor';
+import RestaurantEditor from '../food-dining/restaurants/RestaurantEditor';
 import CreateListing from './CreateListing';
-import CoffeeShopEditor from './CoffeeShopEditor';
-import BakeryEditor from './BakeryEditor';
-import CateringEditor from './CateringEditor';
-import FoodProcessingEditor from './FoodProcessingEditor';
+import CoffeeShopEditor from '../food-dining/coffee-shops/CoffeeShopEditor';
+import BakeryEditor from '../food-dining/bakery/BakeryEditor';
+import CateringEditor from '../food-dining/catering/CateringEditor';
+import FoodProcessingEditor from '../food-dining/food-processing/FoodProcessingEditor';
 
 const typeByName = {
   restaurants: 'restaurant',

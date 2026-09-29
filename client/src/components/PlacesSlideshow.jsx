@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { isHealthcareBusiness } from '../utils/healthcare';
+import { isHealthcareBusiness } from '../pages/healthcare-medical/healthcareUtils';
 
 /**
  * Auto-advancing image carousel for "Popular places in <city>". Supports
