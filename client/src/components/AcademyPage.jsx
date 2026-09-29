@@ -30,7 +30,7 @@ const videoEmbedUrl = (value) => {
       if (id) return `https://player.vimeo.com/video/${id}`;
     }
   } catch { /* Non-embed video links can still open directly. */ }
-  return '';
+  return url;
 };
 
 function AcademyCourseDetail({ place, course, imageSrc, phone, onBack }) {
@@ -56,6 +56,8 @@ function AcademyCourseDetail({ place, course, imageSrc, phone, onBack }) {
 
 export default function AcademyPage({ place, onReport }) {
   const [videoOpen, setVideoOpen] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState('');
+  const [selectedImage, setSelectedImage] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [contactNotice, setContactNotice] = useState('');
   const attrs = place.attributes || {};
@@ -67,9 +69,27 @@ export default function AcademyPage({ place, onReport }) {
   const cover = imageUrl(place.coverImage) || photos[0] || image('photo-1523240795612-9a054b0db644', 1800);
   const aboutImage = imageUrl(academy.aboutImage) || photos[2] || photos[1] || image('photo-1524178232363-1fb2b075b655', 700);
   const rawVideo = academy.videoUrl || place.video || attrs.video;
-  const videoUrl = safeUrl(Array.isArray(rawVideo) ? rawVideo[0] : rawVideo);
+  const videoUrl = safeUrl(selectedVideo || (Array.isArray(rawVideo) ? rawVideo[0] : rawVideo));
   const videoEmbed = videoEmbedUrl(videoUrl);
   const isDirectVideo = Boolean(videoUrl && /\.(mp4|webm|ogg)(\?.*)?$/i.test(videoUrl));
+  const academyViewerItems = [...new Set([
+    cover,
+    aboutImage,
+    ...photos,
+    ...academyPhotos.map((item) => imageUrl(item.url)),
+    ...courses.map((course) => imageUrl(course.image)),
+    ...(academy.facultyPhotos || []).map((photo) => imageUrl(photo)),
+  ].filter(Boolean))].map((src, index) => ({ src, alt: `${place.name} academy photo ${index + 1}` }));
+  const selectedImageIndex = academyViewerItems.findIndex((item) => item.src === selectedImage);
+  const activeVideo = selectedVideo || videoUrl;
+  const activeVideoEmbed = videoEmbedUrl(activeVideo);
+  const activeVideoIsDirect = Boolean(activeVideo && /\.(mp4|webm|ogg)(\?.*)?$/i.test(activeVideo));
+  const moveImage = (direction) => {
+    if (!academyViewerItems.length) return;
+    const currentIndex = Math.max(selectedImageIndex, 0);
+    const nextIndex = (currentIndex + direction + academyViewerItems.length) % academyViewerItems.length;
+    setSelectedImage(academyViewerItems[nextIndex].src);
+  };
   const socials = { ...academy.socialLinks, ...(place.socialLinks || {}) };
   const socialLinks = [
     ['Facebook', socials.facebook, 'f'], ['Instagram', socials.instagram, '◎'],
@@ -112,7 +132,31 @@ export default function AcademyPage({ place, onReport }) {
     />;
   }
 
-  return <div className="min-h-screen bg-[#f7fbff] text-[#103769]">
+  return <div className="min-h-screen bg-[#f7fbff] text-[#103769]" onClick={(event) => {
+    if (!(event.target instanceof Element)) return;
+    const videoElement = event.target.closest('main video');
+    if (videoElement) {
+      setSelectedVideo(videoElement.currentSrc || videoElement.src);
+      setVideoOpen(true);
+      return;
+    }
+    const videoLink = event.target.closest('main a[target="_blank"]');
+    if (videoLink && /video/i.test(videoLink.textContent || '')) {
+      event.preventDefault();
+      setSelectedVideo(videoLink.href);
+      setVideoOpen(true);
+      return;
+    }
+    const imageElement = event.target.closest('main img, #top img');
+    if (imageElement && !imageElement.closest('[data-video-trigger]')) setSelectedImage(imageElement.currentSrc || imageElement.src);
+  }}>
+    {selectedImage && <div role="dialog" aria-modal="true" aria-label="Academy photo viewer" className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/95 p-4 sm:p-8" onClick={() => setSelectedImage(null)}><button type="button" onClick={() => setSelectedImage(null)} className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-3xl text-white" aria-label="Close image viewer">×</button>{academyViewerItems.length > 1 && <button type="button" onClick={(event) => { event.stopPropagation(); moveImage(-1); }} className="absolute left-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-3xl text-white sm:left-6" aria-label="Previous image">‹</button>}<div className="flex max-h-full max-w-full flex-col items-center" onClick={(event) => event.stopPropagation()}><img src={selectedImage} alt={academyViewerItems[selectedImageIndex]?.alt || `${place.name} enlarged`} className="max-h-[78vh] max-w-[calc(100vw-7rem)] object-contain sm:max-h-[82vh]" />{academyViewerItems.length > 1 && <p className="mt-3 text-xs font-medium text-white/75">{Math.max(selectedImageIndex + 1, 1)} / {academyViewerItems.length}</p>}</div>{academyViewerItems.length > 1 && <button type="button" onClick={(event) => { event.stopPropagation(); moveImage(1); }} className="absolute right-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-3xl text-white sm:right-6" aria-label="Next image">›</button>}</div>}
+    {selectedImage && <div role="dialog" aria-modal="true" aria-label="Academy photo viewer" className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/95 p-4 sm:p-8" onClick={() => setSelectedImage(null)}>
+      <button type="button" onClick={() => setSelectedImage(null)} className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-3xl text-white hover:bg-white/20" aria-label="Close image viewer">×</button>
+      {academyViewerItems.length > 1 && <button type="button" onClick={(event) => { event.stopPropagation(); moveImage(-1); }} className="absolute left-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-3xl text-white hover:bg-white/25 sm:left-6" aria-label="Previous image">‹</button>}
+      <div className="flex max-h-full max-w-full flex-col items-center" onClick={(event) => event.stopPropagation()}><img src={selectedImage} alt={academyViewerItems[selectedImageIndex]?.alt || `${place.name} enlarged`} className="max-h-[78vh] max-w-[calc(100vw-7rem)] object-contain sm:max-h-[82vh]" />{academyViewerItems.length > 1 && <p className="mt-3 text-xs font-medium text-white/75">{Math.max(selectedImageIndex + 1, 1)} / {academyViewerItems.length}</p>}</div>
+      {academyViewerItems.length > 1 && <button type="button" onClick={(event) => { event.stopPropagation(); moveImage(1); }} className="absolute right-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-3xl text-white hover:bg-white/25 sm:right-6" aria-label="Next image">›</button>}
+    </div>}
     <header className="sticky top-0 z-40 border-b border-blue-100 bg-white/95 shadow-sm backdrop-blur"><div className="mx-auto flex h-16 max-w-[1500px] items-center justify-between gap-4 px-4 sm:px-8"><a href="#top" className="flex min-w-0 items-center gap-2.5">{place.logo ? <img src={place.logo} alt="" className="h-10 w-10 object-contain"/> : <span className="text-3xl">🎓</span>}<span className="min-w-0"><strong className="block truncate text-base">{place.name}</strong><small className="text-[9px] tracking-wide text-slate-500">Learn · Practice · Achieve</small></span></a><nav className="hidden gap-7 text-[10px] font-bold lg:flex"><a href="#top">Home</a><a href="#courses">Courses</a><a href="#about">About Us</a><a href="#facilities">Facilities</a><a href="#gallery">Gallery</a><a href="#placement">Placements</a><a href="#contact">Contact</a></nav><div className="flex items-center gap-3"><a href={phone} className="hidden text-[10px] font-bold sm:block">☎ {place.phone || 'Call us'}</a><a href="#contact" className="rounded-full bg-blue-700 px-4 py-2 text-[10px] font-bold text-white">Enroll Now →</a></div></div></header>
 
     <section id="top" className="relative isolate min-h-[280px] overflow-hidden bg-[#06366b] sm:min-h-[350px]"><img src={cover} alt={`${place.name} students`} className="absolute inset-0 -z-20 h-full w-full object-cover"/><div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(3,39,82,.98)_0%,rgba(3,48,91,.85)_38%,rgba(3,48,91,.15)_100%)]"/><div className="mx-auto flex min-h-[280px] max-w-[1500px] items-center px-5 py-9 sm:min-h-[350px] sm:px-8"><div className="max-w-xl text-white"><span className="rounded-full bg-teal-600 px-4 py-1.5 text-[10px] font-bold">🎓 Build Your Future with Us</span><h1 className="mt-4 text-4xl font-black leading-[1.02] sm:text-6xl">Learn Today<br/><span className="text-[#ffca12]">Lead Tomorrow</span></h1><p className="mt-3 max-w-lg text-xs leading-relaxed text-white/90 sm:text-sm">{place.description || `${place.name} offers industry-focused training programs, expert faculty and hands-on learning to help you build a successful career.`}</p><div className="mt-5 flex gap-3"><a href="#courses" className="rounded-lg bg-[#ffca12] px-5 py-3 text-[10px] font-extrabold text-[#12345d]">Explore Courses →</a><a href="#contact" className="rounded-lg border border-white/60 px-5 py-3 text-[10px] font-bold">✉ Contact Us</a></div><div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[9px] font-bold">{(academy.highlights || ['Expert Faculty','Hands-on Training','Modern Infrastructure','100% Placement Support']).slice(0,4).map((x,i)=><span key={i}>✦　{typeof x === 'string' ? x : x.name}</span>)}</div></div></div></section>

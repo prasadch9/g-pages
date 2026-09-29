@@ -8,6 +8,8 @@ const mongoSanitize = require('express-mongo-sanitize');
 const rateLimit = require('express-rate-limit');
 
 const authRoutes = require('./routes/authRoutes');
+const siteSettingsRoutes = require('./routes/siteSettingsRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 const locationRoutes = require('./routes/locationRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const placeRoutes = require('./routes/placeRoutes');
@@ -90,6 +92,8 @@ app.use(
 app.get('/api/health', (req, res) => res.json({ success: true, message: 'Google Pages API is running' }));
 
 app.use('/api/auth', authRoutes);
+app.use('/api/settings', siteSettingsRoutes);
+app.use('/api/contact', contactRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/places', placeRoutes);

@@ -13,7 +13,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { resolveFoodBusinessType } from '../components/public/PublicProfileShared';
 import { isHealthcareBusiness } from '../utils/healthcare';
-import SunriseSchoolPage from '../components/SunriseSchoolPage';
+import SchoolExperience from '../components/SchoolExperience';
 import CollegePage from '../components/CollegePage';
 import UniversityPage from '../components/UniversityPage';
 import TrainingInstitutionPage from '../components/TrainingInstitutionPage';
@@ -528,7 +528,7 @@ export default function PlaceDetailPage() {
   if (isSchoolCategory) {
     return (
       <>
-        <SunriseSchoolPage
+        <SchoolExperience
           place={place}
           mapsUrl={mapsUrl}
           socialLinks={socialLinks}

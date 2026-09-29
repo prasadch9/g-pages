@@ -45,6 +45,43 @@ const getCities = async (req, res, next) => {
   }
 };
 
+/** GET /api/locations/cities/search?q=visakhapatnam */
+const searchCities = async (req, res, next) => {
+  try {
+    const query = String(req.query.q || '').trim();
+    if (query.length < 2) {
+      return res.status(200).json({ success: true, data: [] });
+    }
+
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const cities = await Location.find({
+      level: 'city',
+      status: 'active',
+      name: { $regex: escapedQuery, $options: 'i' },
+    })
+      .select('name slug parent')
+      .populate({
+        path: 'parent',
+        match: { status: 'active' },
+        select: 'name slug parent',
+        populate: {
+          path: 'parent',
+          match: { status: 'active' },
+          select: 'name slug',
+        },
+      })
+      .sort('name')
+      .limit(8);
+
+    res.status(200).json({
+      success: true,
+      data: cities.filter((city) => city.parent?.parent),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 /** GET /api/locations/areas/:cityId */
 const getAreas = async (req, res, next) => {
   try {
@@ -156,6 +193,7 @@ module.exports = {
   getStates,
   getDistricts,
   getCities,
+  searchCities,
   getAreas,
   resolveBySlug,
   createLocation,

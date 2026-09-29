@@ -39,8 +39,9 @@ The frontend expects the API at `http://localhost:5000/api` by default. Override
 `VITE_API_URL` env var if needed.
 
 To enable **Continue with Google**, create a Google OAuth Web application client with
-`http://localhost:5173` as an authorized JavaScript origin. Set its ID as
-`GOOGLE_CLIENT_ID` in `server/.env` and `VITE_GOOGLE_CLIENT_ID` in `client/.env`.
+`http://localhost:5173` and `http://127.0.0.1:5173` as authorized JavaScript origins.
+Set its ID as `GOOGLE_CLIENT_ID` in `server/.env` and `VITE_GOOGLE_CLIENT_ID` in
+`client/.env.local` (or `client/.env`). Restart the frontend after changing its env file.
 
 ### 3. Try it out
 
@@ -77,8 +78,9 @@ enquiries (contact-business form, business inbox), reporting a listing, in-app n
 - **Self-serve business signup**: today a user's role is flipped to `business` directly in the
   database. A "Become a business owner" flow (or letting any user submit a listing, which
   promotes their role automatically) would remove that manual step.
-- **Notifications** are in-app only; no email/SMS delivery is wired up yet (`SMTP_*` env vars
-  are scaffolded but unused).
+- **Email delivery** uses the configured SMTP transport for password resets and Contact form
+  submissions. Set `SMTP_*` in `server/.env`; optionally set `CONTACT_EMAIL` as the Contact
+  form recipient (defaults to `SMTP_USER`). Other notifications are in-app only.
 - **Category management UI**: the API supports full category CRUD, but there's no admin screen
   for it yet — categories are managed via `npm run seed` or directly in MongoDB.
 - **SEO extras** (sitemap.xml, structured data, meta tags per page) aren't generated yet.

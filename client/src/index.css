@@ -120,6 +120,155 @@
     box-shadow: 0 12px 32px rgba(16, 42, 67, .07);
   }
   .school-page a { transition: color .2s ease, background-color .2s ease, transform .2s ease, box-shadow .2s ease; }
+  .school-experience { --school-forest: #0c514e; --school-ink: #103957; --school-gold: #efbd43; background: linear-gradient(180deg, #edf5fb 0%, #f3f8fd 22%, #edf7f0 100%); color: #17324d; }
+  .school-mark { display: grid; height: 3rem; width: 3rem; flex: 0 0 auto; place-items: center; border: 2px solid #d9ad3d; border-radius: 50%; color: #0c514e; font-size: 1.8rem; }
+  .school-header { border-bottom: 1px solid rgba(23, 50, 77, .08); background: rgba(255, 255, 255, .96); box-shadow: 0 8px 24px rgba(11, 34, 52, .04); }
+  .school-navigation a { position: relative; color: #214766; font-weight: 700; }
+  .school-navigation a::after { position: absolute; right: 0; bottom: 0; left: 0; height: 2px; background: var(--school-gold); content: ''; transform: scaleX(0); transform-origin: left; transition: transform .2s ease; }
+  .school-navigation a:hover::after { transform: scaleX(1); }
+  .school-contact-link { gap: .45rem; align-items: center; background: linear-gradient(135deg, #0d4a5a, #0c514e); color: white; box-shadow: 0 10px 20px rgba(12, 81, 78, .18); }
+  .school-hero-shade { background: linear-gradient(90deg, rgba(3, 26, 41, .92) 0%, rgba(5, 35, 51, .84) 42%, rgba(8, 46, 59, .2) 100%); }
+  .school-hero-students { -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.32) 13%, #000 34%); mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.32) 13%, #000 34%); filter: saturate(1.08) contrast(1.04); }
+  .school-primary-action { display: inline-flex; align-items: center; gap: .6rem; background: linear-gradient(135deg, #f8d96b, #f2bb36); color: #12344a; box-shadow: 0 18px 26px rgba(210, 161, 40, .22); transition: transform .2s ease, box-shadow .2s ease, filter .2s ease; }
+  .school-primary-action:hover { transform: translateY(-2px); box-shadow: 0 20px 28px rgba(210, 161, 40, .26); filter: saturate(1.04); }
+  .school-secondary-action { display: inline-flex; align-items: center; gap: .5rem; border: 1px solid rgba(255,255,255,.72); color: white; transition: background .2s ease; }
+  .school-secondary-action:hover { background: rgba(255,255,255,.12); }
+  .school-admission-note { border-left: 3px solid #edbd45; background: rgba(255,253,247,.95); box-shadow: 0 14px 36px rgba(4, 28, 44, .18); }
+  .school-hero-caption { background: linear-gradient(90deg, rgba(4,32,49,.78), rgba(4,32,49,.18)); }
+  .school-facts { box-shadow: none; background: linear-gradient(90deg, rgba(11, 75, 72, .98), rgba(12, 81, 78, .96)); }
+  .school-facts > div { max-width: 1280px; margin: 0 auto; }
+  .school-facts > div > div { border-right: 1px solid rgba(255,255,255,.09); background: rgba(255,255,255,.02); }
+  .school-facts > div > div:last-child { border-right: 0; }
+  .school-band { position: relative; padding-bottom: 1.1rem; }
+  .school-band > .school-inner { max-width: 1280px; margin: 0 auto; background: rgba(255, 255, 255, .96); border: 1px solid rgba(19, 53, 72, .08); border-radius: 0; box-shadow: none; }
+  .school-about { background: #f5f5f1; }
+  .school-about-photo { background: #d1dfd7; }
+  .school-about-photo::after { position: absolute; inset: .7rem -0.7rem -0.7rem .7rem; z-index: -1; border: 1px solid #c7a94f; content: ''; }
+  .school-photo-note { box-shadow: 4px 4px 0 rgba(12, 81, 78, .26); }
+  .school-eyebrow { color: #16746a; letter-spacing: .12em; }
+  .school-text-link { color: #12675f; }
+  .school-text-link:hover { color: #bd7c18; }
+  .school-leadership { background: linear-gradient(112deg, #092d4b 0%, #0c514e 100%); }
+  .school-academics { background: linear-gradient(180deg, #f4f7fb 0%, #eef6f3 100%); }
+  .school-section-heading { gap: 1.5rem; }
+  .school-classline span:not(:first-child) { position: relative; padding-left: 1rem; }
+  .school-classline span:not(:first-child)::before { position: absolute; top: 50%; left: 0; width: 5px; height: 5px; border-radius: 50%; background: #daaa38; content: ''; transform: translateY(-50%); }
+  .school-facilities { background: linear-gradient(110deg, #eef5f9, #edf5ef); }
+  .school-image-shade { background: linear-gradient(0deg, rgba(5, 31, 44, .88), transparent 68%); transition: opacity .25s ease; }
+  .school-facility img { transition: transform .55s ease; }
+  .school-facility:hover img { transform: scale(1.045); }
+  .school-gallery { background: linear-gradient(180deg, #f8fbfe 0%, #eef4f1 100%); }
+  .school-gallery-image { min-height: 9rem; }
+  .school-gallery-image:focus-visible { outline-color: #13776b; }
+  .school-photo-grid button img { transition: transform .55s ease; }
+  .school-photo-grid button:hover img { transform: scale(1.05); }
+  .school-community { background: #f0f5fb; }
+  .school-community > .school-inner { background: rgba(255,255,255,.86); }
+  .school-person-mark { display: grid; height: 3rem; width: 3rem; flex: 0 0 auto; place-items: center; border-radius: 50%; background: #0c514e; color: #f8d66f; font-family: 'Fraunces', serif; font-size: 1.2rem; }
+  .school-activity-icon { display: grid; height: 2rem; width: 2rem; flex: 0 0 auto; place-items: center; border-radius: 50%; background: #dcebe1; font-size: 1rem; }
+  .school-activity-1, .school-activity-5 { background: #fae8bd; }
+  .school-activity-2, .school-activity-6 { background: #dceaf2; }
+  .school-activity-3, .school-activity-7 { background: #eddfee; }
+  .school-achievement + .school-achievement { border-top: 1px solid #dfd8c6; padding-top: .85rem; }
+  .school-events { background: linear-gradient(105deg, #f0f8f9, #edf2f6); }
+  .school-event-row { border-bottom: 1px solid rgba(16, 57, 87, .16); }
+  .school-event-number { color: #14776c; }
+  .school-film::after { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(5, 30, 43, .35), transparent); content: ''; pointer-events: none; }
+  .school-play { z-index: 1; border: 1px solid rgba(255,255,255,.8); background: #e14943; box-shadow: 0 8px 24px rgba(4, 25, 36, .35); }
+  .school-experience main > .school-band { padding-top: 1rem; padding-bottom: 1.25rem; }
+  .school-experience #principal-message,
+  .school-experience #why-choose,
+  .school-experience #academics,
+  .school-experience #facilities,
+  .school-experience #faculty,
+  .school-experience #activities,
+  .school-experience #achievements,
+  .school-experience #events article { padding: 1.25rem; }
+  .school-experience #principal-message h2,
+  .school-experience #why-choose h2,
+  .school-experience #academics h2,
+  .school-experience #facilities h2,
+  .school-experience #faculty h2,
+  .school-experience #activities h2,
+  .school-experience #achievements h2,
+  .school-experience #events h2 { font-size: 1.2rem; line-height: 1.35; }
+  .school-experience #academics .relative { min-height: 220px; }
+  .school-experience #gallery button { min-height: 140px; }
+  .school-experience #principal-message img,
+  .school-experience #principal-message > div:last-child { width: 7rem; height: 7rem; }
+  .school-experience #why-choose > div { gap: .75rem; }
+  .school-experience #why-choose > div > div > span:first-child { width: 2.75rem; height: 2.75rem; }
+  .school-experience #why-choose > div > div > span:last-child { font-size: .75rem; }
+  .school-experience #faculty img,
+  .school-experience #faculty .school-person-mark { width: 3.5rem; height: 3.5rem; }
+  .school-experience #faculty strong { font-size: .75rem; }
+  .school-experience #faculty small { font-size: .65rem; }
+  .school-experience #activities > div > div { min-height: 5rem; }
+  .school-experience #activities > div > div > span:first-child { width: 2.5rem; height: 2.5rem; font-size: 1.3rem; }
+  .school-experience #activities > div > div > span:last-child { font-size: .7rem; }
+  .school-experience #achievements strong { font-size: .9rem; }
+  .school-experience #events article:first-child img { height: 8rem; }
+  .school-experience #events article:nth-child(3) img { height: 7rem; }
+  .school-experience #events article:nth-child(4) > a { width: min(100%, 45rem); height: auto; aspect-ratio: 16 / 9; max-height: 25rem; margin-inline: auto; }
+  @media (max-width: 640px) {
+    .school-experience #academics .relative { min-height: 180px; }
+    .school-experience #gallery button { min-height: 112px; }
+    .school-experience #events article:first-child img { height: 6rem; }
+    .school-experience #events article:nth-child(3) img { height: 5rem; }
+  }
+  .school-admissions { background-image: linear-gradient(100deg, rgba(6, 39, 63, .94), rgba(12, 81, 78, .85)), url('https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=2000&q=85'); background-position: center; background-size: cover; }
+  .school-contact-band { background: #eef3f8; }
+  .school-contact-band > .school-inner { background: rgba(255,255,255,.88); }
+  .school-map { background: #dce9e4; box-shadow: 12px 12px 0 #d5b34e; }
+  .school-map-link { background: #0c514e; color: white; }
+  .school-map-link:hover { background: #093d3a; }
+  .school-footer { border-top: 5px solid #e8bb43; background: linear-gradient(180deg, #082d47 0%, #061f31 100%); }
+  .school-enquiry-form input,
+  .school-enquiry-form select,
+  .school-enquiry-form textarea { width: 100%; min-width: 0; border: 0; border-bottom: 1px solid rgba(255,255,255,.38); border-radius: 0; background: rgba(255,255,255,.08); padding: .7rem .75rem; color: white; font: inherit; font-size: .8rem; }
+  .school-enquiry-form input::placeholder,
+  .school-enquiry-form textarea::placeholder { color: rgba(255,255,255,.58); }
+  .school-enquiry-form select { color: rgba(255,255,255,.75); }
+  .school-enquiry-form option { color: #17324d; }
+  .school-enquiry-form input:focus,
+  .school-enquiry-form select:focus,
+  .school-enquiry-form textarea:focus { border-color: #f5c64e; outline: 0; }
+  .school-form-submit { background: #f5c64e; color: #12344a; }
+  .school-form-submit:hover { background: #ffda70; }
+  @media (max-width: 768px) {
+    .school-navigation { gap: 1rem; }
+    .school-hero { min-height: 480px; }
+    .school-about-photo::after { inset: .6rem -.6rem -.6rem .6rem; }
+    .school-map { box-shadow: 6px 6px 0 #d5b34e; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .school-experience *, .school-experience *::before, .school-experience *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+  }
+  .university-form { color: #17324d; }
+  .university-form-section { position: relative; overflow: hidden; }
+  .university-form-section::before { position: absolute; top: 0; left: 0; width: .3rem; height: 100%; background: linear-gradient(180deg, #1769a8, #38b7c9); content: ''; }
+  .university-section-heading { border-bottom: 1px solid #e3edf6; padding-bottom: .85rem; }
+  .university-form-field > span,
+  .university-form-section label { display: block; font-size: .78rem; font-weight: 650; line-height: 1.35; color: #36536d; }
+  .university-form-section input:not([type='checkbox']):not([type='file']),
+  .university-form-section select,
+  .university-form-section textarea { border-color: #c9dceb; border-radius: .65rem; background: #fbfdff; transition: border-color .18s ease, box-shadow .18s ease, background .18s ease; }
+  .university-form-section input:not([type='checkbox']):not([type='file']):focus,
+  .university-form-section select:focus,
+  .university-form-section textarea:focus { border-color: #2583db; background: white; box-shadow: 0 0 0 3px rgba(37,131,219,.12); outline: none; }
+  .university-form-section input[type='file'] { display: block; width: 100%; margin-top: .35rem; border: 1px dashed #9fc2df; border-radius: .65rem; background: #f7fbff; padding: .7rem; font-size: .75rem; color: #587087; }
+  .university-form-section input[type='checkbox'] { accent-color: #1769a8; }
+  .university-form-section button { transition: transform .18s ease, filter .18s ease, box-shadow .18s ease; }
+  .university-form-section button:hover { transform: translateY(-1px); filter: brightness(.97); }
+  .university-form-intro { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; background: linear-gradient(115deg, #eef7ff 0%, #f5fbff 68%, #e6f7f4 100%); }
+  .university-form-progress { display: grid; min-width: 6rem; place-items: center; border-left: 1px solid #c9ddf1; padding-left: 1.5rem; text-align: center; color: #1769a8; }
+  .university-form-progress span { font-family: Georgia, serif; font-size: 2.2rem; font-weight: 700; line-height: 1; }
+  .university-form-progress small { margin-top: .35rem; font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; }
+  @media (max-width: 640px) {
+    .university-form-intro { align-items: flex-start; flex-direction: column; }
+    .university-form-progress { display: flex; gap: .5rem; border-left: 0; border-top: 1px solid #c9ddf1; padding: .75rem 0 0; }
+    .university-form-progress span { font-size: 1.5rem; }
+  }
   .school-form label:has(> select[multiple]) { display: none; }
   @keyframes school-page-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 

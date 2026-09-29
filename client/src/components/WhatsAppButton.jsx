@@ -1,12 +1,29 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import api from '../services/api';
 
-const COMPANY_WHATSAPP_NUMBER = import.meta.env.VITE_COMPANY_WHATSAPP_NUMBER || '919876543210';
-const WHATSAPP_URL = `https://wa.me/${COMPANY_WHATSAPP_NUMBER}?text=${encodeURIComponent('Hello G-PAGES, I need some information.')}`;
+const DEFAULT_WHATSAPP_NUMBER = import.meta.env.VITE_COMPANY_WHATSAPP_NUMBER || '919876543210';
 
 export default function WhatsAppButton() {
+  const [number, setNumber] = useState(DEFAULT_WHATSAPP_NUMBER);
+
+  useEffect(() => {
+    const applySettings = (settings) => setNumber(settings.whatsappNumber || '');
+    api
+      .get('/settings/public')
+      .then(({ data }) => applySettings(data.data || {}))
+      .catch(() => {});
+    const handleSettingsUpdate = (event) => applySettings(event.detail || {});
+    window.addEventListener('google-pages:site-settings-updated', handleSettingsUpdate);
+    return () => window.removeEventListener('google-pages:site-settings-updated', handleSettingsUpdate);
+  }, []);
+
+  const digits = String(number).replace(/\D/g, '');
+  if (!digits) return null;
+  const url = `https://wa.me/${digits}?text=${encodeURIComponent('Hello G-PAGES, I need some information.')}`;
+
   return (
     <a
-      href={WHATSAPP_URL}
+      href={url}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat with G-PAGES on WhatsApp"

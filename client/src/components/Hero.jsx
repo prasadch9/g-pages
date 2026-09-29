@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import CitySearch from './CitySearch';
 import LocationSelector from './LocationSelector';
 
 const CITY_SLIDES = [
@@ -99,6 +100,7 @@ export default function Hero() {
 
           <div className="order-5 mt-5 rounded-2xl border border-white/60 bg-white/95 p-1.5 shadow-[0_20px_60px_rgba(2,12,27,0.34)] backdrop-blur sm:mt-8 sm:p-3 lg:order-none">
             <p className="px-3 pb-2 pt-1 text-xs font-semibold uppercase tracking-[0.12em] text-ink/45">Start exploring near you</p>
+            <CitySearch className="px-2 pb-2 sm:px-3" />
             <LocationSelector />
           </div>
 

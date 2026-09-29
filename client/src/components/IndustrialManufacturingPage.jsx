@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const defaultImages = {
   hero: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80',
@@ -26,6 +26,7 @@ function getYoutubeEmbedUrl(url) {
 }
 
 export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, onReport }) {
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const categoryText = `${place?.subcategory || ''} ${place?.category?.name || ''}`.toLowerCase();
   const isFoodProcessing = categoryText.includes('food');
   const smallScale = place?.attributes?.smallScaleIndustries || {};
@@ -40,6 +41,14 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
   const address = place?.address || 'Vijayawada, Andhra Pradesh';
   const phone = place?.phone || '+91 98765 43210';
   const email = place?.email || 'info@agrifreshfoods.in';
+  const whatsappValue = place?.socialLinks?.whatsapp || pageData.whatsapp || phone;
+  const whatsappUrl = /^https?:\/\//i.test(String(whatsappValue || ''))
+    ? whatsappValue
+    : `https://wa.me/${String(whatsappValue || '').replace(/\D/g, '')}`;
+  const mapQuery = place?.coordinates?.lat && place?.coordinates?.lng
+    ? `${place.coordinates.lat},${place.coordinates.lng}`
+    : address;
+  const directionsUrl = mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
   const coverImage = place?.coverImage || defaultImages.hero;
   const galleryImageUrls = (pageData.galleryImages || []).map((item) => typeof item === 'string' ? item : item.url).filter(Boolean);
   const gallery = [...new Set([...(Array.isArray(place?.images) ? place.images : []), ...galleryImageUrls])].slice(0, 6);
@@ -259,24 +268,26 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
               <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#75b55e]">Our Products</p>
               <h2 className="mt-2 font-display text-4xl font-bold tracking-tight text-[#072d1d]">{isFoodProcessing ? 'Wide Range of Processed Food Products' : 'Products & Manufacturing Services'}</h2>
             </div>
-            <button type="button" onClick={onReport} className="hidden rounded-full border border-[#dfece2] bg-white px-4 py-2 text-sm font-semibold text-[#1d2d25] md:inline-flex">
-              View All Products →
-            </button>
+            <a href="#products-grid" className="hidden rounded-full border border-[#dfece2] bg-white px-4 py-2 text-sm font-semibold text-[#1d2d25] md:inline-flex">View All Products →</a>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            {products.map((product) => (
+          <div id="products-grid" className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {products.map((product, index) => {
+              const fallbackImage = galleryImages[index % galleryImages.length] || defaultImages[`product${(index % 6) + 1}`];
+              const productImage = product.image || product.imageUrl || product.photo || fallbackImage;
+              return (
               <article key={product.name} className="overflow-hidden rounded-[18px] border border-[#dfece2] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-                <img src={product.image} alt={product.name} className="h-52 w-full object-cover" />
+                <img src={productImage} alt={product.name || 'Product'} onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = fallbackImage; }} className="h-52 w-full object-cover" />
                 <div className="p-4">
-                  <h3 className="text-[23px] font-bold leading-tight text-[#0a311e]">{product.name}</h3>
+                  <h3 className="text-[23px] font-bold leading-tight text-[#0a311e]">{product.name || 'Product / service'}</h3>
                   <p className="mt-2 text-sm text-[#4d5f57]">{product.description}</p>
-                  <button type="button" onClick={onReport} className="mt-4 inline-flex items-center text-sm font-semibold text-[#1d5a3c] hover:underline">
+                  <button type="button" onClick={() => setSelectedProduct({ ...product, image: productImage })} className="mt-4 inline-flex items-center text-sm font-semibold text-[#1d5a3c] hover:underline">
                     View Details →
                   </button>
                 </div>
               </article>
-            ))}
+              );
+            })}
           </div>
         </section>
 
@@ -415,6 +426,13 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
                 <div className="text-[11px] uppercase tracking-[0.16em] text-[#697d72]">Location</div>
                 <p className="mt-2 text-[15px] leading-relaxed text-[#42554b]">{address}</p>
               </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="rounded-full bg-[#168b57] px-4 py-2 text-xs font-bold text-white">◉ WhatsApp</a>}
+                <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="rounded-full bg-[#1d5a3c] px-4 py-2 text-xs font-bold text-white">⌖ Open in Google Maps ↗</a>
+              </div>
+              <div className="mt-4 overflow-hidden rounded-[16px] border border-[#dfece2]">
+                <iframe title={`Google map to ${businessName}`} src={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`} className="h-56 w-full border-0" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+              </div>
             </div>
 
             <div className="rounded-[20px] border border-[#dfece2] bg-[#f9fbfa] p-5">
@@ -491,6 +509,23 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
           </div>
         </div>
       </footer>
+      {selectedProduct && <div role="dialog" aria-modal="true" aria-label={`${selectedProduct.name || 'Product'} details`} className="fixed inset-0 z-50 flex items-center justify-center bg-[#061c31]/85 p-4" onClick={() => setSelectedProduct(null)}>
+        <div className="relative grid max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-[20px] bg-white shadow-2xl md:grid-cols-2" onClick={(event) => event.stopPropagation()}>
+          <img src={selectedProduct.image || defaultImages.product1} alt={selectedProduct.name || 'Product'} onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = defaultImages.product1; }} className="h-56 w-full object-cover md:h-full md:min-h-[360px]" />
+          <div className="overflow-y-auto p-6 sm:p-8">
+            <button type="button" onClick={() => setSelectedProduct(null)} className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-2xl text-[#17324d] shadow" aria-label="Close product details">×</button>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#75b55e]">{isFoodProcessing ? 'Our product' : 'Manufacturing product / service'}</p>
+            <h2 className="mt-2 pr-10 font-display text-3xl font-bold text-[#072d1d]">{selectedProduct.name || 'Product details'}</h2>
+            <p className="mt-4 text-sm leading-relaxed text-[#4d5f57]">{selectedProduct.description || 'Contact us for specifications, availability and custom requirements.'}</p>
+            {selectedProduct.price && <p className="mt-4 text-sm font-semibold text-[#1d5a3c]">Price / MOQ: {selectedProduct.price}</p>}
+            <div className="mt-6 flex flex-wrap gap-2">
+              <a href="#contact" onClick={() => setSelectedProduct(null)} className="rounded-full bg-[#1d5a3c] px-5 py-2.5 text-xs font-bold text-white">Request a quote</a>
+              {phone && <a href={`tel:${phone}`} className="rounded-full border border-[#1d5a3c] px-5 py-2.5 text-xs font-bold text-[#1d5a3c]">Call us</a>}
+              {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="rounded-full bg-[#168b57] px-5 py-2.5 text-xs font-bold text-white">WhatsApp</a>}
+            </div>
+          </div>
+        </div>
+      </div>}
     </div>
   );
 }

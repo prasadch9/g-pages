@@ -1,31 +1,92 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReviewsSection from './ReviewsSection';
 
 const facilityIcons = { Library: '▤', 'Computer Lab': '▣', 'Science Lab': '⚗', 'Digital Classrooms': '▱', Auditorium: '♜', 'Seminar Hall': '▥', Hostel: '▦', Canteen: '☕', Transportation: '▰', 'Wi-Fi': '⌁', Parking: 'P', 'Sports Ground': '◉', Gym: '✚', 'Medical Facility': '✚', 'CCTV Security': '◉', 'Drinking Water': '●' };
 const courseIcons = ['▦', '▤', '▣', '◈', '▱', '✧'];
 
+function videoEmbedUrl(url) {
+  try {
+    const parsedUrl = new URL(url);
+    if (parsedUrl.hostname.includes('youtu.be')) return `https://www.youtube-nocookie.com/embed/${parsedUrl.pathname.slice(1)}?autoplay=1`;
+    if (parsedUrl.hostname.includes('youtube.com')) {
+      const videoId = parsedUrl.searchParams.get('v') || parsedUrl.pathname.split('/').pop();
+      return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1`;
+    }
+    if (parsedUrl.hostname.includes('vimeo.com')) return `https://player.vimeo.com/video/${parsedUrl.pathname.split('/').pop()}?autoplay=1`;
+    return url;
+  } catch {
+    return url;
+  }
+}
+
 function Detail({ icon, label, value }) { return <div className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0962cc] text-lg text-white">{icon}</span><div><p className="text-[10px] font-semibold uppercase tracking-wide text-[#5d7390]">{label}</p><p className="text-sm font-bold text-[#06346c]">{value || '—'}</p></div></div>; }
 function Heading({ icon, children, action }) { return <div className="flex items-center justify-between border-b border-[#d8e7fa] pb-2"><h2 className="flex items-center gap-2 text-lg font-bold text-[#06346c]"><span className="text-[#0764d4]">{icon}</span>{children}</h2>{action && <a href={action} className="text-xs font-semibold text-[#0764d4]">View All →</a>}</div>; }
 
 export default function CollegePage({ place, mapsUrl, onShare, onReport }) {
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedVideo, setSelectedVideo] = useState(null);
   const data = place.attributes || {};
   const courses = data.courses || (data.collegeType === 'Intermediate College' ? data.collegeGroups : data.collegePrograms) || [];
   const facilities = data.collegeFacilities?.length ? [...data.collegeFacilities, data.customFacility].filter(Boolean) : place.facilities || [];
   const faculty = data.faculty || [];
   const gallery = place.images || [];
-  const videos = Array.isArray(place.video) ? place.video : place.video ? [place.video] : [];
+  const rawVideos = data.collegeVideos?.length ? data.collegeVideos : data.schoolVideos?.length ? data.schoolVideos : Array.isArray(place.video) ? place.video : place.video ? [place.video] : [];
+  const videos = rawVideos.map((video) => typeof video === 'string' ? video : video?.url).filter(Boolean);
   const principal = data.principal || { name: data.principalName, designation: data.principalDesignation, qualification: data.principalQualification, experience: data.principalExperience };
   const footerLogo = data.footerLogo || place.logo;
   const years = data.establishedYear ? `${new Date().getFullYear() - Number(data.establishedYear)}+` : '—';
   const admissionOpen = (data.admissionStatus || '').toLowerCase() === 'open';
   const website = place.website?.startsWith('http') ? place.website : place.website ? `https://${place.website}` : null;
+  const imageViewerItems = [...new Map([
+    ...(place.coverImage ? [{ src: place.coverImage, alt: `${place.name} campus` }] : []),
+    ...(data.aboutImage ? [{ src: data.aboutImage, alt: `About ${place.name}` }] : []),
+    ...gallery.map((src, index) => ({ src, alt: `${place.name} gallery ${index + 1}` })),
+    ...faculty.map((member, index) => {
+      const details = typeof member === 'object' ? member : { name: member };
+      const src = details.photo || details.image || data.facultyImages?.[index];
+      return { src, alt: details.name || `${place.name} faculty` };
+    }),
+    ...(data.principalImage ? [{ src: data.principalImage, alt: principal.name || 'College principal' }] : []),
+  ].filter((item) => item.src).map((item) => [item.src, item])).values()];
+  const selectedImageIndex = imageViewerItems.findIndex((item) => item.src === selectedImage);
+  const moveImage = (direction) => {
+    if (!imageViewerItems.length) return;
+    const currentIndex = Math.max(selectedImageIndex, 0);
+    const nextIndex = (currentIndex + direction + imageViewerItems.length) % imageViewerItems.length;
+    setSelectedImage(imageViewerItems[nextIndex].src);
+  };
+  const openVideo = () => {
+    if (videos[0]) setSelectedVideo(videos[0]);
+    else if (imageViewerItems[0]) setSelectedImage(imageViewerItems[0].src);
+  };
 
-  return <div className="min-h-screen bg-[#f7fbff] text-[#06346c]">
+  return <div className="min-h-screen bg-[#f7fbff] text-[#06346c]" onClick={(event) => {
+    if (!(event.target instanceof Element)) return;
+    const video = event.target.closest('main video');
+    if (video) {
+      event.preventDefault();
+      setSelectedVideo(video.currentSrc || video.src);
+      return;
+    }
+    const image = event.target.closest('main img, #top img');
+    if (!image || image.closest('[data-video-trigger]')) return;
+    setSelectedImage(image.currentSrc || image.src);
+  }}>
+    {selectedImage && <div role="dialog" aria-modal="true" aria-label="College photo viewer" className="fixed inset-0 z-50 flex items-center justify-center bg-[#061c2b]/95 p-4 sm:p-8" onClick={() => setSelectedImage(null)}>
+      <button type="button" onClick={() => setSelectedImage(null)} className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-3xl text-white hover:bg-white/20" aria-label="Close image viewer">×</button>
+      {imageViewerItems.length > 1 && <button type="button" onClick={(event) => { event.stopPropagation(); moveImage(-1); }} className="absolute left-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-3xl text-white hover:bg-white/25 sm:left-6" aria-label="Previous image">‹</button>}
+      <div className="flex max-h-full max-w-full flex-col items-center" onClick={(event) => event.stopPropagation()}><img src={selectedImage} alt={imageViewerItems[selectedImageIndex]?.alt || `${place.name} enlarged`} className="max-h-[78vh] max-w-[calc(100vw-7rem)] object-contain sm:max-h-[82vh]" />{imageViewerItems.length > 1 && <p className="mt-3 text-xs font-medium text-white/75">{Math.max(selectedImageIndex + 1, 1)} / {imageViewerItems.length}</p>}</div>
+      {imageViewerItems.length > 1 && <button type="button" onClick={(event) => { event.stopPropagation(); moveImage(1); }} className="absolute right-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-3xl text-white hover:bg-white/25 sm:right-6" aria-label="Next image">›</button>}
+    </div>}
+    {selectedVideo && <div role="dialog" aria-modal="true" aria-label="College video player" className="fixed inset-0 z-50 flex items-center justify-center bg-[#061c2b]/95 p-4 sm:p-8" onClick={() => setSelectedVideo(null)}>
+      <button type="button" onClick={() => setSelectedVideo(null)} className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-3xl text-white hover:bg-white/20" aria-label="Close video player">×</button>
+      <div className="w-full max-w-5xl overflow-hidden rounded-lg bg-black" onClick={(event) => event.stopPropagation()}>{/\.(mp4|webm|ogg)(\?.*)?$/i.test(selectedVideo) ? <video src={selectedVideo} controls autoPlay className="max-h-[85vh] w-full" /> : <iframe src={videoEmbedUrl(selectedVideo)} title={`${place.name} video`} allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen className="aspect-video w-full border-0" />}</div>
+    </div>}
     <header className="sticky top-0 z-30 border-b border-[#2c6eb8] bg-[linear-gradient(110deg,#06346c,#0755a8,#06346c)] text-white shadow-lg"><div className="mx-auto flex h-16 max-w-[1500px] items-center gap-5 px-5"><a href="#top" className="flex min-w-0 items-center gap-3">{place.logo ? <img src={place.logo} alt={`${place.name} logo`} className="h-11 w-11 rounded-full bg-white object-contain p-1" /> : <span className="flex h-11 w-11 items-center justify-center rounded-full border border-white/70 text-xl">▣</span>}<span className="min-w-0"><strong className="block truncate text-lg leading-tight">{place.name}</strong><small className="block truncate text-xs text-white/90">{data.collegeType || 'College'}</small></span></a><nav className="ml-auto hidden items-center gap-7 text-xs font-semibold lg:flex"><a href="#top">Home</a><a href="#about">About Us</a><a href="#courses">Courses</a><a href="#admissions">Admissions</a><a href="#facilities">Facilities</a><a href="#faculty">Faculty</a><a href="#gallery">Gallery</a><a href="#contact">Contact</a></nav><a href="#admissions" className="ml-auto rounded-xl bg-[linear-gradient(135deg,#4590ff,#0966db)] px-5 py-2 text-xs font-bold shadow lg:ml-2">Apply Online</a></div></header>
     <section id="top" className="relative min-h-[280px] overflow-hidden bg-[#06346c] sm:min-h-[330px]">{(place.coverImage || gallery[0]) && <img src={place.coverImage || gallery[0]} alt={`${place.name} campus`} className="absolute inset-0 h-full w-full object-cover" />}<div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,36,79,.96),rgba(3,58,113,.78),rgba(3,58,113,.08))]" /><div className="relative mx-auto flex min-h-[280px] max-w-[1500px] flex-col justify-center px-8 py-10 text-white sm:min-h-[330px]"><p className="text-base font-medium text-[#7ed2ff]">{data.tagline || 'Learn | Grow | Build Your Future'}</p><h1 className="mt-2 max-w-2xl text-4xl font-extrabold leading-tight sm:text-5xl">{place.name}</h1><p className="mt-3 max-w-xl text-sm leading-relaxed text-white/90">{place.description || 'Quality education, experienced faculty and modern facilities to help students achieve their dreams.'}</p><div className="mt-5 flex flex-wrap gap-3">{[['🎓', 'Type', data.collegeType || 'College'], ['▦', 'Ownership', data.ownership || 'Private'], ['▣', 'Established', data.establishedYear || '—']].map(([icon, label, value]) => <div key={label} className="flex items-center gap-2 rounded-full border border-white/60 bg-[#06346c]/55 px-4 py-2"><span className="text-xl">{icon}</span><span className="text-xs"><small className="block text-white/70">{label}</small><strong>{value}</strong></span></div>)}</div></div></section>
     <section className="border-b border-[#d4e2f4] bg-white"><div className="mx-auto grid max-w-[1500px] grid-cols-2 divide-x divide-y divide-[#c9daf0] sm:grid-cols-5 sm:divide-y-0"><Detail icon="👥" label="Students" value={data.totalStudents || '2000+'} /><Detail icon="♟" label="Faculty Members" value={faculty.length ? `${faculty.length}+` : '150+'} /><Detail icon="★" label="NAAC" value={data.naacGrade ? `${data.naacGrade} Grade` : 'Accredited'} /><Detail icon="✓" label="Recognition" value={data.universityAffiliation || data.board || 'Recognized'} /><Detail icon="⌖" label="Located in" value={place.location?.city?.name || 'Your City'} /></div></section>
     <main className="mx-auto max-w-[1500px] p-5 sm:p-7"><div className="grid gap-4 xl:grid-cols-[1.05fr_1.65fr_.85fr_1fr]">
-      <section id="about" className="rounded-lg border border-[#d8e7fa] bg-white p-5"><Heading icon="—">About Our College</Heading><p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-[#294d78]">{place.description || 'College information will be added soon.'}</p>{gallery[1] && <img src={gallery[1]} alt="College students" className="mt-5 h-32 w-full rounded object-cover" />}</section>
+      <section id="about" className="rounded-lg border border-[#d8e7fa] bg-white p-5"><Heading icon="—">About Our College</Heading><p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-[#294d78]">{data.aboutDescription || place.description || 'College information will be added soon.'}</p>{(data.aboutImage || gallery[1]) && <img src={data.aboutImage || gallery[1]} alt="About the college" className="mt-5 h-40 w-full rounded object-cover" />}</section>
       <section id="courses" className="rounded-lg border border-[#d8e7fa] bg-white p-5"><Heading icon="🎓" action="#courses">Courses Offered</Heading><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">{courses.length ? courses.map((course, index) => <div key={`${course.name}-${index}`} className="rounded-lg border border-[#d8e7fa] bg-[#fbfdff] p-4"><span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#edf5ff] text-xl text-[#0764d4]">{courseIcons[index % courseIcons.length]}</span><h3 className="mt-3 text-sm font-bold">{course.name}</h3>{course.subjects && <p className="mt-1 text-[11px] text-[#5d7390]">{course.subjects}</p>}<p className="mt-3 text-xs text-[#5d7390]">{course.duration || '—'} {course.fee && ` · ${course.fee}`}</p></div>) : <p className="col-span-3 text-sm text-[#5d7390]">Courses will be added soon.</p>}</div></section>
       <section id="admissions" className="rounded-lg border border-[#d8e7fa] bg-white p-5"><Heading icon="📣">Admission Information</Heading><div className="mt-4 space-y-3">{admissionOpen && <span className="inline-block rounded-full bg-[#13a95a] px-3 py-1 text-xs font-bold text-white">Admissions Open</span>}<Detail icon="▣" label="Application starts" value={data.applicationStartDate || 'Contact college'} /><Detail icon="▣" label="Last date to apply" value={data.applicationLastDate || 'Contact college'} /><Detail icon="☎" label="Contact number" value={data.enquiryPhone || place.phone} /><Detail icon="✉" label="Email" value={data.admissionEmail || place.email} />{website && <a href={website} target="_blank" rel="noreferrer" className="block rounded bg-[#0764d4] px-4 py-3 text-center text-xs font-bold text-white">Apply Now →</a>}</div></section>
       <section id="facilities" className="rounded-lg border border-[#d8e7fa] bg-white p-5"><Heading icon="♜" action="#facilities">Campus Facilities</Heading><div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-3">{facilities.length ? facilities.map((facility) => <p key={facility} className="flex items-center gap-2 text-xs text-[#294d78]"><span className="font-bold text-[#0764d4]">{facilityIcons[facility] || '✦'}</span>{facility}</p>) : <p className="text-sm text-[#5d7390]">Facilities will be added soon.</p>}</div></section>

@@ -3,6 +3,7 @@ const {
   getStates,
   getDistricts,
   getCities,
+  searchCities,
   getAreas,
   resolveBySlug,
   createLocation,
@@ -15,6 +16,7 @@ const router = express.Router();
 
 router.get('/states', getStates);
 router.get('/districts/:stateId', getDistricts);
+router.get('/cities/search', searchCities);
 router.get('/cities/:districtId', getCities);
 router.get('/areas/:cityId', getAreas);
 router.get('/resolve', resolveBySlug);

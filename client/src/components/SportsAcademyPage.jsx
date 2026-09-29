@@ -9,6 +9,16 @@ const sportsImages = [
 ];
 const imageUrl = (id, width = 900) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=85`;
 const safeUrl = (url) => url ? (/^https?:\/\//i.test(url) ? url : `https://${url}`) : '';
+const videoEmbedUrl = (value) => {
+  try {
+    const parsedUrl = new URL(safeUrl(value));
+    const host = parsedUrl.hostname.replace(/^www\./, '');
+    if (host === 'youtu.be') return `https://www.youtube-nocookie.com/embed/${parsedUrl.pathname.slice(1)}?autoplay=1`;
+    if (host.endsWith('youtube.com')) return `https://www.youtube-nocookie.com/embed/${parsedUrl.searchParams.get('v') || parsedUrl.pathname.split('/').pop()}?autoplay=1`;
+    if (host === 'vimeo.com' || host.endsWith('.vimeo.com')) return `https://player.vimeo.com/video/${parsedUrl.pathname.split('/').pop()}?autoplay=1`;
+  } catch { return ''; }
+  return '';
+};
 const defaults = [
   { name: 'Cricket', description: 'Technical training, match practice and tournament exposure.' },
   { name: 'Football', description: 'Build teamwork, fitness and competitive skills.' },
@@ -19,6 +29,8 @@ const defaults = [
 ];
 
 export default function SportsAcademyPage({ place, onReport }) {
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedVideo, setSelectedVideo] = useState('');
   const [selectedSport, setSelectedSport] = useState(null);
   const [enrollOpen, setEnrollOpen] = useState(false);
   const [enquiry, setEnquiry] = useState({ name: '', email: '', phone: '', message: '' });
@@ -43,7 +55,16 @@ export default function SportsAcademyPage({ place, onReport }) {
     ['★', profile.successRate || '95%', 'Success Rate'],
     ['⬡', profile.yearsExperience || '10+', 'Years of Excellence'],
   ];
-  const video = Array.isArray(place.video) ? place.video[0] : place.video || profile.videoUrl || (Array.isArray(profile.videos) ? profile.videos[0] : profile.videos);
+  const rawVideo = Array.isArray(place.video) ? place.video[0] : place.video || profile.videoUrl || (Array.isArray(profile.videos) ? profile.videos[0] : profile.videos);
+  const video = typeof rawVideo === 'string' ? rawVideo : rawVideo?.url || '';
+  const sportsViewerItems = [...new Set([hero, aboutImage, ...photos, ...programs.map((program) => typeof program === 'object' ? program.image : '')].filter(Boolean))].map((src, index) => ({ src, alt: `${place.name} sports photo ${index + 1}` }));
+  const selectedImageIndex = sportsViewerItems.findIndex((item) => item.src === selectedImage);
+  const moveImage = (direction) => {
+    if (!sportsViewerItems.length) return;
+    const currentIndex = Math.max(selectedImageIndex, 0);
+    const nextIndex = (currentIndex + direction + sportsViewerItems.length) % sportsViewerItems.length;
+    setSelectedImage(sportsViewerItems[nextIndex].src);
+  };
 
   const submitEnquiry = async (event) => {
     event.preventDefault();
@@ -71,7 +92,24 @@ export default function SportsAcademyPage({ place, onReport }) {
     return <div className="min-h-screen bg-[#f7fbff] text-[#12345d]"><header className="flex h-16 items-center border-b border-blue-100 bg-white px-5 sm:px-8"><button type="button" onClick={() => { setSelectedSport(null); setEnrollOpen(false); setEnquiryStatus('idle'); }} className="rounded-full border border-blue-200 px-4 py-2 text-xs font-bold text-blue-800">← All Sports Programs</button><strong className="ml-4 truncate">{place.name}</strong></header><main className="mx-auto max-w-6xl px-4 py-8 sm:px-8"><div className="grid overflow-hidden rounded-2xl bg-white shadow-lg lg:grid-cols-2"><img src={sportImage} alt={`${sportName} training`} className="h-64 w-full object-cover sm:h-96"/><div className="flex flex-col justify-center p-6 sm:p-10"><p className="text-xs font-extrabold uppercase tracking-widest text-blue-700">Sports Program</p><h1 className="mt-2 text-3xl font-black sm:text-4xl">{sportName}</h1><p className="mt-4 text-sm leading-relaxed text-slate-600">{selectedSport.description || selectedSport.details || `Join ${place.name} for expert ${sportName.toLowerCase()} coaching, structured practice and opportunities to compete.`}</p><div className="mt-5 grid gap-3 sm:grid-cols-2">{[['Age group', selectedSport.ageGroup || selectedSport.ageGroups || profile.ageGroups || 'All age groups'], ['Training schedule', selectedSport.schedule || profile.schedule || 'Flexible batches'], ['Coach', selectedSport.coach || selectedSport.coachName || coaches[0]?.name || coaches[0] || 'Certified sports coaches'], ['Level', selectedSport.level || 'Beginner to advanced']].map(([label,value])=><div key={label} className="rounded-lg bg-blue-50 p-3"><small className="block text-[9px] font-bold uppercase text-blue-700">{label}</small><span className="mt-1 block text-xs font-semibold">{typeof value === 'object' ? value.name : value}</span></div>)}</div><div className="mt-6 flex flex-wrap gap-3"><button type="button" onClick={() => { setEnquiry({ name: '', email: '', phone: '', message: '' }); setEnquiryStatus('idle'); setEnrollOpen(true); }} className="rounded-full bg-orange-500 px-6 py-3 text-xs font-extrabold text-white">Enroll Now →</button>{phone && <a href={`tel:${phone.replace(/[^\d+]/g,'')}`} className="rounded-full border border-blue-300 px-6 py-3 text-xs font-bold text-blue-800">☎ Call {phone}</a>}</div></div></div></main>{enrollOpen && <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/70 p-4" role="dialog" aria-modal="true" aria-label={`Enroll in ${sportName}`} onClick={() => setEnrollOpen(false)}><form onSubmit={submitEnquiry} onClick={(event) => event.stopPropagation()} className="w-full max-w-lg rounded-2xl bg-white p-5 text-[#12345d] shadow-2xl sm:p-7"><div className="flex items-start justify-between gap-3"><div><p className="text-[9px] font-extrabold uppercase tracking-widest text-blue-700">Program Enquiry</p><h2 className="mt-1 text-xl font-extrabold">Enroll in {sportName}</h2></div><button type="button" onClick={() => setEnrollOpen(false)} className="text-2xl" aria-label="Close enrolment form">×</button></div>{enquiryStatus === 'sent' ? <div className="mt-5 rounded-lg bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">Your enquiry was sent. The academy will contact you soon.</div> : <><div className="mt-5 grid gap-3 sm:grid-cols-2"><input required maxLength={100} placeholder="Your name" value={enquiry.name} onChange={(event) => setEnquiry({ ...enquiry, name: event.target.value })} className="rounded-lg border border-slate-200 px-3 py-3 text-sm"/><input required type="email" maxLength={150} placeholder="Email address" value={enquiry.email} onChange={(event) => setEnquiry({ ...enquiry, email: event.target.value })} className="rounded-lg border border-slate-200 px-3 py-3 text-sm"/><input placeholder="Phone number" value={enquiry.phone} onChange={(event) => setEnquiry({ ...enquiry, phone: event.target.value })} className="rounded-lg border border-slate-200 px-3 py-3 text-sm sm:col-span-2"/><textarea required maxLength={900} rows={3} placeholder="Tell us how we can help" value={enquiry.message} onChange={(event) => setEnquiry({ ...enquiry, message: event.target.value })} className="rounded-lg border border-slate-200 px-3 py-3 text-sm sm:col-span-2"/></div>{enquiryError && <p role="alert" className="mt-3 text-xs text-red-700">{enquiryError}</p>}<button type="submit" disabled={enquiryStatus === 'sending'} className="mt-4 w-full rounded-full bg-blue-800 px-5 py-3 text-sm font-bold text-white disabled:opacity-60">{enquiryStatus === 'sending' ? 'Sending…' : 'Send Enquiry'}</button></>}</form></div>}</div>;
   }
 
-  return <div className="min-h-screen bg-[#f7fbff] text-[#12345d]">
+  return <div className="min-h-screen bg-[#f7fbff] text-[#12345d]" onClick={(event) => {
+    if (!(event.target instanceof Element)) return;
+    const videoElement = event.target.closest('main video');
+    if (videoElement) {
+      setSelectedVideo(videoElement.currentSrc || videoElement.src);
+      return;
+    }
+    const videoLink = event.target.closest('a[target="_blank"]');
+    if (video && videoLink && videoLink.href === safeUrl(video)) {
+      event.preventDefault();
+      setSelectedVideo(video);
+      return;
+    }
+    const imageElement = event.target.closest('main img, #top img');
+    if (imageElement && !imageElement.closest('[data-video-trigger]')) setSelectedImage(imageElement.currentSrc || imageElement.src);
+  }}>
+    {selectedImage && <div role="dialog" aria-modal="true" aria-label="Sports academy photo viewer" className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/95 p-4 sm:p-8" onClick={() => setSelectedImage(null)}><button type="button" onClick={() => setSelectedImage(null)} className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-3xl text-white" aria-label="Close image viewer">×</button>{sportsViewerItems.length > 1 && <button type="button" onClick={(event) => { event.stopPropagation(); moveImage(-1); }} className="absolute left-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-3xl text-white sm:left-6" aria-label="Previous image">‹</button>}<div className="flex max-h-full max-w-full flex-col items-center" onClick={(event) => event.stopPropagation()}><img src={selectedImage} alt={sportsViewerItems[selectedImageIndex]?.alt || `${place.name} enlarged`} className="max-h-[78vh] max-w-[calc(100vw-7rem)] object-contain sm:max-h-[82vh]" />{sportsViewerItems.length > 1 && <p className="mt-3 text-xs font-medium text-white/75">{Math.max(selectedImageIndex + 1, 1)} / {sportsViewerItems.length}</p>}</div>{sportsViewerItems.length > 1 && <button type="button" onClick={(event) => { event.stopPropagation(); moveImage(1); }} className="absolute right-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-3xl text-white sm:right-6" aria-label="Next image">›</button>}</div>}
+    {selectedVideo && <div role="dialog" aria-modal="true" aria-label="Sports academy video player" className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/95 p-4 sm:p-8" onClick={() => setSelectedVideo('')}><button type="button" onClick={() => setSelectedVideo('')} className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-3xl text-white" aria-label="Close video player">×</button><div className="w-full max-w-5xl overflow-hidden rounded-lg bg-black" onClick={(event) => event.stopPropagation()}>{/\.(mp4|webm|ogg)(\?.*)?$/i.test(selectedVideo) ? <video src={selectedVideo} controls autoPlay className="max-h-[85vh] w-full" /> : <iframe src={videoEmbedUrl(selectedVideo) || safeUrl(selectedVideo)} title={`${place.name} sports video`} allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen className="aspect-video w-full border-0" />}</div></div>}
     <header className="sticky top-0 z-40 border-b border-blue-100 bg-white/95 shadow-sm backdrop-blur"><div className="mx-auto flex h-16 max-w-[1500px] items-center justify-between gap-3 px-4 sm:px-8"><a href="#top" className="flex min-w-0 items-center gap-2"><span className="text-3xl text-blue-800">◈</span><span className="min-w-0"><strong className="block truncate text-sm sm:text-base">{place.name}</strong><small className="text-[9px] text-slate-500">Train · Compete · Excel</small></span></a><nav className="hidden gap-7 text-[10px] font-bold lg:flex"><a href="#top">Home</a><a href="#programs">Programs</a><a href="#about">About Us</a><a href="#facilities">Facilities</a><a href="#gallery">Gallery</a><a href="#coaches">Coaches</a><a href="#contact">Contact</a></nav><div className="flex items-center gap-3"><a href={phone ? `tel:${phone.replace(/[^\d+]/g, '')}` : '#contact'} className="hidden text-[10px] font-bold sm:block">☎ {phone || 'Call us'}</a><a href="#contact" className="rounded-full bg-orange-500 px-4 py-2 text-[10px] font-bold text-white">Enroll Now →</a></div></div></header>
 
     <section id="top" className="relative isolate min-h-[285px] overflow-hidden bg-[#062e62] sm:min-h-[350px]"><img src={hero} alt={`${place.name} sports training`} className="absolute inset-0 -z-20 h-full w-full object-cover"/><div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(3,35,75,.98)_0%,rgba(3,43,83,.83)_42%,rgba(3,43,83,.06)_100%)]"/><div className="mx-auto flex min-h-[285px] max-w-[1500px] items-center px-5 py-9 sm:min-h-[350px] sm:px-8"><div className="max-w-xl text-white"><span className="rounded-full bg-sky-700 px-4 py-1.5 text-[10px] font-bold">🏆 Build Champions, Not Just Athletes</span><h1 className="mt-4 text-4xl font-black leading-[1.03] sm:text-6xl">SPORTS ACADEMY<br/><span className="text-orange-400">for a Stronger Tomorrow</span></h1><p className="mt-3 max-w-lg text-xs leading-relaxed text-white/90 sm:text-sm">{place.description || 'World-class coaching, modern facilities and personal guidance help every athlete reach their full potential.'}</p><div className="mt-5 flex flex-wrap gap-3"><a href="#programs" className="rounded-lg bg-orange-500 px-5 py-3 text-[10px] font-extrabold text-white">Explore Programs →</a>{video && <a href={safeUrl(video)} target="_blank" rel="noreferrer" className="rounded-lg border border-white/60 px-5 py-3 text-[10px] font-bold">▶ Watch Our Video</a>}</div><div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[9px] font-bold">{['Expert Coaches','Modern Facilities','Holistic Development','National & International Exposure'].map((item,i)=><span key={item}>{['♟','▦','✦','◉'][i]}　{item}</span>)}</div></div></div></section>

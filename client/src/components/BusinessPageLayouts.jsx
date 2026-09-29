@@ -16,19 +16,47 @@ const safeExternalUrl = (value) => {
   }
 };
 
+function whatsappUrlFor(place) {
+  const value = place.socialLinks?.whatsapp || place.phone;
+  if (!value) return null;
+  if (/^\+?[\d\s().-]+$/.test(value)) {
+    const number = value.replace(/\D/g, '');
+    return number ? `https://wa.me/${number}` : null;
+  }
+  return safeExternalUrl(value);
+}
+
+function facebookUrlFor(place) {
+  return safeExternalUrl(place.socialLinks?.facebook)
+    || `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`;
+}
+
 function ContactPanel({ place, mapsUrl, onReport }) {
   const website = safeExternalUrl(place.website);
+  const whatsappUrl = whatsappUrlFor(place);
+  const facebookUrl = facebookUrlFor(place);
+  const mapQuery = place.coordinates?.lat && place.coordinates?.lng
+    ? `${place.coordinates.lat},${place.coordinates.lng}`
+    : place.address || place.name;
+  const directionsUrl = mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
   return (
     <aside className="flex flex-col gap-4">
       <div className="rounded-2xl border border-line bg-white p-5 shadow-sm">
         <h2 className="font-display text-xl font-semibold text-ink">Contact</h2>
         <div className="mt-4 flex flex-col gap-2 text-sm text-ink/70">
-          {place.phone && <a href={`tel:${place.phone}`} className="hover:text-cyan-700">Call {place.phone}</a>}
+          {place.phone && <a href={`tel:${place.phone}`} className="rounded-lg bg-cyan-50 px-3 py-2 font-semibold text-cyan-800 hover:bg-cyan-100">☎ Call {place.phone}</a>}
           {place.email && <a href={`mailto:${place.email}`} className="hover:text-cyan-700">{place.email}</a>}
           <span>{place.address}</span>
-          <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-cyan-700 hover:underline">Get directions</a>
+          <div className="grid grid-cols-2 gap-2">
+            {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-emerald-50 px-3 py-2 text-center text-xs font-semibold text-emerald-800 hover:bg-emerald-100">◉ WhatsApp</a>}
+            <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-blue-50 px-3 py-2 text-center text-xs font-semibold text-blue-800 hover:bg-blue-100">f {place.socialLinks?.facebook ? 'Facebook' : 'Share on Facebook'}</a>
+          </div>
+          <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-cyan-700 hover:underline">⌖ Get directions in Google Maps ↗</a>
           {website && <a href={website} target="_blank" rel="noopener noreferrer" className="font-medium text-cyan-700 hover:underline">Visit official website</a>}
           <button type="button" onClick={onReport} className="text-left font-medium text-vermilion hover:underline">Report listing</button>
+        </div>
+        <div className="mt-4 overflow-hidden rounded-lg border border-line">
+          <iframe title={`Google map to ${place.name}`} src={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`} className="h-40 w-full border-0" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
         </div>
       </div>
       <ReviewsSection placeId={place._id} />
@@ -587,11 +615,13 @@ function moduleKey(value) {
 }
 
 function ContactLinks({ place }) {
+  const whatsappUrl = whatsappUrlFor(place);
+  const facebookUrl = facebookUrlFor(place);
   const links = [
     place.phone && [`tel:${place.phone}`, 'Call', '☎'],
     place.email && [`mailto:${place.email}`, 'Email', '✉'],
-    place.socialLinks?.whatsapp && [normaliseUrl(place.socialLinks.whatsapp), 'WhatsApp', '◉'],
-    place.socialLinks?.facebook && [normaliseUrl(place.socialLinks.facebook), 'Facebook', 'f'],
+    whatsappUrl && [whatsappUrl, 'WhatsApp', '◉'],
+    [facebookUrl, place.socialLinks?.facebook ? 'Facebook' : 'Share on Facebook', 'f'],
     place.socialLinks?.instagram && [normaliseUrl(place.socialLinks.instagram), 'Instagram', '◎'],
     place.website && [normaliseUrl(place.website), 'Official website', '↗'],
   ].filter(Boolean);

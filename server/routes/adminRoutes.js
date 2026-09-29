@@ -14,6 +14,7 @@ const {
   getAnalytics,
 } = require('../controllers/adminController');
 const { getReportsAdmin, updateReportAdmin } = require('../controllers/reportController');
+const { getAdminSettings, updateAdminSettings } = require('../controllers/siteSettingsController');
 const { getAllReviewsAdmin, setReviewStatusAdmin } = require('../controllers/reviewController');
 const { protect, authorize } = require('../middleware/auth');
 const multer = require('multer');
@@ -26,6 +27,8 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 *
 router.use(protect, authorize('admin'));
 
 router.get('/analytics', getAnalytics);
+router.get('/settings', getAdminSettings);
+router.put('/settings', updateAdminSettings);
 router.post('/import', upload.single('file'), importPlaces);
 
 router.get('/users', getUsers);

@@ -27,7 +27,7 @@ const createEnquiry = async (req, res, next) => {
       title: 'New enquiry received',
       message: `${name} sent an enquiry about ${placeDoc.name}.`,
       type: 'enquiry',
-      link: `/business/dashboard/enquiries`,
+      link: `/business/dashboard#enquiries`,
     });
 
     res.status(201).json({ success: true, message: 'Your enquiry has been sent.', data: enquiry });

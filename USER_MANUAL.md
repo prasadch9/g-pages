@@ -246,6 +246,16 @@ The overview displays platform information such as:
 - Most viewed listings.
 - Most searched listings.
 
+### Manage social links and WhatsApp
+
+1. Open **Social links** in the admin navigation.
+2. Enter the Instagram profile URL and Facebook page URL you want shown in the footer.
+3. Enter the WhatsApp number with its country code, then select **Save settings**.
+4. Saved social icons appear in the footer, and the floating WhatsApp button uses the saved number.
+
+Instagram and Facebook URLs must use their official domains. The WhatsApp number is saved as
+digits only, including the country code.
+
 ### Review submitted listings
 
 1. Open `/admin`.

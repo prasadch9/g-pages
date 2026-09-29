@@ -1,5 +1,6 @@
 
 const mongoose = require('mongoose');
+const { BUSINESS_CATEGORY_GROUPS, normalizeBusinessGroup } = require('../config/businessConfig');
 
 const businessRequestSchema = new mongoose.Schema(
   {
@@ -29,7 +30,8 @@ const businessRequestSchema = new mongoose.Schema(
 
     businessGroup: {
       type: String,
-      enum: ['business-professional-services', 'logistics-moving'],
+      enum: Object.keys(BUSINESS_CATEGORY_GROUPS),
+      set: (value) => normalizeBusinessGroup(value) || value,
       default: null,
     },
 

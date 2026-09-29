@@ -96,6 +96,7 @@ const initialForm = {
   faculty: '',
   achievements: '',
   events: '',
+  newsNotices: '',
   admissionProcess: '',
   eligibility: '',
   feeInformation: '',
@@ -229,59 +230,6 @@ export default function CreateListing() {
   useEffect(() => {
     api.get('/categories').then(({ data }) => setCategories(data.data)).catch(() => setCategories([]));
   }, []);
-
-  useEffect(() => {
-    if (!id) return;
-    api.get(`/places/${id}`).then(({ data }) => {
-      const place = data.data;
-      setEditBusinessPlace(place);
-      const subcategory = place.attributes?.subCategory || place.category?.name || '';
-      const existingVideos = place.attributes?.mallVideos?.length
-        ? place.attributes.mallVideos
-        : (place.attributes?.businessProfile?.common?.videos?.length
-          ? place.attributes.businessProfile.common.videos
-          : Array.isArray(place.video) ? place.video : place.video ? [place.video] : (place.videos || []));
-      const categoryGroup = CATEGORY_GROUPS.find((group) => group.children.some((child) => child.toLowerCase() === subcategory.toLowerCase()));
-      setForm({
-        ...initialForm,
-        name: place.name || '',
-        mainCategory: categoryGroup?.name || '',
-        category: place.category?._id || place.category || categoryGroup?.name || '',
-        subcategory,
-        pageType: place.pageType || 'static',
-        categoryData: place.categoryData || {},
-        address: place.address || '',
-        description: place.description || '',
-        phone: place.phone || '',
-        email: place.email || '',
-        website: place.website || '',
-        services: (place.services || []).join(', '),
-        facebook: place.socialLinks?.facebook || '',
-        instagram: place.socialLinks?.instagram || '',
-        youtube: place.socialLinks?.youtube || '',
-        whatsapp: place.socialLinks?.whatsapp || '',
-        chatSupport: place.socialLinks?.chatSupport || '',
-        videoUrls: existingVideos.map((video) => typeof video === 'string' ? video : video.url).filter(Boolean).join('\n'),
-      });
-      setShoppingDetails(shoppingDetailsFromPlace(place.attributes || {}));
-      setMallCollectionDetails(place.attributes?.mallCollections || (place.images || []).map((image) => ({ image, tag: 'New', caption: '', features: '' })));
-      setMallVideos(existingVideos.map((video) => typeof video === 'string' ? { url: video, caption: '' } : video));
-      setWorkingHours(place.workingHours || []);
-      setLocation({
-        state: place.location?.state?._id || place.location?.state || '',
-        district: place.location?.district?._id || place.location?.district || '',
-        city: place.location?.city?._id || place.location?.city || '',
-        area: place.location?.area?._id || place.location?.area || '',
-        areaText: place.location?.areaText || '',
-      });
-      setUploadedFiles({
-        logo: place.logo || '',
-        coverImage: place.coverImage || '',
-        aboutImage: place.aboutImage || '',
-        galleryImages: place.images || [],
-      });
-    }).catch((err) => setError(err.message));
-  }, [id]);
 
   const selectedCategoryName = form.mainCategory || form.category || '';
 
@@ -434,11 +382,17 @@ export default function CreateListing() {
       const rawSubcategory = attributes.subCategory || (typeof place.subcategory === 'object' ? place.subcategory?.name : place.subcategory) || place.category?.name || '';
       const editSubcategory = /^[a-f\d]{24}$/i.test(rawSubcategory) ? place.category?.name || '' : rawSubcategory;
       const editCategoryGroup = place.categoryGroup || CATEGORY_GROUPS.find((group) => group.children.some((child) => child.toLowerCase() === String(editSubcategory).toLowerCase()))?.name || '';
+      const existingVideos = attributes.mallVideos?.length
+        ? attributes.mallVideos
+        : (attributes.businessProfile?.common?.videos?.length
+          ? attributes.businessProfile.common.videos
+          : Array.isArray(place.video) ? place.video : place.video ? [place.video] : (place.videos || []));
       setEditBusinessPlace(place);
       const principal = attributes.principal || {};
       const admissionDetails = attributes.admissionDetails || {};
       const fees = attributes.fees || {};
-      setForm((current) => ({ ...current, name: place.name || '', category: place.category?._id || place.category || '', subcategory: editSubcategory, mainCategory: editCategoryGroup, address: place.address || '', description: place.description || '', phone: place.phone || '', email: place.email || '', website: place.website || '', services: (place.services || []).join(', '), facilities: (place.facilities || []).join(', '), pageType: place.pageType || 'static', facebook: place.socialLinks?.facebook || '', instagram: place.socialLinks?.instagram || '', whatsapp: place.socialLinks?.whatsapp || '', youtube: place.socialLinks?.youtube || '', linkedin: place.socialLinks?.linkedin || '', ...place.attributes, categoryData: place.categoryData || {} }));
+      setForm((current) => ({ ...current, name: place.name || '', category: place.category?._id || place.category || '', subcategory: editSubcategory, mainCategory: editCategoryGroup, address: place.address || '', description: place.description || '', phone: place.phone || '', email: place.email || '', website: place.website || '', services: (place.services || []).join(', '), facilities: (place.facilities || []).join(', '), pageType: place.pageType || 'static', facebook: place.socialLinks?.facebook || '', instagram: place.socialLinks?.instagram || '', whatsapp: place.socialLinks?.whatsapp || '', youtube: place.socialLinks?.youtube || '', linkedin: place.socialLinks?.linkedin || '', ...attributes, videoUrls: existingVideos.map((video) => typeof video === 'string' ? video : video.url).filter(Boolean).join('\n'), categoryData: place.categoryData || {} }));
+      setForm((current) => ({ ...current, newsNotices: (Array.isArray(attributes.newsNotices) ? attributes.newsNotices : String(attributes.newsNotices || '').split(/[\n,]/)).map((notice) => typeof notice === 'string' ? notice.trim() : notice?.title || notice?.name || '').filter(Boolean).join('\n') }));
       setForm((current) => ({
         ...current,
         smallScaleIndustries: {
@@ -455,8 +409,13 @@ export default function CreateListing() {
       setTravelDetails(place.attributes?.businessProfile?.categorySpecific || place.attributes?.travelDetails || {});
       setFoodDetails(place.attributes?.businessProfile?.categorySpecific || place.attributes?.foodDetails || {});
       setWeddingDetails(place.attributes?.businessProfile?.categorySpecific || place.attributes?.weddingDetails || {});
+      setShoppingDetails(shoppingDetailsFromPlace(attributes));
+      setMallCollectionDetails(attributes.mallCollections || (place.images || []).map((image) => ({ image, tag: 'New', caption: '', features: '' })));
+      setMallVideos(existingVideos.map((video) => typeof video === 'string' ? { url: video, caption: '' } : video));
+      setWorkingHours(place.workingHours || []);
+      setUploadedFiles({ logo: place.logo || '', coverImage: place.coverImage || '', aboutImage: attributes.aboutImage || place.aboutImage || '', galleryImages: place.images || [] });
       setForm((current) => ({ ...current, principalName: principal.name || '', principalDesignation: principal.designation || 'Principal', principalQualification: principal.qualification || '', principalExperience: principal.experience || '', principalMessage: principal.message || attributes.principalMessage || '', admissionStatus: admissionDetails.status || 'open', admissionClasses: admissionDetails.classes || [], ageCriteria: admissionDetails.ageCriteria || '', requiredDocuments: admissionDetails.requiredDocuments || [], enquiryPhone: admissionDetails.enquiryPhone || '', admissionProcess: admissionDetails.process || attributes.admissionProcess || '', eligibility: admissionDetails.eligibility || attributes.eligibility || '', showFees: fees.show !== false, admissionFee: fees.admission || '', tuitionFee: fees.tuition || '', transportFee: fees.transport || '', otherCharges: fees.other || '', feeInformation: fees.description || attributes.feeInformation || '' }));
-      setLocation({ state: place.location?.state?._id || place.location?.state || '', district: place.location?.district?._id || place.location?.district || '', city: place.location?.city?._id || place.location?.city || '', area: place.location?.area?._id || place.location?.area || '' });
+      setLocation({ state: place.location?.state?._id || place.location?.state || '', district: place.location?.district?._id || place.location?.district || '', city: place.location?.city?._id || place.location?.city || '', area: place.location?.area?._id || place.location?.area || '', areaText: place.location?.areaText || place.location?.area?.name || '' });
       setFaculty(attributes.faculty || []);
       setInfrastructure(attributes.infrastructure || []);
       setSchoolFacilities(attributes.schoolFacilities || []);
@@ -464,7 +423,7 @@ export default function CreateListing() {
       setSchoolVideos(attributes.schoolVideos || []);
       setAchievements(attributes.achievements || []);
       setSchoolEvents(attributes.schoolEvents || []);
-      setExistingMedia({ logo: place.logo || '', cover: place.coverImage || '', about: attributes.aboutImage || attributes.smallScaleIndustries?.aboutImageUrl || attributes.foodProcessing?.aboutImageUrl || attributes.tradingBusinesses?.aboutImageUrl || '', principal: attributes.principalImage || '', images: [...new Set([...(place.images || []), ...(attributes.galleryImages || [])])], videos: Array.isArray(place.video) ? place.video : place.video ? [place.video] : [], faculty: attributes.facultyImages || [], infrastructure: attributes.infrastructureImages || [], facilities: attributes.facilityImages || [], events: attributes.eventImages || [], principalGallery: attributes.principalGallery || [] });
+      setExistingMedia({ logo: place.logo || '', cover: place.coverImage || '', about: attributes.aboutImage || attributes.academy?.aboutImage || attributes.smallScaleIndustries?.aboutImageUrl || attributes.foodProcessing?.aboutImageUrl || attributes.tradingBusinesses?.aboutImageUrl || '', principal: attributes.principalImage || '', images: [...new Set([...(place.images || []), ...(attributes.galleryImages || [])])], videos: Array.isArray(place.video) ? place.video : place.video ? [place.video] : [], faculty: attributes.facultyImages || [], infrastructure: attributes.infrastructureImages || [], facilities: attributes.facilityImages || [], events: attributes.eventImages || [], principalGallery: attributes.principalGallery || [] });
     }).catch((err) => setError(err.message));
   }, [editId]);
 
@@ -559,8 +518,13 @@ export default function CreateListing() {
       return;
     }
 
-    if (!location.state || !location.district || !location.city || !location.areaText.trim()) {
-      setError('Please select state and district, select city, and enter area.');
+    if (!location.state || !location.district || !location.city) {
+      setError('Please select state, district, and city.');
+      return;
+    }
+
+    if (!isEditing && !location.areaText.trim()) {
+      setError('Please enter area.');
       return;
     }
 
@@ -579,13 +543,14 @@ export default function CreateListing() {
       return;
     }
 
-    const hasCoverImage = isSchool ? Boolean(coverFile || existingMedia.cover) : Boolean(uploadedFiles.coverImage);
+    const hasCoverImage = Boolean(coverFile || uploadedFiles.coverImage || existingMedia.cover);
     if (!hasCoverImage) {
       setError('Cover page image is required.');
       return;
     }
 
-    if (!isSchool && !isDedicatedIndustryForm && !uploadedFiles.aboutImage) {
+    const hasAboutImage = Boolean(aboutImageFile || academyAboutImageFile || uploadedFiles.aboutImage || existingMedia.about);
+    if (!isSchool && !isDedicatedIndustryForm && !hasAboutImage) {
       setError('About us image is required.');
       return;
     }
@@ -749,6 +714,7 @@ export default function CreateListing() {
           teachingMethod: form.teachingMethod || undefined,
           languages: form.languages,
           academicActivities: form.academicActivities || undefined,
+          newsNotices: form.newsNotices.split(/[\n,]/).map((notice) => notice.trim()).filter(Boolean),
           principal: { name: form.principalName, designation: form.principalDesignation, qualification: form.principalQualification, experience: form.principalExperience, message: form.principalMessage },
           admissionDetails: { status: form.admissionStatus, classes: form.admissionClasses, eligibility: form.eligibility, ageCriteria: form.ageCriteria, requiredDocuments: form.requiredDocuments, process: form.admissionProcess, enquiryPhone: form.enquiryPhone },
           fees: { show: form.showFees, admission: form.admissionFee, tuition: form.tuitionFee, transport: form.transportFee, other: form.otherCharges, description: form.feeInformation },
@@ -892,7 +858,7 @@ export default function CreateListing() {
         tradingBusinessImageFiles.forEach((file) => updatePayload.append('tradingBusinessImages', file));
         tradingBusinessVideoFiles.forEach((file) => updatePayload.append('tradingBusinessVideos', file));
         if (logoFile) updatePayload.append('logo', logoFile);
-        if (aboutImageFile && isDedicatedIndustryForm) updatePayload.append('aboutImage', aboutImageFile);
+        if (aboutImageFile) updatePayload.append('aboutImage', aboutImageFile);
         if (academyAboutImageFile) updatePayload.append('academyAboutImage', academyAboutImageFile);
         if (academyIntroVideoFile) updatePayload.append('academyIntroVideo', academyIntroVideoFile);
         if (academyVideoThumbnailFile) updatePayload.append('academyVideoThumbnail', academyVideoThumbnailFile);
@@ -969,6 +935,11 @@ export default function CreateListing() {
           {isFoodProcessingForManufacturing && <FoodProcessingFields form={form} setForm={setForm} inputClass={inputClass} logoFile={logoFile} setLogoFile={setLogoFile} existingLogo={existingMedia.logo} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} existingAboutImage={existingMedia.about} />}
           {isTradingBusinessesForManufacturing && <TradingBusinessesFields form={form} setForm={setForm} inputClass={inputClass} logoFile={logoFile} setLogoFile={setLogoFile} existingLogo={existingMedia.logo} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} existingAboutImage={existingMedia.about} />}
           <div className="col-span-2 grid gap-4 sm:grid-cols-2"><label className="text-sm text-ink/70">Facebook URL<input value={form.facebook} onChange={update('facebook')} placeholder="https://facebook.com/" className={inputClass} /></label><label className="text-sm text-ink/70">Instagram URL<input value={form.instagram} onChange={update('instagram')} placeholder="https://instagram.com/" className={inputClass} /></label><label className="text-sm text-ink/70">WhatsApp<input value={form.whatsapp} onChange={update('whatsapp')} placeholder="https://wa.me/" className={inputClass} /></label></div>
+          {error && <p className="col-span-2 text-sm text-vermilion">{error}</p>}
+          {success && <p className="col-span-2 text-sm text-moss">{success}</p>}
+          <button type="submit" disabled={submitting} className="col-span-2 mt-2 rounded bg-ink py-2.5 text-[15px] font-medium text-paper transition hover:bg-ink-light disabled:opacity-60">
+            {submitting ? (isEditing ? 'Updating...' : 'Submitting...') : (isEditing ? 'Update listing' : 'Submit for approval')}
+          </button>
           </> : <>
           {selectedGroup && (
             <div className="col-span-2 rounded-2xl border border-line bg-gradient-to-r from-slate-50 to-blue-50/30 p-4 shadow-sm">
@@ -1376,10 +1347,12 @@ export default function CreateListing() {
 
             <div className="rounded-[1.25rem] border border-[#d8c9f3] bg-[#faf8ff]/95 p-5 shadow-sm sm:p-7"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#6950a8]">3. Principal details</p><div className="mt-4 grid grid-cols-2 gap-4">{[['principalName', 'Principal name *', 'Dr. Anitha Reddy'], ['principalDesignation', 'Designation', 'Principal'], ['principalQualification', 'Qualification', 'M.Sc., B.Ed.'], ['principalExperience', 'Experience', '18 Years']].map(([field, label, placeholder]) => <label key={field} className="col-span-2 text-sm text-ink/70 sm:col-span-1">{label}<input value={form[field]} onChange={update(field)} placeholder={placeholder} className={inputClass} /></label>)}<label className="col-span-2 text-sm text-ink/70">Principal message<textarea rows={3} value={form.principalMessage} onChange={update('principalMessage')} className={inputClass} /></label></div></div>
 
-            <div className="rounded-[1.25rem] border border-[#b9e6df] bg-[#f1fbf8]/95 p-5 shadow-sm sm:p-7"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#168b9a]">4. Academics</p><div className="mt-4 grid gap-4"><label className="text-sm text-ink/70">Teaching method<textarea rows={3} value={form.teachingMethod} onChange={update('teachingMethod')} className={inputClass} /></label><CheckboxGroup label="Languages offered" items={languages} values={form.languages} onChange={(values) => setForm({ ...form, languages: values })} /><label className="text-sm text-ink/70">Academic activities<textarea rows={3} value={form.academicActivities} onChange={update('academicActivities')} className={inputClass} /></label></div></div>
+            <div className="rounded-[1.25rem] border border-[#b9e6df] bg-[#f1fbf8]/95 p-5 shadow-sm sm:p-7"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#168b9a]">4. Academics</p><div className="mt-4 grid gap-4"><label className="text-sm text-ink/70">Teaching method<textarea rows={3} value={form.teachingMethod} onChange={update('teachingMethod')} className={inputClass} /></label><CheckboxGroup label="Languages offered" items={languages} values={form.languages} onChange={(values) => setForm({ ...form, languages: values })} /><label className="text-sm text-ink/70">Student activities <span className="block text-xs text-ink/45">Enter activities separated by commas or line breaks.</span><textarea rows={3} value={form.academicActivities} onChange={update('academicActivities')} placeholder="Sports, Arts, Music, Science Club" className={inputClass} /></label></div></div>
           </div>}
 
           {isSchool && <div className="col-span-2 rounded-xl border border-[#b9e6df] bg-white p-5 sm:p-7"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#168b9a]">School selections</p><div className="mt-4 grid gap-5"><CheckboxGroup label="Required documents" items={documents} values={form.requiredDocuments} onChange={(values) => setForm({ ...form, requiredDocuments: values })} /></div></div>}
+
+          {isSchool && <div className="col-span-2 rounded-xl border border-[#dce8f2] bg-white p-5 shadow-sm sm:p-7"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#1769a8]">School updates</p><h2 className="mt-1 font-display text-xl font-semibold text-[#17324d]">News &amp; Notices</h2><p className="mt-1 text-xs text-ink/50">Add one notice per line. These appear separately from calendar events.</p><textarea rows={4} value={form.newsNotices} onChange={update('newsNotices')} placeholder={'Admissions open for 2026 - 27\nExamination schedule\nHoliday notice'} className={`${inputClass} mt-4`} /></div>}
 
           {userCategoryConfig.fields.length > 0 && !isAnyBizProfForm && (
             <div className="col-span-2 rounded-[1.25rem] border border-cyan-200 bg-cyan-50/50 p-5 shadow-sm sm:p-7">
@@ -1433,13 +1406,24 @@ export default function CreateListing() {
 
           {!isSchool && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && !isAnyBizProfForm && <div className="col-span-2">
             <label className="text-sm text-ink/70">Cover photo</label>
-            <input required={!isEditing && !coverFile} type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} className={inputClass} />
+            {renderSingleImageUpload('coverImage', 'Cover photo', false)}
           </div>}
 
           {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && !isAcademy && !isSportsAcademy && !isAnyBizProfForm && <div className="col-span-2">
             <label className="text-sm text-ink/70">Gallery photos (select as many as needed)</label>
-            <input type="file" accept="image/*" multiple onChange={(e) => setGalleryFiles(Array.from(e.target.files || []))} className={inputClass} />
-            {galleryFiles.length > 0 && <p className="mt-1 text-xs text-ink/50">{galleryFiles.length} photos selected.</p>}
+            <input type="file" accept="image/*" multiple onChange={(e) => handleLocalFiles('galleryImages', e.target.files, true)} className={inputClass} />
+            {(uploadedFiles.galleryImages || []).length > 0 && (
+              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {uploadedFiles.galleryImages.map((image, index) => (
+                  <div key={`${image}-${index}`} className="relative">
+                    <img src={mediaUrl(image)} alt={`Gallery image ${index + 1}`} className="h-28 w-full rounded border border-line bg-white object-cover" />
+                    <button type="button" onClick={() => removeUploadedImage('galleryImages', index)} className="mt-1 text-xs font-medium text-vermilion hover:underline">
+                      Remove image
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>}
 
           {!isSchool && !isCollege && !isUniversity && !isShoppingCategory && !isAutomotiveCategory && !isFoodCategory && !isWeddingCategory && !isAcademy && !isSportsAcademy && !isAnyBizProfForm && <div className="col-span-2">
@@ -1459,7 +1443,7 @@ export default function CreateListing() {
             <div className="rounded-xl border border-[#d8c9f3] bg-[#faf8ff] p-5 sm:p-7"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#6950a8]">12. Social media</p><div className="mt-4 grid grid-cols-2 gap-4">{[['facebook', 'Facebook'], ['instagram', 'Instagram'], ['youtube', 'YouTube'], ['linkedin', 'LinkedIn']].map(([field, label]) => <label key={field} className="col-span-2 text-sm text-ink/70 sm:col-span-1">{label} URL<input value={form[field]} onChange={update(field)} placeholder="https://" className={inputClass} /></label>)}</div></div>
           </div>}
 
-          {isCollege && <CollegeRegistrationFields form={form} setForm={setForm} inputClass={inputClass} faculty={faculty} setFaculty={setFaculty} achievements={achievements} setAchievements={setAchievements} principalImageFile={principalImageFile} setPrincipalImageFile={setPrincipalImageFile} logoFile={logoFile} setLogoFile={setLogoFile} footerLogoFile={footerLogoFile} setFooterLogoFile={setFooterLogoFile} galleryFiles={galleryFiles} setGalleryFiles={setGalleryFiles} schoolVideos={schoolVideos} setSchoolVideos={setSchoolVideos} />}
+          {isCollege && <CollegeRegistrationFields form={form} setForm={setForm} inputClass={inputClass} faculty={faculty} setFaculty={setFaculty} achievements={achievements} setAchievements={setAchievements} principalImageFile={principalImageFile} setPrincipalImageFile={setPrincipalImageFile} logoFile={logoFile} setLogoFile={setLogoFile} footerLogoFile={footerLogoFile} setFooterLogoFile={setFooterLogoFile} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} existingAboutImage={existingMedia.about} galleryFiles={galleryFiles} setGalleryFiles={setGalleryFiles} schoolVideos={schoolVideos} setSchoolVideos={setSchoolVideos} />}
           {isUniversity && <UniversityRegistrationFields form={form} setForm={setForm} inputClass={inputClass} logoFile={logoFile} setLogoFile={setLogoFile} coverFile={coverFile} setCoverFile={setCoverFile} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} galleryFiles={galleryFiles} setGalleryFiles={setGalleryFiles} schoolVideos={schoolVideos} setSchoolVideos={setSchoolVideos} />}
           {isAcademy && <AcademyRegistrationFields form={form} setForm={setForm} logoFile={logoFile} setLogoFile={setLogoFile} existingLogo={existingMedia.logo} aboutImageFile={academyAboutImageFile} setAboutImageFile={setAcademyAboutImageFile} introVideoFile={academyIntroVideoFile} setIntroVideoFile={setAcademyIntroVideoFile} videoThumbnailFile={academyVideoThumbnailFile} setVideoThumbnailFile={setAcademyVideoThumbnailFile} />}
           {isSportsAcademy && <SportsAcademyRegistrationFields form={form} setForm={setForm} logoFile={logoFile} setLogoFile={setLogoFile} existingLogo={existingMedia.logo} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} galleryFiles={galleryFiles} setGalleryFiles={setGalleryFiles} videoFiles={videoFiles} setVideoFiles={setVideoFiles} />}

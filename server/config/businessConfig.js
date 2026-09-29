@@ -18,6 +18,11 @@ const SUBCATEGORY_TO_GROUP = Object.fromEntries(
   Object.entries(BUSINESS_CATEGORY_GROUPS).flatMap(([group, subcategories]) => subcategories.map((subcategory) => [subcategory, group]))
 );
 
+const normalizeBusinessGroup = (value) => {
+  const normalize = (group) => String(group || '').toLowerCase().replace(/&/g, '').replace(/[^a-z0-9]/g, '');
+  return Object.keys(BUSINESS_CATEGORY_GROUPS).find((group) => normalize(group) === normalize(value)) || null;
+};
+
 const CATEGORY_MODULES = {
   Schools: ['admissions', 'classes', 'academicPrograms', 'faculty', 'campus', 'facilities', 'sports', 'activities', 'events', 'achievements'],
   Hospitals: ['departments', 'doctors', 'specialities', 'diagnostics', 'facilities', 'appointment', 'emergency'],
@@ -34,4 +39,4 @@ const CATEGORY_MODULES = {
 const getBusinessGroup = (subcategory) => SUBCATEGORY_TO_GROUP[subcategory] || null;
 const getModules = (subcategory, pageType) => pageType === 'dynamic' ? (CATEGORY_MODULES[subcategory] || []) : [];
 
-module.exports = { BUSINESS_CATEGORY_GROUPS, SUBCATEGORY_TO_GROUP, CATEGORY_MODULES, getBusinessGroup, getModules };
+module.exports = { BUSINESS_CATEGORY_GROUPS, SUBCATEGORY_TO_GROUP, CATEGORY_MODULES, getBusinessGroup, getModules, normalizeBusinessGroup };

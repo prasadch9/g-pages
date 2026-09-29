@@ -3,7 +3,7 @@ const Category = require('../models/Category');
 const Favorite = require('../models/Favorite');
 const BusinessRequest = require('../models/BusinessRequest');
 const Notification = require('../models/Notification');
-const { getBusinessGroup } = require('../config/businessConfig');
+const { getBusinessGroup, normalizeBusinessGroup } = require('../config/businessConfig');
 const { storeUpload } = require('../services/mediaStorage');
 const slugify = require('slugify');
 const { AppError } = require('../middleware/errorHandler');
@@ -224,7 +224,7 @@ const createPlace = async (req, res, next) => {
     const category = await Category.findById(body.category).select('name group');
     if (!category) return next(new AppError('Select a valid category.', 400));
     const subcategory = body.subcategory || category.name;
-    const businessGroup = body.businessGroup || getBusinessGroup(subcategory) || null;
+    const businessGroup = getBusinessGroup(subcategory) || normalizeBusinessGroup(body.businessGroup);
     const pageType = body.pageType || 'static';
     body.location = parseMultipartValue(body.location, body.location);
     body.socialLinks = parseMultipartValue(body.socialLinks, {});
@@ -394,6 +394,9 @@ const updatePlace = async (req, res, next) => {
     ownerUpdates.location = parseMultipartValue(ownerUpdates.location, ownerUpdates.location);
     ownerUpdates.services = parseMultipartValue(ownerUpdates.services, ownerUpdates.services);
     ownerUpdates.facilities = parseMultipartValue(ownerUpdates.facilities, ownerUpdates.facilities);
+    ownerUpdates.images = parseMultipartValue(ownerUpdates.images, ownerUpdates.images);
+    ownerUpdates.videos = parseMultipartValue(ownerUpdates.videos, ownerUpdates.videos);
+    ownerUpdates.workingHours = parseMultipartValue(ownerUpdates.workingHours, ownerUpdates.workingHours);
     ownerUpdates.socialLinks = parseMultipartValue(ownerUpdates.socialLinks, ownerUpdates.socialLinks);
     ownerUpdates.attributes = parseMultipartValue(ownerUpdates.attributes, ownerUpdates.attributes);
     ownerUpdates.categoryData = parseMultipartValue(ownerUpdates.categoryData, ownerUpdates.categoryData);

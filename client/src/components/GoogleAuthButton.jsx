@@ -1,9 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 const GOOGLE_SCRIPT_ID = 'google-identity-services';
+const GOOGLE_CLIENT_ID_KEY = '__googlePagesGoogleClientId';
+const GOOGLE_CALLBACK_KEY = '__googlePagesGoogleCallback';
 
 export default function GoogleAuthButton({ onSuccess, onError, disabled = false }) {
   const buttonRef = useRef(null);
+  window[GOOGLE_CALLBACK_KEY] = onSuccess;
   const [ready, setReady] = useState(Boolean(window.google?.accounts?.id));
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -33,10 +36,13 @@ export default function GoogleAuthButton({ onSuccess, onError, disabled = false 
   useEffect(() => {
     if (!ready || !clientId || !buttonRef.current || disabled) return;
     buttonRef.current.replaceChildren();
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: ({ credential }) => onSuccess(credential),
-    });
+    if (window[GOOGLE_CLIENT_ID_KEY] !== clientId) {
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: ({ credential }) => window[GOOGLE_CALLBACK_KEY]?.(credential),
+      });
+      window[GOOGLE_CLIENT_ID_KEY] = clientId;
+    }
     window.google.accounts.id.renderButton(buttonRef.current, {
       theme: 'outline',
       size: 'large',
@@ -44,7 +50,7 @@ export default function GoogleAuthButton({ onSuccess, onError, disabled = false 
       text: 'continue_with',
       width: buttonRef.current.offsetWidth || 360,
     });
-  }, [clientId, disabled, onSuccess, ready]);
+  }, [clientId, disabled, ready]);
 
   const handleUnavailable = () => {
     onError('Google sign-in is not configured yet. Add VITE_GOOGLE_CLIENT_ID to the client environment.');

@@ -21,6 +21,16 @@ const galleryDefaults = [
 
 const imageUrl = (id) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=900&q=85`;
 const safeUrl = (value) => value ? (/^https?:\/\//i.test(value) ? value : `https://${value}`) : '';
+const videoEmbedUrl = (value) => {
+  try {
+    const parsedUrl = new URL(safeUrl(value));
+    const host = parsedUrl.hostname.replace(/^www\./, '');
+    if (host === 'youtu.be') return `https://www.youtube-nocookie.com/embed/${parsedUrl.pathname.slice(1)}?autoplay=1`;
+    if (host.endsWith('youtube.com')) return `https://www.youtube-nocookie.com/embed/${parsedUrl.searchParams.get('v') || parsedUrl.pathname.split('/').pop()}?autoplay=1`;
+    if (host === 'vimeo.com' || host.endsWith('.vimeo.com')) return `https://player.vimeo.com/video/${parsedUrl.pathname.split('/').pop()}?autoplay=1`;
+  } catch { return ''; }
+  return '';
+};
 
 function SectionTitle({ eyebrow, title, action }) {
   return <div className="flex items-center justify-between gap-3"><div><p className="text-[9px] font-extrabold uppercase tracking-[.16em] text-blue-700">{eyebrow}</p><h2 className="mt-1 text-xl font-extrabold text-[#123764] sm:text-2xl">{title}</h2></div>{action && <a href={action.href} className="shrink-0 text-[9px] font-bold text-blue-700">{action.label} →</a>}</div>;
@@ -52,6 +62,8 @@ function CourseDetailPage({ place, course, image, phone, onBack }) {
 
 export default function TrainingInstitutionPage({ place, onReport }) {
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedVideo, setSelectedVideo] = useState('');
   const attrs = place.attributes || {};
   const profile = attrs.trainingInstitution || attrs.trainingInstitute || attrs.academy || attrs;
   const coursesList = profile.courses || profile.programs || profile.trainingPrograms || [];
@@ -63,6 +75,14 @@ export default function TrainingInstitutionPage({ place, onReport }) {
     : gallery.length ? gallery.slice(0, 5).map((src, i) => [src, profile.galleryTitles?.[i] || ['Computer Lab', 'Classroom Sessions', 'Hands-on Practice', 'Student Achievements', 'Our Campus'][i]]) : galleryDefaults.map(([title, id]) => [imageUrl(id), title]);
   const heroImage = place.coverImage || gallery[0] || imageUrl('photo-1523240795612-9a054b0db644');
   const aboutImage = profile.aboutImage || gallery[1] || gallery[0] || imageUrl('photo-1524178232363-1fb2b075b655');
+  const trainingViewerItems = [...new Set([heroImage, aboutImage, ...galleryItems.map(([src]) => src), ...coursesList.map((course) => course.image)].filter(Boolean))].map((src, index) => ({ src, alt: `${place.name} training photo ${index + 1}` }));
+  const selectedImageIndex = trainingViewerItems.findIndex((item) => item.src === selectedImage);
+  const moveImage = (direction) => {
+    if (!trainingViewerItems.length) return;
+    const currentIndex = Math.max(selectedImageIndex, 0);
+    const nextIndex = (currentIndex + direction + trainingViewerItems.length) % trainingViewerItems.length;
+    setSelectedImage(trainingViewerItems[nextIndex].src);
+  };
   const highlights = profile.highlights || ['Expert Trainers', 'Hands-on Learning', '100% Placement Support'];
   const facilities = profile.facilities || place.facilities || ['Modern Infrastructure', 'Hands-on Training', 'Experienced Trainers', 'Flexible Batches'];
   const testimonials = profile.testimonials || [];
@@ -98,7 +118,32 @@ export default function TrainingInstitutionPage({ place, onReport }) {
     ? (/^https?:\/\//i.test(value) ? value : `https://wa.me/${String(value).replace(/\D/g, '')}`)
     : safeUrl(value);
 
-  return <div className="training-page min-h-screen bg-[#f7fbff] text-[#12345d]">
+  return <div className="training-page min-h-screen bg-[#f7fbff] text-[#12345d]" onClick={(event) => {
+    if (!(event.target instanceof Element)) return;
+    const videoElement = event.target.closest('main video');
+    if (videoElement) {
+      setSelectedVideo(videoElement.currentSrc || videoElement.src);
+      return;
+    }
+    const videoLink = event.target.closest('main a[target="_blank"]');
+    if (videoLink) {
+      event.preventDefault();
+      setSelectedVideo(videoLink.href);
+      return;
+    }
+    const imageElement = event.target.closest('main img, #top img');
+    if (imageElement && !imageElement.closest('[data-video-trigger]')) setSelectedImage(imageElement.currentSrc || imageElement.src);
+  }}>
+    {selectedImage && <div role="dialog" aria-modal="true" aria-label="Training photo viewer" className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/95 p-4 sm:p-8" onClick={() => setSelectedImage(null)}>
+      <button type="button" onClick={() => setSelectedImage(null)} className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-3xl text-white" aria-label="Close image viewer">×</button>
+      {trainingViewerItems.length > 1 && <button type="button" onClick={(event) => { event.stopPropagation(); moveImage(-1); }} className="absolute left-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-3xl text-white sm:left-6" aria-label="Previous image">‹</button>}
+      <div className="flex max-h-full max-w-full flex-col items-center" onClick={(event) => event.stopPropagation()}><img src={selectedImage} alt={trainingViewerItems[selectedImageIndex]?.alt || `${place.name} enlarged`} className="max-h-[78vh] max-w-[calc(100vw-7rem)] object-contain sm:max-h-[82vh]" />{trainingViewerItems.length > 1 && <p className="mt-3 text-xs font-medium text-white/75">{Math.max(selectedImageIndex + 1, 1)} / {trainingViewerItems.length}</p>}</div>
+      {trainingViewerItems.length > 1 && <button type="button" onClick={(event) => { event.stopPropagation(); moveImage(1); }} className="absolute right-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-3xl text-white sm:right-6" aria-label="Next image">›</button>}
+    </div>}
+    {selectedVideo && <div role="dialog" aria-modal="true" aria-label="Training video player" className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/95 p-4 sm:p-8" onClick={() => setSelectedVideo('')}>
+      <button type="button" onClick={() => setSelectedVideo('')} className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-3xl text-white" aria-label="Close video player">×</button>
+      <div className="w-full max-w-5xl overflow-hidden rounded-lg bg-black" onClick={(event) => event.stopPropagation()}>{/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(selectedVideo) ? <video src={selectedVideo} controls autoPlay className="max-h-[85vh] w-full" /> : <iframe src={videoEmbedUrl(selectedVideo) || safeUrl(selectedVideo)} title={`${place.name} training video`} allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen className="aspect-video w-full border-0" />}</div>
+    </div>}
     <header className="sticky top-0 z-40 border-b border-blue-100 bg-white/95 shadow-sm backdrop-blur"><div className="mx-auto flex h-[62px] max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-8"><a href="#top" className="flex min-w-0 items-center gap-2.5">{place.logo ? <img src={place.logo} alt="" className="h-10 w-10 object-contain" /> : <span className="text-3xl text-blue-700">🎓</span>}<span className="min-w-0"><strong className="block truncate text-sm sm:text-base">{place.name}</strong><small className="block text-[9px] tracking-wider text-slate-500">Learn · Practice · Grow</small></span></a><nav className="hidden items-center gap-7 text-[10px] font-bold lg:flex"><a href="#top" className="text-blue-700">Home</a><a href="#courses">Courses</a><a href="#about">About Us</a><a href="#facilities">Facilities</a><a href="#gallery">Gallery</a><a href="#placement">Placement</a><a href="#reviews">Reviews</a><a href={`#review-comment-${place._id}`}>Comments</a><a href="#contact">Contact</a></nav><div className="flex shrink-0 items-center gap-3"><a href={phone} className="hidden text-[10px] font-bold sm:block">☎ {place.phone || 'Contact us'}</a><a href="#contact" className="rounded-full bg-blue-700 px-4 py-2 text-[10px] font-bold text-white">Enrol Now →</a></div></div></header>
 
     <section id="top" className="relative isolate min-h-[285px] overflow-hidden bg-[#06366b] sm:min-h-[350px]"><img src={heroImage} alt={`${place.name} training`} className="absolute inset-0 -z-20 h-full w-full object-cover"/><div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(3,35,75,.98)_0%,rgba(3,43,83,.88)_42%,rgba(3,43,83,.18)_100%)]"/><div className="mx-auto flex min-h-[285px] max-w-[1440px] items-center px-5 py-10 sm:min-h-[350px] sm:px-8"><div className="max-w-xl text-white"><span className="rounded-full bg-teal-600/90 px-4 py-1.5 text-[10px] font-bold">✦ Your Future Starts Here</span><h1 className="mt-4 text-4xl font-black leading-[1.04] sm:text-6xl">Build Your Skills<br/><span className="text-[#ffc313]">For a Better Tomorrow</span></h1><p className="mt-3 max-w-lg text-xs leading-relaxed text-white/85 sm:text-sm">{place.description || 'Join our industry-focused training programs and gain practical skills with expert guidance, hands-on learning and placement support.'}</p><div className="mt-5 flex flex-wrap gap-3"><a href="#courses" className="rounded-lg bg-[#ffc313] px-5 py-3 text-[10px] font-extrabold text-[#12345d]">Explore Courses →</a><a href="#contact" className="rounded-lg border border-white/50 px-5 py-3 text-[10px] font-bold text-white">Contact Us</a></div><div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-[10px] font-semibold text-white/90">{highlights.slice(0, 3).map((item, i) => <span key={i}>✦　{typeof item === 'string' ? item : item.name}</span>)}</div></div></div></section>

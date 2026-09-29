@@ -10,6 +10,7 @@ import CategoriesPage from './pages/CategoriesPage';
 import CategoryPlacesPage from './pages/CategoryPlacesPage';
 import ExplorePage from './pages/ExplorePage';
 import AboutPage from './pages/AboutPage';
+import { BusinessSupportPage, CareersPage, ContactPage, PrivacyPage, TermsPage } from './pages/CompanyPages';
 import BusinessesPage from './pages/BusinessesPage';
 import ComingSoon from './pages/ComingSoon';
 import ProtectedRoute from './routes/ProtectedRoute';
@@ -22,11 +23,13 @@ import AdminOverview from './pages/admin/AdminOverview';
 import AdminBusinesses from './pages/admin/AdminBusinesses';
 import AdminBusinessReview from './pages/admin/AdminBusinessReview';
 import AdminUsers from './pages/admin/AdminUsers';
+import AdminSettings from './pages/admin/AdminSettings';
 import AdminCategories from './pages/admin/AdminCategories';
 import CityPage from './pages/CityPage';
 import CategoryListingPage from './pages/CategoryListingPage';
 import PlaceDetailPage from './pages/PlaceDetailPage';
 import SearchResultsPage from './pages/SearchResultsPage';
+import TrendingPlacesPage from './pages/TrendingPlacesPage';
 import PublicBusinessProfilePage from './pages/PublicBusinessProfilePage';
 import RestaurantEditor from './pages/business/RestaurantEditor';
 import BusinessEditorPage from './pages/business/BusinessEditorPage';
@@ -35,10 +38,9 @@ import WhatsAppButton from './components/WhatsAppButton';
 export default function App() {
   const location = useLocation();
   const isPlaceRoute = location.pathname.startsWith('/place/');
-  const isRestaurantProfile = /^\/business\/[^/]+$/.test(location.pathname);
+  const isRestaurantProfile = /^\/business\/[^/]+$/.test(location.pathname) && location.pathname !== '/business/dashboard';
   const isConsultancyPage = location.pathname.endsWith('/consultancies');
-  const isBusinessOwnerSurface = /^(\/business\/dashboard|\/business\/listings\/new(?:\/restaurant)?|\/business\/listings\/[^/]+\/edit)/.test(location.pathname);
-  const hideChrome = isPlaceRoute || isRestaurantProfile || isBusinessOwnerSurface || isConsultancyPage;
+  const hideChrome = isPlaceRoute || isRestaurantProfile || isConsultancyPage;
 
   return (
     <div className="flex min-h-screen flex-col bg-paper">
@@ -50,13 +52,20 @@ export default function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/register" element={<Register />} />
           <Route path="/search" element={<SearchResultsPage />} />
+          <Route path="/trending" element={<TrendingPlacesPage />} />
           <Route path="/place/:id" element={<PlaceDetailPage />} />
+          <Route path="/business/login" element={<Login businessMode />} />
+          <Route path="/business/support" element={<BusinessSupportPage />} />
           <Route path="/business/:businessId" element={<PublicBusinessProfilePage />} />
           <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/categories/:category" element={<CategoryPlacesPage />} />
           <Route path="/explore" element={<ExplorePage />} />
           <Route path="/businesses" element={<BusinessesPage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/careers" element={<CareersPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
           <Route
             path="/dashboard"
             element={
@@ -131,6 +140,7 @@ export default function App() {
             <Route path="businesses" element={<AdminBusinesses />} />
             <Route path="businesses/:id" element={<AdminBusinessReview />} />
             <Route path="users" element={<AdminUsers />} />
+            <Route path="settings" element={<AdminSettings />} />
           </Route>
 
           {/* SEO-friendly location routes, e.g.:

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import GoogleAuthButton from '../components/GoogleAuthButton';
 
-export default function Login() {
+export default function Login({ businessMode = false }) {
   const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -67,8 +67,8 @@ export default function Login() {
   return (
     <div className="container-page flex min-h-[70vh] items-center justify-center py-16">
       <div className="w-full max-w-sm rounded-3xl border border-white/80 bg-white/85 p-7 shadow-[0_20px_55px_rgba(16,42,67,0.12)] backdrop-blur sm:p-8">
-        <h1 className="font-display text-2xl font-semibold text-ink">Log in to Google Pages</h1>
-        <p className="mt-1 text-sm text-ink/55">Pick up right where you left off.</p>
+        <h1 className="font-display text-2xl font-semibold text-ink">{businessMode ? 'Business login' : 'Log in to Google Pages'}</h1>
+        <p className="mt-1 text-sm text-ink/55">{businessMode ? 'Sign in to manage your business listings.' : 'Pick up right where you left off.'}</p>
 
         <div className="mt-6">
           <GoogleAuthButton onSuccess={handleGoogleSuccess} onError={setError} disabled={googleSubmitting || submitting} />
@@ -124,9 +124,9 @@ export default function Login() {
         )}
 
         <p className="mt-6 text-sm text-ink/55">
-          New to Google Pages?{' '}
-          <Link to="/register" className="text-ink underline underline-offset-2">
-            Create an account
+          {businessMode ? 'Need a business account?' : 'New to Google Pages?'}{' '}
+          <Link to={businessMode ? '/register?role=business' : '/register'} className="text-ink underline underline-offset-2">
+            {businessMode ? 'Create a business account' : 'Create an account'}
           </Link>
         </p>
       </div>
