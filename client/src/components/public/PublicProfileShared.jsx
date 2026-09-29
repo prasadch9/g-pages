@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import FavoriteButton from '../FavoriteButton';
 import ReviewsSection from '../ReviewsSection';
 import api from '../../services/api';
+import mediaUrl from '../../utils/mediaUrl';
 
 export const safeUrl = (value) => {
   if (!value) return '';
@@ -86,6 +87,39 @@ export const resolvePropertyBusinessType = (place) => {
   return '';
 };
 
+export const collectVideos = (...sources) => {
+  const rawList = [];
+  const add = (val) => {
+    if (!val) return;
+    if (Array.isArray(val)) {
+      val.forEach(add);
+    } else if (typeof val === 'string') {
+      val.split(/[\n,\r]+/).forEach((str) => {
+        const trimmed = str.trim();
+        if (trimmed) rawList.push(trimmed);
+      });
+    } else if (typeof val === 'object') {
+      if (val.url || val.src || val.videoUrl) {
+        rawList.push(val);
+      }
+    }
+  };
+
+  sources.forEach(add);
+
+  const normalized = [];
+  const seenUrls = new Set();
+  for (const item of rawList) {
+    const url = typeof item === 'string' ? item : item.url || item.src || item.videoUrl || '';
+    const cleanUrl = String(url).trim();
+    if (cleanUrl && !seenUrls.has(cleanUrl)) {
+      seenUrls.add(cleanUrl);
+      normalized.push(typeof item === 'string' ? { url: cleanUrl } : { ...item, url: cleanUrl });
+    }
+  }
+  return normalized;
+};
+
 export const getProfileData = (place) => {
   const business = place?.attributes?.businessProfile || {};
   const legacy = place?.attributes?.restaurantProfile || {};
@@ -94,21 +128,50 @@ export const getProfileData = (place) => {
   const legacyBasic = legacy.basicInformation || {};
   const legacyLocation = legacy.location || {};
   const legacyDetails = legacy.details || {};
+  const weddingDetails = place?.attributes?.weddingDetails || {};
+  const foodDetails = place?.attributes?.foodDetails || {};
+  const travelDetails = place?.attributes?.travelDetails || {};
   const merged = { ...common, ...categorySpecific, ...legacyBasic, ...legacyLocation, ...legacyDetails };
+
+  const videos = collectVideos(
+    common.videos,
+    place?.videos,
+    place?.video,
+    place?.attributes?.videos,
+    place?.attributes?.video,
+    place?.attributes?.videoUrls,
+    place?.attributes?.mallVideos,
+    place?.attributes?.schoolVideos,
+    place?.attributes?.youtubeUrl,
+    place?.attributes?.videoUrl,
+    weddingDetails.videos,
+    weddingDetails.video,
+    categorySpecific.videos,
+    categorySpecific.video,
+    foodDetails.videos,
+    travelDetails.videos,
+    place?.attributes?.academy?.galleryVideos,
+    place?.attributes?.smallScaleIndustries?.galleryVideos,
+    place?.attributes?.foodProcessing?.galleryVideos,
+    place?.attributes?.tradingBusinesses?.galleryVideos,
+    legacy.videos
+  );
+
   return {
     ...merged,
     services: categorySpecific.services || common.services || legacy.services || place?.services || [],
     infrastructure: categorySpecific.infrastructure || common.infrastructure || legacy.infrastructure || place?.facilities || [],
     businessType: business.businessType || legacy.businessType || '',
-    socialMedia: { ...(place?.socialLinks || {}), ...(common.socialMedia || {}), ...(legacy.socialMedia || {}) },
+    socialMedia: { ...(place?.socialLinks || {}), ...(common.socialMedia || {}) },
     openingHours: common.openingHours || legacy.openingHours || legacyDetails.openingHours || place?.workingHours || [],
     gallery: common.gallery || legacy.gallery || place?.images || [],
-    videos: common.videos || legacy.videos || [],
+    videos,
     logo: common.logo || place?.logo || '',
     coverImage: common.coverImage || place?.coverImage || '',
     about: common.about || place?.description || '',
   };
 };
+
 
 export function ImageFrame({ src, alt, className = '', eager = false }) {
   return src ? <img src={src} alt={alt} loading={eager ? 'eager' : 'lazy'} className={`h-full w-full object-cover ${className}`} /> : <div className={`h-full w-full bg-gradient-to-br from-stone-300 to-stone-700 ${className}`} aria-label={alt} />;
@@ -164,44 +227,55 @@ export function ServicesSection({ title = 'Services', items = [] }) {
 }
 
 const getYouTubeId = (url) => {
+  if (!url || typeof url !== 'string') return null;
   try {
-    const u = new URL(url);
-    if (u.hostname.includes('youtu.be')) return u.pathname.slice(1).split('?')[0];
-    if (u.pathname.includes('/shorts/')) return u.pathname.split('/shorts/')[1]?.split('?')[0];
+    const iframeMatch = url.match(/src=["']([^"']+)["']/i);
+    const cleanUrl = iframeMatch ? iframeMatch[1] : url.trim();
+    const u = new URL(cleanUrl.startsWith('http') ? cleanUrl : `https://${cleanUrl}`);
+    if (u.hostname.includes('youtu.be')) return u.pathname.slice(1).split('?')[0].split('/')[0];
+    if (u.pathname.includes('/shorts/')) return u.pathname.split('/shorts/')[1]?.split('?')[0].split('/')[0];
+    if (u.pathname.includes('/embed/')) return u.pathname.split('/embed/')[1]?.split('?')[0].split('/')[0];
+    if (u.pathname.includes('/live/')) return u.pathname.split('/live/')[1]?.split('?')[0].split('/')[0];
     return u.searchParams.get('v');
-  } catch { return null; }
+  } catch {
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/|live\/))([\w-]{11})/i);
+    return match ? match[1] : null;
+  }
 };
 const getVimeoId = (url) => { try { const m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/); return m ? m[1] : null; } catch { return null; } };
 const getGoogleDriveEmbedUrl = (url) => { try { const m = url.match(/drive\.google\.com\/file\/d\/([^/]+)/); if (m) return `https://drive.google.com/file/d/${m[1]}/preview`; if (url.includes('drive.google.com') && url.includes('/preview')) return url; return null; } catch { return null; } };
 const detectVideoSrcType = (video) => {
-  if (video.type && video.type !== 'url') return video.type;
-  const url = video.url || '';
+  const url = typeof video === 'string' ? video : video?.url || video?.src || '';
   if (/youtu\.be|youtube\.com/i.test(url)) return 'youtube';
   if (/vimeo\.com/i.test(url)) return 'vimeo';
   if (/drive\.google\.com/i.test(url)) return 'google';
-  if (/\.(mp4|webm|mov|avi|mkv)(\?|$)/i.test(url)) return 'direct';
+  if (/\.(mp4|webm|mov|avi|mkv)(\?|$)/i.test(url) || url.includes('/uploads/')) return 'direct';
+  if (video?.type && video.type !== 'url') return video.type;
   return 'url';
 };
 
 export function PublicVideoCard({ video }) {
   const [failed, setFailed] = useState(false);
+  const rawUrl = typeof video === 'string' ? video : video?.url || video?.src || '';
   const srcType = detectVideoSrcType(video);
-  let embedUrl = null;
-  if (srcType === 'youtube') { const id = getYouTubeId(video.url); embedUrl = id ? `https://www.youtube.com/embed/${id}` : null; }
-  else if (srcType === 'vimeo') { const id = getVimeoId(video.url); embedUrl = id ? `https://player.vimeo.com/video/${id}` : null; }
-  else if (srcType === 'google') { embedUrl = getGoogleDriveEmbedUrl(video.url); }
 
+  let embedUrl = null;
+  if (srcType === 'youtube') { const id = getYouTubeId(rawUrl); embedUrl = id ? `https://www.youtube.com/embed/${id}` : null; }
+  else if (srcType === 'vimeo') { const id = getVimeoId(rawUrl); embedUrl = id ? `https://player.vimeo.com/video/${id}` : null; }
+  else if (srcType === 'google') { embedUrl = getGoogleDriveEmbedUrl(rawUrl); }
+
+  const resolvedUrl = mediaUrl(rawUrl);
   const sourceLabel = { upload: '📁 Uploaded', youtube: '▶ YouTube', vimeo: '🎬 Vimeo', google: '🔵 Google Drive', direct: '🎞 Video', url: '🔗 Video' }[srcType] || '🔗 Video';
 
   return (
     <div className="overflow-hidden rounded-xl border border-black/10 bg-white shadow-sm">
       <div className="aspect-video w-full overflow-hidden bg-black/5">
         {(srcType === 'upload' || srcType === 'direct') ? (
-          <video src={video.url} controls className="h-full w-full" onError={() => setFailed(true)} />
+          <video src={resolvedUrl} controls className="h-full w-full object-cover" onError={() => setFailed(true)} />
         ) : embedUrl && !failed ? (
           <iframe
             src={embedUrl}
-            title={video.title || 'Video'}
+            title={video.title || video.caption || 'Video'}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
             className="h-full w-full border-0"
@@ -210,20 +284,22 @@ export function PublicVideoCard({ video }) {
         ) : (
           <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
             <span className="text-4xl">🎬</span>
-            <p className="text-sm font-semibold opacity-70">{video.title || 'Video'}</p>
-            <a
-              href={safeUrl(video.url)}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-lg bg-stone-900 px-5 py-2.5 text-sm font-bold text-white"
-            >
-              Open Video ↗
-            </a>
+            <p className="text-sm font-semibold opacity-70">{video.title || video.caption || 'Video'}</p>
+            {resolvedUrl && (
+              <a
+                href={safeUrl(resolvedUrl)}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-lg bg-stone-900 px-5 py-2.5 text-sm font-bold text-white hover:bg-stone-800"
+              >
+                Open Video ↗
+              </a>
+            )}
           </div>
         )}
       </div>
       <div className="px-4 py-3">
-        <p className="truncate text-sm font-semibold">{video.title || video.originalName || 'Watch video'}</p>
+        <p className="truncate text-sm font-semibold">{video.title || video.caption || video.originalName || 'Watch video'}</p>
         <p className="mt-0.5 text-xs opacity-50">{sourceLabel}</p>
       </div>
     </div>

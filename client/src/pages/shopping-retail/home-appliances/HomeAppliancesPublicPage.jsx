@@ -65,7 +65,7 @@ export default function HomeAppliancesPublicPage({ place }) {
   const products = firstList(specific.products, specific.productItems, attributes.products, attributes.featuredProducts, attributes.productList);
   const savedCategories = firstList(specific.productCategories, specific.products, attributes.productCategories, attributes.products);
   const services = firstList(specific.services, specific.specialtyServices, place.services, profile.services);
-  const videosSource = firstList(common.videos, profile.videos, place.videos, place.video, attributes.videos);
+  const videosSource = profile.videos?.length ? profile.videos : firstList(common.videos, place.videos, place.video, attributes.videos);
   const videos = videosSource.map((video) => typeof video === 'string' ? { url: video } : video).filter((video) => video?.url || video?.src);
   const facilities = firstList(place.facilities, specific.features, specific.infrastructure, attributes.facilities);
   const savedOffer = firstList(specific.offer, specific.offers, attributes.offer, attributes.offers);

@@ -168,9 +168,9 @@ function RetailPublicPage({ place, kind }) {
   const itemRecords = kind === 'mall' ? firstList(place.attributes?.mallCollections) : kind === 'boutique' ? firstList(specific.collections) : firstList(specific.productItems, specific.productsList, specific.products);
   const products = itemRecords.filter((item) => typeof item === 'object' && (item.name || item.title));
   const services = savedServices.length ? savedServices : design.cardNames;
-  const videoRecords = kind === 'mall'
-    ? firstList(place.attributes?.mallVideos, common.videos, place.videos, place.video)
-    : firstList(common.videos, profile.videos, place.videos, place.video);
+  const videoRecords = profile.videos?.length
+    ? profile.videos
+    : firstList(place.attributes?.mallVideos, common.videos, place.videos, place.video);
   const videos = videoRecords.map((video) => typeof video === 'string' ? { url: video } : video).filter((video) => video?.url || video?.src);
   const profileOffers = kind === 'mall' ? firstList(place.attributes?.mallOffers, place.attributes?.offers) : firstList(specific.offers, specific.offer, profile.offers, specific.features?.filter?.((item) => /%|off|offer/i.test(String(item))));
   const offers = profileOffers;
@@ -242,9 +242,12 @@ function RetailPublicPage({ place, kind }) {
   );
 }
 
-export function BoutiquePublicPage({ place }) { return <RetailPublicPage place={place} kind="boutique" />; }
+import BoutiquePublicPage from './BoutiquePublicPage';
+
+export { BoutiquePublicPage };
 export function ShoppingMallPublicPage({ place }) { return <RetailPublicPage place={place} kind="mall" />; }
 export function HomeAppliancesPublicPage({ place }) { return <RetailPublicPage place={place} kind="appliances" />; }
 export function FurnitureShopPublicPage({ place }) { return <RetailPublicPage place={place} kind="furniture" />; }
 export function MattressShopPublicPage({ place }) { return <RetailPublicPage place={place} kind="mattress" />; }
 export { NurseryPublicPage };
+

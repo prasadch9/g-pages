@@ -35,6 +35,7 @@ import { isHealthcareBusiness } from './healthcare-medical/healthcareUtils';
 const normalizeCategoryLabel = (value) => String(value?.name || value?.slug || value || '')
   .trim()
   .toLowerCase()
+  .replace(/\band\b/g, ' ')
   .replace(/[_&-]+/g, ' ')
   .replace(/\s+/g, ' ');
 
@@ -58,6 +59,8 @@ const isMarriageWeddingListing = (place) => {
     place?.category?.parent?.slug,
     place?.category?.name,
     place?.category?.slug,
+    place?.subcategory?.parent?.name,
+    place?.subcategory?.parent?.slug,
   ];
   return categoryLabels.some((label) => normalizeCategoryLabel(label) === 'marriage wedding');
 };
@@ -98,18 +101,6 @@ const isSaloonSpaListing = (place) => {
 };
 
 const isShoppingRetailListing = (place, subcategories) => {
-  const parentLabels = [
-    place?.categoryGroup,
-    place?.businessGroup,
-    place?.category?.group,
-    place?.category?.parent?.name,
-    place?.category?.parent?.slug,
-    place?.category?.name,
-    place?.category?.slug,
-  ];
-  const isShoppingRetail = parentLabels.some((label) => normalizeCategoryLabel(label) === 'shopping retail');
-  if (!isShoppingRetail) return false;
-
   const candidates = [
     place?.subcategory?.name,
     place?.subcategory?.slug,

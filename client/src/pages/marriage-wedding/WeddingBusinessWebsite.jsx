@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import ReviewsSection from '../../components/ReviewsSection';
-import { getProfileData, ImageFrame, VideoGallery } from '../../components/public/PublicProfileShared';
+import { getProfileData, ImageFrame, PublicVideoCard, VideoGallery } from '../../components/public/PublicProfileShared';
 import { getWhatsAppUrl } from '../healthcare-medical/healthcareUtils';
 
 const configs = {
@@ -94,6 +94,12 @@ export default function WeddingBusinessWebsite({ place, weddingType }) {
     return fromProfile.length ? fromProfile : defaultServices;
   }, [profile, place]);
 
+  const videos = useMemo(() => {
+    return (profile.videos && profile.videos.length ? profile.videos : [])
+      .map((item) => (typeof item === 'string' ? { url: item } : item))
+      .filter((item) => item && (item.url || item.src));
+  }, [profile.videos]);
+
   const social = profile.socialMedia || place.socialLinks || {};
   const primaryPhone = place.phone || profile.phone || '';
   const primaryWhatsApp = place.whatsapp || profile.whatsapp || social.whatsapp || primaryPhone;
@@ -116,7 +122,18 @@ export default function WeddingBusinessWebsite({ place, weddingType }) {
   const logo = profile.logo || place.logo || '';
   const heroTitle = config.tagline || 'Find Your Perfect Life Partner';
 
-  const navLinks = config.nav.map((item) => ({ label: item, href: `#${item.toLowerCase().replace(/[^a-z]+/g, '-')}` }));
+  const navLinks = useMemo(() => {
+    const base = config.nav.map((item) => ({ label: item, href: `#${item.toLowerCase().replace(/[^a-z]+/g, '-')}` }));
+    if (videos.length > 0 && !base.some((link) => link.href === '#videos' || link.href === '#success-stories')) {
+      const contactIdx = base.findIndex((l) => l.href === '#contact');
+      if (contactIdx !== -1) {
+        base.splice(contactIdx, 0, { label: 'Videos', href: '#videos' });
+      } else {
+        base.push({ label: 'Videos', href: '#videos' });
+      }
+    }
+    return base;
+  }, [config.nav, videos.length]);
 
   return (
     <div className="min-h-screen bg-[#fffaf7] text-[#4b1227]">
@@ -395,32 +412,24 @@ export default function WeddingBusinessWebsite({ place, weddingType }) {
             <div className="flex items-end justify-between gap-4">
               <div>
                 <p className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-[#d4145a]">VIDEOS</p>
-                <h2 className="mt-3 font-display text-4xl leading-tight text-[#4b1227] sm:text-[52px]">Success Stories & Special Moments</h2>
+                <h2 className="mt-3 font-display text-4xl leading-tight text-[#4b1227] sm:text-[52px]">Success Stories &amp; Special Moments</h2>
               </div>
-              <button type="button" className="inline-flex items-center gap-2 rounded-full border border-[#f0d4dd] bg-white px-5 py-3 text-sm font-bold text-[#4b1227] shadow-sm">
-                View All Videos
-              </button>
+              {videos.length > 0 && (
+                <button type="button" className="inline-flex items-center gap-2 rounded-full border border-[#f0d4dd] bg-white px-5 py-3 text-sm font-bold text-[#4b1227] shadow-sm">
+                  View All Videos ({videos.length})
+                </button>
+              )}
             </div>
 
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {(defaultVideoCards || []).map((video, index) => (
-                <div key={`${video.title}-${index}`} className="overflow-hidden rounded-[22px] border border-[#f3dfe5] bg-white shadow-[0_12px_24px_rgba(75,18,39,0.06)]">
-                  <div className="relative aspect-video overflow-hidden bg-[#f4e1e8]">
-                    <ImageFrame src={video.image} alt={video.title} className="h-full w-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#4b1227]/40 to-transparent" />
-                    <div className="absolute inset-0 grid place-items-center">
-                      <div className="grid h-16 w-16 place-items-center rounded-full bg-white/85 text-3xl text-[#d4145a] shadow-lg">▶</div>
-                    </div>
-                    <span className="absolute bottom-3 right-3 rounded-full bg-[#ffffffdd] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#4b1227]">
-                      {video.duration}
-                    </span>
-                  </div>
-                  <div className="p-4">
-                    <p className="text-lg font-bold text-[#4b1227]">{video.title}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            {videos.length > 0 ? (
+              <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                {videos.map((video, index) => (
+                  <PublicVideoCard key={`${video.url || video.src || index}-${index}`} video={video} />
+                ))}
+              </div>
+            ) : (
+              <p className="mt-6 text-sm text-[#7a4360]">Videos have not been added yet.</p>
+            )}
           </div>
         </section>
 

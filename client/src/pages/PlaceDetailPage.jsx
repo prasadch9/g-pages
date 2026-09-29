@@ -564,36 +564,21 @@ export default function PlaceDetailPage() {
     );
   }
 
-  if (isShoppingCategory) {
-    const RetailPage = !isShoppingMall ? chandhuuRetailLayout : null;
-    return (
-      <>
-        {isShoppingMall ? <ShoppingMallBusinessPage
-          place={place}
-          mapsUrl={mapsUrl}
-          socialLinks={socialLinks}
-          onShare={handleShare}
-          onReport={() => setShowReport(true)}
-          onReviewPosted={handleReviewPosted}
-        /> : RetailPage ? <RetailPage
-          place={place}
-          mapsUrl={mapsUrl}
-          socialLinks={socialLinks}
-          onShare={handleShare}
-          onReport={() => setShowReport(true)}
-        /> : <ChandhuuRetailGenericLayout
-          place={place}
-          mapsUrl={mapsUrl}
-          socialLinks={socialLinks}
-          onShare={handleShare}
-          onReport={() => setShowReport(true)}
-        />}
-        {showReport && <ReportModal placeId={place._id} onClose={() => setShowReport(false)} />}
-      </>
-    );
-  }
+  const isMarriageWeddingCategory = [
+    place.categoryGroup,
+    place.businessGroup,
+    place.category?.group,
+    place.category?.parent?.name,
+    place.category?.parent?.slug,
+    place.category?.name,
+    place.category?.slug,
+    place.subcategory?.parent?.name,
+    place.subcategory?.parent?.slug,
+  ].some((label) => String(label || '').toLowerCase().replace(/\band\b/g, ' ').replace(/[_&-]+/g, ' ').trim() === 'marriage wedding');
 
-  if ((foodBusinessType && !isIndustryManufacturingGroup) || isHealthcareBusiness(place)) return <Navigate to={`/business/${place._id}`} replace />;
+  if ((foodBusinessType && !isIndustryManufacturingGroup) || isHealthcareBusiness(place) || isMarriageWeddingCategory || isShoppingCategory) {
+    return <Navigate to={`/business/${place._id}`} replace />;
+  }
   if (isCollegeCategory) {
     return <CollegePage place={place} mapsUrl={mapsUrl} onShare={handleShare} onReport={() => setShowReport(true)} />;
   }

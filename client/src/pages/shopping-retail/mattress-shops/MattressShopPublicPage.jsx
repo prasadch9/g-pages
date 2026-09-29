@@ -65,7 +65,7 @@ export default function MattressShopPublicPage({ place }) {
   const categoryNames = firstList(specific.products, specific.productCategories, attributes.productCategories, attributes.products);
   const productItems = firstList(specific.productItems, specific.featuredProducts, attributes.productItems, attributes.featuredProducts).filter((item) => typeof item === 'object' && (item.name || item.title));
   const services = firstList(specific.services, specific.specialtyServices, place.services, profile.services);
-  const videoSource = firstList(common.videos, profile.videos, place.videos, place.video, attributes.videos);
+  const videoSource = profile.videos?.length ? profile.videos : firstList(common.videos, place.videos, place.video, attributes.videos);
   const videos = videoSource.map((video) => typeof video === 'string' ? { url: video } : video).filter((video) => video?.url || video?.src);
   const offers = firstList(specific.offer, specific.offers, attributes.offer, attributes.offers);
   const features = firstList(place.facilities, specific.features, specific.infrastructure, attributes.facilities);

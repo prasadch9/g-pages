@@ -79,7 +79,7 @@ export default function FurnitureShopPublicPage({ place }) {
   const collections = firstList(specific.collections, specific.productCategories, attributes.collections, attributes.productCategories);
   const services = firstList(specific.services, specific.specialtyServices, place.services, profile.services);
   const savedFeatures = firstList(place.facilities, specific.infrastructure, specific.features, attributes.facilities);
-  const videoItems = firstList(common.videos, profile.videos, place.videos, place.video, attributes.videos).map((video) => typeof video === 'string' ? { url: video } : video).filter((video) => video?.url || video?.src);
+  const videoItems = (profile.videos?.length ? profile.videos : firstList(common.videos, place.videos, place.video, attributes.videos)).map((video) => typeof video === 'string' ? { url: video } : video).filter((video) => video?.url || video?.src);
   const offerItems = firstList(specific.offers, specific.offer, attributes.offers, attributes.offer);
 
   const name = place.name || common.businessName || 'Furniture Showroom';

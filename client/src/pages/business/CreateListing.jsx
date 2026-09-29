@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
 import LocationCascadeFields from '../../components/LocationCascadeFields';
@@ -664,6 +664,11 @@ export default function CreateListing() {
       const linkedBusinessVideos = mallVideos.filter((video) => !video.file && video.url).map((video) => video.url);
       payload.append('video', JSON.stringify(linkedBusinessVideos));
       mallVideos.filter((video) => video.file).forEach((video) => payload.append('videos', video.file));
+      // Build canonical video objects for create path (URL videos only; device uploads go as files)
+      let uploadedVideoObjects = mallVideos
+        .filter((v) => !v.file && (v.url || v.src))
+        .map((v) => typeof v === 'string' ? { url: v } : { url: v.url || v.src || '', caption: v.caption || '', title: v.caption || '' })
+        .filter((v) => v.url);
       payload.append('attributes', JSON.stringify({
           // Preserve category-specific form fields, including the college
           // registration sections, in the public page data.
@@ -673,8 +678,8 @@ export default function CreateListing() {
           ...(isWeddingCategory ? { weddingDetails, businessProfile: { businessType: weddingBusinessType, categorySpecific: weddingDetails } } : {}),
           subCategory: form.subcategory || undefined,
           ...(isShoppingCategory ? Object.fromEntries(Object.entries(shoppingDetails).filter(([, value]) => String(value || '').trim())) : {}),
-          ...(isShoppingCategory && form.subcategory !== 'Shopping Malls' ? { businessProfile: { ...(form.businessProfile || {}), businessType: form.subcategory, categorySpecific: shoppingProfileDetails(form.subcategory, shoppingDetails) } } : {}),
-          ...(isShoppingCategory && form.subcategory === 'Shopping Malls' ? { mallCollections: mallCollectionDetailsPayload, mallVideos: mallVideos.map((video) => ({ url: video.url || '', caption: video.caption || '' })) } : {}),
+          ...(isShoppingCategory && form.subcategory !== 'Shopping Malls' ? { businessProfile: { ...(form.businessProfile || {}), businessType: form.subcategory, categorySpecific: shoppingProfileDetails(form.subcategory, shoppingDetails), common: { ...((form.businessProfile || {}).common || {}), videos: uploadedVideoObjects } } } : {}),
+          ...(isShoppingCategory && form.subcategory === 'Shopping Malls' ? { mallCollections: mallCollectionDetailsPayload, mallVideos: uploadedVideoObjects.map((video) => ({ url: video.url || '', caption: video.caption || '' })) } : {}),
           workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed),
           academy: academyForSave,
           smallScaleIndustries: smallScaleForSave,
@@ -810,8 +815,14 @@ export default function CreateListing() {
           uploadSingleImage(uploadedFiles.coverImage),
           uploadSingleImage(uploadedFiles.aboutImage),
           uploadImages(uploadedFiles.galleryImages || []),
-          (isShoppingCategory && form.subcategory === 'Shopping Malls') || isAutomotiveCategory || isFoodCategory || isWeddingCategory ? uploadMallVideos(mallVideos) : Promise.resolve(splitList(form.videoUrls)),
+          isShoppingCategory || isAutomotiveCategory || isFoodCategory || isWeddingCategory ? uploadMallVideos(mallVideos) : Promise.resolve(splitList(form.videoUrls)),
         ]);
+        // Recompute uploadedVideoObjects with the actual server URLs returned after upload
+        uploadedVideoObjects = (Array.isArray(editedVideoUrls) ? editedVideoUrls : []).map((url, index) => {
+          const source = mallVideos?.[index];
+          const caption = typeof source === 'object' ? source.caption || source.title || '' : '';
+          return { url: String(url || ''), caption, title: caption };
+        }).filter((v) => v.url);
       }
       const editableData = {
         name: form.name,
@@ -835,7 +846,7 @@ export default function CreateListing() {
         images: editedGalleryImages,
         videos: editedVideoUrls,
         workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed),
-        attributes: { ...form, academy: academyForSave, smallScaleIndustries: smallScaleForSave, foodProcessing: foodProcessingForSave, tradingBusinesses: tradingBusinessesForSave, ...(isTravelCategory ? { travelDetails, businessProfile: { categorySpecific: travelDetails } } : {}), ...(isFoodCategory ? { foodDetails, businessProfile: { businessType: foodBusinessType, categorySpecific: foodDetails } } : {}), subCategory: form.subcategory || undefined, ...(isShoppingCategory ? Object.fromEntries(Object.entries(shoppingDetails).filter(([, value]) => String(value || '').trim())) : {}), ...(isShoppingCategory && form.subcategory !== 'Shopping Malls' ? { businessProfile: { ...(form.businessProfile || {}), businessType: form.subcategory, categorySpecific: shoppingProfileDetails(form.subcategory, shoppingDetails) } } : {}), ...(isShoppingCategory && form.subcategory === 'Shopping Malls' ? { mallCollections: mallCollectionDetailsPayload, mallVideos: mallVideos.map((video) => ({ url: video.url || '', caption: video.caption || '' })) } : {}), courses: form.collegeType === 'Intermediate College' ? form.collegeGroups : form.collegePrograms, admissions: form.admissionProcess, placements: form.placementAvailable === 'Yes' ? [form.placementOfficer && `Placement officer: ${form.placementOfficer}`, form.averagePackage && `Average package: ${form.averagePackage}`, form.highestPackage && `Highest package: ${form.highestPackage}`, form.recruitingCompanies && `Recruiters: ${form.recruitingCompanies}`].filter(Boolean) : [], socialVisibility: undefined, faculty, infrastructure, schoolFacilities, galleryItems, schoolVideos, achievements, schoolEvents, principalImage: existingMedia.principal || undefined, aboutImage: editedAboutImage || undefined, galleryImages: editedGalleryImages, workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed), ...(isUniversity ? { university: form.university, programs: form.university?.programs || [], facilities: form.university?.facilities || [], stats: form.university?.stats || [], aboutTitle: form.university?.aboutTitle, aboutDescription: form.university?.aboutDescription, rankingEnabled: form.university?.rankingEnabled, rank: form.university?.rank, rankingDescription: form.university?.rankingDescription, campusTitle: form.campusTitle, campusDescription: form.campusDescription, showAdmission: form.university?.showAdmission, admissionTitle: form.university?.admissionTitle, admissionDescription: form.university?.admissionDescription } : {}) },
+        attributes: { ...form, academy: academyForSave, smallScaleIndustries: smallScaleForSave, foodProcessing: foodProcessingForSave, tradingBusinesses: tradingBusinessesForSave, ...(isTravelCategory ? { travelDetails, businessProfile: { categorySpecific: travelDetails } } : {}), ...(isFoodCategory ? { foodDetails, businessProfile: { businessType: foodBusinessType, categorySpecific: foodDetails } } : {}), subCategory: form.subcategory || undefined, ...(isShoppingCategory ? Object.fromEntries(Object.entries(shoppingDetails).filter(([, value]) => String(value || '').trim())) : {}), ...(isShoppingCategory && form.subcategory !== 'Shopping Malls' ? { businessProfile: { ...(form.businessProfile || {}), businessType: form.subcategory, categorySpecific: shoppingProfileDetails(form.subcategory, shoppingDetails), common: { ...((form.businessProfile || {}).common || {}), videos: uploadedVideoObjects } } } : {}), ...(isShoppingCategory && form.subcategory === 'Shopping Malls' ? { mallCollections: mallCollectionDetailsPayload, mallVideos: uploadedVideoObjects.map((video) => ({ url: video.url || '', caption: video.caption || '' })) } : {}), courses: form.collegeType === 'Intermediate College' ? form.collegeGroups : form.collegePrograms, admissions: form.admissionProcess, placements: form.placementAvailable === 'Yes' ? [form.placementOfficer && `Placement officer: ${form.placementOfficer}`, form.averagePackage && `Average package: ${form.averagePackage}`, form.highestPackage && `Highest package: ${form.highestPackage}`, form.recruitingCompanies && `Recruiters: ${form.recruitingCompanies}`].filter(Boolean) : [], socialVisibility: undefined, faculty, infrastructure, schoolFacilities, galleryItems, schoolVideos, achievements, schoolEvents, principalImage: existingMedia.principal || undefined, aboutImage: editedAboutImage || undefined, galleryImages: editedGalleryImages, workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed), ...(isUniversity ? { university: form.university, programs: form.university?.programs || [], facilities: form.university?.facilities || [], stats: form.university?.stats || [], aboutTitle: form.university?.aboutTitle, aboutDescription: form.university?.aboutDescription, rankingEnabled: form.university?.rankingEnabled, rank: form.university?.rank, rankingDescription: form.university?.rankingDescription, campusTitle: form.campusTitle, campusDescription: form.campusDescription, showAdmission: form.university?.showAdmission, admissionTitle: form.university?.admissionTitle, admissionDescription: form.university?.admissionDescription } : {}) },
       };
       if (isWeddingCategory) {
         editableData.attributes.weddingDetails = weddingDetails;
@@ -1295,7 +1306,7 @@ export default function CreateListing() {
                 </div>
               </div>
 
-              {(isFoodCategory || isWeddingCategory) ? <div className="col-span-2 rounded-xl border border-[#ebded8] bg-white p-4">
+              {(isFoodCategory || isWeddingCategory || isShoppingCategory) ? <div className="col-span-2 rounded-xl border border-[#ebded8] bg-white p-4">
                 <p className="text-sm font-semibold text-ink">Business videos (optional)</p>
                 <p className="mt-1 text-xs text-ink/60">Add a video URL or upload video files. These videos appear on the business website.</p>
                 <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">

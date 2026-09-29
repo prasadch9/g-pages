@@ -579,48 +579,71 @@ const run = async () => {
 
     const categories = await Category.find({ status: 'active' }).sort('order');
     const cities = await Location.find({ level: 'city', status: 'active' }).populate({ path: 'parent', populate: { path: 'parent' } });
-    let placesCreated = 0;
-    for (const city of cities) {
-      const state = await Location.findOne({ level: 'state', _id: city.parent.parent });
-      for (let categoryIndex = 0; categoryIndex < categories.length; categoryIndex += 1) {
-        const category = categories[categoryIndex];
-        const area = await Location.findOne({ level: 'area', parent: city._id }).skip(categoryIndex % Math.max(1, (AREAS[city.name] || []).length));
-        const name = `${city.name} ${category.name.replace(/s$/, '')} Hub`;
-        const image = IMAGE_SETS[categoryIndex % IMAGE_SETS.length];
-        const place = await Place.findOneAndUpdate(
-          { name, 'location.city': city._id, category: category._id },
-          {
-            $set: {
-              name, slug: createSlug(name), category: category._id,
-              categoryGroup: category.group || getCategoryGroup(category.name),
-              subcategory: category.name,
-              pageType: 'static', applicationStatus: 'approved', isPublished: true,
-              location: { state: state._id, district: city.parent._id, city: city._id, area: area?._id || null },
-              address: `${area?.name || city.name} Main Road, ${city.name}, Andhra Pradesh`,
-              description: `A trusted, locally loved ${category.name.toLowerCase()} serving families and visitors across ${city.name}.`,
-              phone: '9876543210', email: 'hello@googlepages.local', website: 'https://www.google.com',
-              images: [image, IMAGE_SETS[(categoryIndex + 3) % IMAGE_SETS.length]], coverImage: image,
-              videos: category.name === 'Car Showrooms' ? [
-                'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-                'https://www.youtube.com/watch?v=ysz5S6PUM-U',
-                'https://www.youtube.com/watch?v=jNQXAC9IVRw',
-              ] : [],
-              services: ['Walk-in service', 'Online enquiries', 'Verified information'],
-              facilities: ['Easy access', 'Customer support', 'Digital payments'],
-              coordinates: { lat: 16.98 + (categoryIndex % 5) * 0.006, lng: 81.78 + (categoryIndex % 4) * 0.006 },
-              attributes: category.name === 'Schools' ? { board: categoryIndex % 2 ? 'State Board' : 'CBSE', classes: '1-12', type: 'Private', gender: 'Co-ed' } :
-                category.name === 'Hospitals' ? { specialization: 'Multi-Specialty', emergency: 'true' } :
-                category.name === 'Restaurants' ? { cuisine: categoryIndex % 2 ? 'South Indian' : 'Multi-Cuisine', priceRange: '₹₹' } : {},
-              rating: { average: Number((4.1 + (categoryIndex % 8) / 10).toFixed(1)), count: 18 + categoryIndex * 4 },
-              verified: true, status: 'approved', applicationStatus: 'approved', isPublished: true, owner: demoOwner._id,
-              views: 120 + categoryIndex * 17, favoritesCount: 8 + categoryIndex,
-            },
-          },
-          { upsert: true, new: true, setDefaultsOnInsert: true }
-        );
-        if (place) placesCreated += 1;
+    const allAreas = await Location.find({ level: 'area', status: 'active' });
+    
+    const areasByCity = {};
+    for (const area of allAreas) {
+      const cityIdStr = area.parent?.toString();
+      if (cityIdStr) {
+        if (!areasByCity[cityIdStr]) areasByCity[cityIdStr] = [];
+        areasByCity[cityIdStr].push(area);
       }
     }
+
+    const placesToInsert = [];
+    for (const city of cities) {
+      const district = city.parent;
+      const stateObj = district?.parent;
+      const stateId = stateObj?._id || stateObj;
+      const districtId = district?._id;
+      const cityAreas = areasByCity[city._id.toString()] || [];
+
+      for (let categoryIndex = 0; categoryIndex < categories.length; categoryIndex += 1) {
+        const category = categories[categoryIndex];
+        const area = cityAreas.length > 0 ? cityAreas[categoryIndex % cityAreas.length] : null;
+        const name = `${city.name} ${category.name.replace(/s$/, '')} Hub`;
+        const image = IMAGE_SETS[categoryIndex % IMAGE_SETS.length];
+
+        placesToInsert.push({
+          name,
+          slug: createSlug(name),
+          category: category._id,
+          categoryGroup: category.group || getCategoryGroup(category.name),
+          subcategory: category.name,
+          pageType: 'static',
+          applicationStatus: 'approved',
+          isPublished: true,
+          location: { state: stateId, district: districtId, city: city._id, area: area?._id || null },
+          address: `${area?.name || city.name} Main Road, ${city.name}, Andhra Pradesh`,
+          description: `A trusted, locally loved ${category.name.toLowerCase()} serving families and visitors across ${city.name}.`,
+          phone: '9876543210',
+          email: 'hello@googlepages.local',
+          website: 'https://www.google.com',
+          images: [image, IMAGE_SETS[(categoryIndex + 3) % IMAGE_SETS.length]],
+          coverImage: image,
+          videos: category.name === 'Car Showrooms' ? [
+            'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            'https://www.youtube.com/watch?v=ysz5S6PUM-U',
+            'https://www.youtube.com/watch?v=jNQXAC9IVRw',
+          ] : [],
+          services: ['Walk-in service', 'Online enquiries', 'Verified information'],
+          facilities: ['Easy access', 'Customer support', 'Digital payments'],
+          coordinates: { lat: 16.98 + (categoryIndex % 5) * 0.006, lng: 81.78 + (categoryIndex % 4) * 0.006 },
+          attributes: category.name === 'Schools' ? { board: categoryIndex % 2 ? 'State Board' : 'CBSE', classes: '1-12', type: 'Private', gender: 'Co-ed' } :
+            category.name === 'Hospitals' ? { specialization: 'Multi-Specialty', emergency: 'true' } :
+            category.name === 'Restaurants' ? { cuisine: categoryIndex % 2 ? 'South Indian' : 'Multi-Cuisine', priceRange: '₹₹' } : {},
+          rating: { average: Number((4.1 + (categoryIndex % 8) / 10).toFixed(1)), count: 18 + categoryIndex * 4 },
+          verified: true,
+          status: 'approved',
+          owner: demoOwner._id,
+          views: 120 + categoryIndex * 17,
+          favoritesCount: 8 + categoryIndex,
+        });
+      }
+    }
+
+    const insertedPlaces = await Place.insertMany(placesToInsert);
+    const placesCreated = insertedPlaces.length;
 
     console.log(`[seed] Ensured Andhra Pradesh location tree, ${placesCreated} demo places, and admin ${seedAdmin.email}`);
 

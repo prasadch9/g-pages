@@ -34,7 +34,7 @@ export default function NurseryPublicPage({ place }) {
   const hero = profile.coverImage || place.coverImage || gallery[0] || '';
   const aboutImage = profile.aboutImage || specific.aboutImage || gallery[1] || gallery[0] || hero;
   const services = asList(specific.services || profile.services);
-  const videos = asList(common.videos || profile.videos || place.videos).map((v) => typeof v === 'string' ? { url: v } : v).filter((v) => v?.url || v?.src);
+  const videos = (profile.videos?.length ? profile.videos : asList(common.videos || place.videos)).map((v) => typeof v === 'string' ? { url: v } : v).filter((v) => v?.url || v?.src);
   const infrastructure = asList(specific.infrastructure || specific.features || place.facilities || profile.infrastructure);
   const phone = place.phone || profile.phone || common.phone || '';
   const whatsapp = getWhatsAppUrl(place.socialLinks?.whatsapp || profile.socialMedia?.whatsapp || phone);
