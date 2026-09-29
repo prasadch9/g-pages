@@ -16,6 +16,19 @@ const parseMultipartValue = (value, fallback) => {
   try { return JSON.parse(value); } catch { return value; }
 };
 
+// Place.services and Place.facilities are string arrays. Dedicated business
+// editors can also provide structured cards, so reduce those cards to their
+// display name before passing them to Mongoose.
+const parseStringList = (value) => {
+  const parsed = parseMultipartValue(value, []);
+  const items = Array.isArray(parsed) ? parsed : [parsed];
+  return items.map((item) => {
+    if (typeof item === 'string') return item.trim();
+    if (item && typeof item === 'object') return String(item.title || item.name || '').trim();
+    return '';
+  }).filter(Boolean);
+};
+
 const publicUploadUrl = (req, file) => `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
 
 async function createUniqueSlug(name, city, excludeId = null) {
@@ -231,7 +244,9 @@ const createPlace = async (req, res, next) => {
     body.attributes = parseMultipartValue(body.attributes, {});
     body.categoryData = parseMultipartValue(body.categoryData, {});
     body.video = parseMultipartValue(body.video, body.video);
-    ['services', 'facilities', 'images'].forEach((field) => { body[field] = parseMultipartValue(body[field], []); });
+    body.services = parseStringList(body.services);
+    body.facilities = parseStringList(body.facilities);
+    body.images = parseMultipartValue(body.images, []);
     const files = (Array.isArray(req.files) ? req.files : Object.entries(req.files || {}).flatMap(([fieldname, entries]) => entries.map((file) => ({ ...file, fieldname }))));
     const filesFor = (fieldname) => files.filter((file) => file.fieldname === fieldname);
     const logo = filesFor('logo')[0] ? publicUploadUrl(req, filesFor('logo')[0]) : body.logo;
@@ -392,8 +407,8 @@ const updatePlace = async (req, res, next) => {
       ...ownerUpdates
     } = req.body;
     ownerUpdates.location = parseMultipartValue(ownerUpdates.location, ownerUpdates.location);
-    ownerUpdates.services = parseMultipartValue(ownerUpdates.services, ownerUpdates.services);
-    ownerUpdates.facilities = parseMultipartValue(ownerUpdates.facilities, ownerUpdates.facilities);
+    if (ownerUpdates.services !== undefined) ownerUpdates.services = parseStringList(ownerUpdates.services);
+    if (ownerUpdates.facilities !== undefined) ownerUpdates.facilities = parseStringList(ownerUpdates.facilities);
     ownerUpdates.images = parseMultipartValue(ownerUpdates.images, ownerUpdates.images);
     ownerUpdates.videos = parseMultipartValue(ownerUpdates.videos, ownerUpdates.videos);
     ownerUpdates.workingHours = parseMultipartValue(ownerUpdates.workingHours, ownerUpdates.workingHours);

@@ -34,6 +34,7 @@ function videoEmbedUrl(url) {
 
 function SchoolExperience({ place, mapsUrl, socialLinks = {}, academics = {}, onShare, onReport, onDelete }) {
   const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedImageCollection, setSelectedImageCollection] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [showAllFacilities, setShowAllFacilities] = useState(false);
   const [showAllEvents, setShowAllEvents] = useState(false);
@@ -77,6 +78,13 @@ function SchoolExperience({ place, mapsUrl, socialLinks = {}, academics = {}, on
     ...eventImages.map((image, index) => ({ src: imageSource(image), alt: `${textOf(events[index]) || 'School event'} photo` })),
     ...events.map((event, index) => ({ src: typeof event === 'object' ? imageSource(event) : '', alt: `${textOf(event) || 'School event'} photo` })),
   ].filter((item) => item.src).map((item) => [item.src, item])).values()];
+  const galleryViewerItems = [...new Map(galleryItems.map((item) => ({ src: imageSource(item), alt: item.caption || item.title || `${schoolName} campus` })).filter((item) => item.src).map((item) => [item.src, item])).values()];
+  const activeImageItems = selectedImageCollection || imageViewerItems;
+  const activeImageIndex = activeImageItems.findIndex((item) => item.src === selectedImage);
+  const openImageViewer = (image, items = imageViewerItems) => {
+    setSelectedImageCollection(items);
+    setSelectedImage(image);
+  };
   const classes = String(academics.classes || '').split(',').map((value) => value.trim()).filter(Boolean);
   const website = place.website ? (place.website.startsWith('http') ? place.website : `https://${place.website}`) : '';
   const whatsappValue = socialLinks.whatsapp || place.phone;
@@ -107,13 +115,13 @@ function SchoolExperience({ place, mapsUrl, socialLinks = {}, academics = {}, on
   const selectedImageIndex = imageViewerItems.findIndex((item) => item.src === selectedImage);
   const moveImage = (direction) => {
     if (!imageViewerItems.length) return;
-    const currentIndex = Math.max(selectedImageIndex, 0);
-    const nextIndex = (currentIndex + direction + imageViewerItems.length) % imageViewerItems.length;
-    setSelectedImage(imageViewerItems[nextIndex].src);
+    const currentIndex = Math.max(activeImageIndex, 0);
+    const nextIndex = (currentIndex + direction + activeImageItems.length) % activeImageItems.length;
+    setSelectedImage(activeImageItems[nextIndex].src);
   };
   const openVideoViewer = () => {
     if (videoUrl) setSelectedVideo(videoUrl);
-    else if (imageViewerItems[0]) setSelectedImage(imageViewerItems[0].src);
+    else if (imageViewerItems[0]) openImageViewer(imageViewerItems[0].src);
   };
   const scrollToAdmissions = (event) => {
     event.preventDefault();
@@ -148,7 +156,7 @@ function SchoolExperience({ place, mapsUrl, socialLinks = {}, academics = {}, on
     if (!(event.target instanceof Element)) return;
     const image = event.target.closest('main img');
     if (!image || image.closest('a, [data-video-trigger]')) return;
-    setSelectedImage(image.currentSrc || image.src);
+    openImageViewer(image.currentSrc || image.src);
   }}>
     <div className="school-utility bg-[#0e2d45] text-white">
       <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-4 px-4 py-2 text-[11px] sm:px-6">
@@ -208,7 +216,7 @@ function SchoolExperience({ place, mapsUrl, socialLinks = {}, academics = {}, on
         <div className="school-inner mx-auto max-w-[1280px] bg-white p-3 shadow-sm sm:p-4">
           <div className="grid gap-3 lg:grid-cols-[1fr_1.05fr_1.35fr]">
             <div className="school-about-photo relative min-h-[240px] overflow-hidden rounded-sm bg-[#dfe9e4]">
-              <img src={gallery[0]?.image || cover} alt={`${schoolName} campus`} className="absolute inset-0 h-full w-full object-cover" />
+              <img src={academics.aboutImage || gallery[0]?.image || cover} alt={`${schoolName} campus`} className="absolute inset-0 h-full w-full object-cover" />
               <span className="absolute bottom-2 left-2 rounded-sm bg-white/90 px-2 py-1 font-display text-xs italic text-[#18375d]">A legacy of learning.</span>
             </div>
             <div className="px-1 py-1">
@@ -306,7 +314,7 @@ function SchoolExperience({ place, mapsUrl, socialLinks = {}, academics = {}, on
             {(gallery.length ? gallery : [{ image: cover, caption: 'Our Campus' }]).slice(0, 7).map((item, index) => {
               const image = item.image || item.photo || item.url || cover;
               const caption = item.caption || item.title || ['Main Entrance', 'Academic Block', 'Computer Lab', 'Library', 'Sports Ground', 'Art Room', 'Campus'][index];
-              return <button type="button" key={`${image}-${index}`} onClick={() => setSelectedImage(image)} className="group relative min-h-16 overflow-hidden rounded border border-[#dce8f2] bg-[#e9f1f8] text-left sm:min-h-20"><img src={image} alt={caption} className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105" /><span className="absolute inset-x-0 bottom-0 bg-white/90 px-1 py-1 text-center text-[8px] font-semibold text-[#234d77]">{caption}</span></button>;
+              return <button type="button" key={`${image}-${index}`} onClick={() => openImageViewer(image)} className="group relative min-h-16 overflow-hidden rounded border border-[#dce8f2] bg-[#e9f1f8] text-left sm:min-h-20"><img src={image} alt={caption} className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105" /><span className="absolute inset-x-0 bottom-0 bg-white/90 px-1 py-1 text-center text-[8px] font-semibold text-[#234d77]">{caption}</span></button>;
             })}
           </div>
         </div>
@@ -324,7 +332,7 @@ function SchoolExperience({ place, mapsUrl, socialLinks = {}, academics = {}, on
         <div className="mx-auto flex max-w-[1280px] flex-col gap-3">
           <article className="rounded-md border border-[#dce8f2] bg-white p-3">
             <div className="flex items-center justify-between"><h2 className="font-display text-xs font-bold text-[#12477f]">Latest Events</h2><button type="button" onClick={() => setShowAllEvents((current) => !current)} className="text-[8px] text-[#2672b9]">{showAllEvents ? 'Show less' : 'View All'}</button></div>
-            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{(showAllEvents ? eventItems : eventItems.slice(0, 3)).map((item, index) => { const eventImage = imageSource(eventImages[index]) || (typeof item === 'object' ? imageSource(item) : '') || imageSource(gallery[index]) || cover; return <div key={`${textOf(item)}-${index}`} className="min-w-0"><button type="button" onClick={() => setSelectedImage(eventImage)} className="block w-full overflow-hidden rounded text-left"><img src={eventImage} alt={`${textOf(item) || 'School event'} photo`} className="h-28 w-full rounded object-cover sm:h-36" /></button><p className="mt-2 truncate text-xs font-semibold text-[#31516e]">{textOf(item)}</p></div>; })}</div>
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{(showAllEvents ? eventItems : eventItems.slice(0, 3)).map((item, index) => { const eventImage = imageSource(eventImages[index]) || (typeof item === 'object' ? imageSource(item) : '') || imageSource(gallery[index]) || cover; return <div key={`${textOf(item)}-${index}`} className="min-w-0"><button type="button" onClick={() => openImageViewer(eventImage)} className="block w-full overflow-hidden rounded text-left"><img src={eventImage} alt={`${textOf(item) || 'School event'} photo`} className="h-28 w-full rounded object-cover sm:h-36" /></button><p className="mt-2 truncate text-xs font-semibold text-[#31516e]">{textOf(item)}</p></div>; })}</div>
           </article>
           <article className="rounded-md border border-[#dce8f2] bg-white p-3">
             <div className="flex items-center justify-between"><h2 className="font-display text-xs font-bold text-[#12477f]">News &amp; Notices</h2><button type="button" onClick={() => setShowAllNotices((current) => !current)} className="text-[8px] text-[#2672b9]">{showAllNotices ? 'Show less' : 'View All'}</button></div>
@@ -332,7 +340,7 @@ function SchoolExperience({ place, mapsUrl, socialLinks = {}, academics = {}, on
           </article>
           <article className="rounded-md border border-[#dce8f2] bg-white p-3">
             <div className="flex items-center justify-between"><h2 className="font-display text-xs font-bold text-[#12477f]">Gallery</h2><button type="button" onClick={() => setShowAllGallery((current) => !current)} className="text-[8px] text-[#2672b9]">{showAllGallery ? 'Show less' : 'View All'}</button></div>
-            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">{(showAllGallery ? galleryItems : galleryItems.slice(0, 6)).map((item, index) => { const image = imageSource(item) || cover; return <button type="button" key={`${image}-${index}`} onClick={() => setSelectedImage(image)} className="overflow-hidden rounded text-left"><img src={image} alt={item.caption || item.title || 'School gallery'} className="h-24 w-full rounded object-cover sm:h-32" /></button>; })}</div>
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">{(showAllGallery ? galleryItems : galleryItems.slice(0, 6)).map((item, index) => { const image = imageSource(item) || cover; return <button type="button" key={`${image}-${index}`} onClick={() => openImageViewer(image, galleryViewerItems.length ? galleryViewerItems : imageViewerItems)} className="overflow-hidden rounded text-left"><img src={image} alt={item.caption || item.title || 'School gallery'} className="h-24 w-full rounded object-cover sm:h-32" /></button>; })}</div>
           </article>
           <article className="rounded-md border border-[#dce8f2] bg-white p-3">
             <div className="flex items-center justify-between"><h2 className="font-display text-xs font-bold text-[#12477f]">Video Gallery</h2><button type="button" onClick={openVideoViewer} className="text-[8px] text-[#2672b9]">View All</button></div>
@@ -451,14 +459,14 @@ function SchoolExperience({ place, mapsUrl, socialLinks = {}, academics = {}, on
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 px-4 py-3 text-[9px] text-white/55 sm:px-6"><span>© {new Date().getFullYear()} {schoolName}. All Rights Reserved.</span><span>Powered by G-PAGES</span></div>
     </footer>
 
-    {selectedImage && <div role="dialog" aria-modal="true" aria-label="School photo viewer" className="fixed inset-0 z-50 flex items-center justify-center bg-[#061c2b]/95 p-4 sm:p-8" onClick={() => setSelectedImage(null)}>
-      <button type="button" onClick={() => setSelectedImage(null)} className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-3xl text-white hover:bg-white/20" aria-label="Close image viewer">×</button>
-      {imageViewerItems.length > 1 && <button type="button" onClick={(event) => { event.stopPropagation(); moveImage(-1); }} className="absolute left-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-3xl text-white hover:bg-white/25 sm:left-6" aria-label="Previous image">‹</button>}
+    {selectedImage && <div role="dialog" aria-modal="true" aria-label="School photo viewer" className="fixed inset-0 z-50 flex items-center justify-center bg-[#061c2b]/95 p-4 sm:p-8" onClick={() => { setSelectedImage(null); setSelectedImageCollection(null); }}>
+      <button type="button" onClick={() => { setSelectedImage(null); setSelectedImageCollection(null); }} className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-3xl text-white hover:bg-white/20" aria-label="Close image viewer">×</button>
+      {activeImageItems.length > 1 && <button type="button" onClick={(event) => { event.stopPropagation(); moveImage(-1); }} className="absolute left-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-3xl text-white hover:bg-white/25 sm:left-6" aria-label="Previous image">‹</button>}
       <div className="flex max-h-full max-w-full flex-col items-center" onClick={(event) => event.stopPropagation()}>
-        <img src={selectedImage} alt={imageViewerItems[selectedImageIndex]?.alt || `${schoolName} enlarged`} className="max-h-[78vh] max-w-[calc(100vw-7rem)] object-contain sm:max-h-[82vh]" />
-        {imageViewerItems.length > 1 && <p className="mt-3 text-xs font-medium text-white/75">{Math.max(selectedImageIndex + 1, 1)} / {imageViewerItems.length}</p>}
+        <img src={selectedImage} alt={activeImageItems[activeImageIndex]?.alt || `${schoolName} enlarged`} className="max-h-[78vh] max-w-[calc(100vw-7rem)] object-contain sm:max-h-[82vh]" />
+        {activeImageItems.length > 1 && <p className="mt-3 text-xs font-medium text-white/75">{Math.max(activeImageIndex + 1, 1)} / {activeImageItems.length}</p>}
       </div>
-      {imageViewerItems.length > 1 && <button type="button" onClick={(event) => { event.stopPropagation(); moveImage(1); }} className="absolute right-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-3xl text-white hover:bg-white/25 sm:right-6" aria-label="Next image">›</button>}
+      {activeImageItems.length > 1 && <button type="button" onClick={(event) => { event.stopPropagation(); moveImage(1); }} className="absolute right-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-3xl text-white hover:bg-white/25 sm:right-6" aria-label="Next image">›</button>}
     </div>}
 
     {selectedVideo && <div role="dialog" aria-modal="true" aria-label="School video player" className="fixed inset-0 z-50 flex items-center justify-center bg-[#061c2b]/95 p-4 sm:p-8" onClick={() => setSelectedVideo(null)}>

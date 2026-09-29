@@ -128,6 +128,22 @@ export default function HealthcareBusinessEditor({ place = {}, create = false, o
 
   const save = async (event) => {
     event?.preventDefault();
+    const missingFields = [
+      !form.name.trim() && 'business name',
+      !form.address.trim() && 'address',
+      !location.state && 'state',
+      !location.district && 'district',
+      !location.city && 'city',
+      !location.areaText.trim() && 'area / locality',
+    ].filter(Boolean);
+    const incompleteDoctor = hasDoctorProfiles && form.doctors.some((doctor) => !String(doctor.name || '').trim());
+    if (missingFields.length || incompleteDoctor) {
+      setError([
+        missingFields.length ? `Please complete: ${missingFields.join(', ')}.` : '',
+        incompleteDoctor ? 'Add a name for each doctor profile or remove the empty profile.' : '',
+      ].filter(Boolean).join(' '));
+      return;
+    }
     setSaving(true);
     setError('');
     setMessage('');
