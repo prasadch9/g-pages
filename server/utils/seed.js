@@ -344,6 +344,12 @@ const run = async () => {
 
     console.log('[seed] Database connected');
 
+    // Reset the seeded catalog so rerunning the script does not keep stale category,
+    // location, or place records that clash with the unique slug/index rules.
+    await Place.deleteMany({});
+    await Location.deleteMany({});
+    await Category.deleteMany({});
+
 
     // ========================================================
     // SEED CATEGORIES
@@ -547,6 +553,10 @@ const run = async () => {
       { $set: { name: 'Google Pages Demo Owner', email: 'demo.owner@googlepages.local', mobile: '9876543210', passwordHash, role: 'business', status: 'active' } },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
+
+    // Reset place data before re-creating the demo catalog so rerunning the seed script
+    // never hits the unique slug index for same-city seeded records.
+    await Place.deleteMany({});
 
     const seedAdminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@googlepages.local';
     const seedAdminPassword = process.env.SEED_ADMIN_PASSWORD || 'Admin@12345';

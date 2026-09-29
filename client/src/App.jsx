@@ -38,9 +38,9 @@ import WhatsAppButton from './components/WhatsAppButton';
 export default function App() {
   const location = useLocation();
   const isPlaceRoute = location.pathname.startsWith('/place/');
-  const isRestaurantProfile = /^\/business\/[^/]+$/.test(location.pathname) && location.pathname !== '/business/dashboard';
+  const isPublicBusinessProfile = /^\/business\/[^/]+$/.test(location.pathname) && location.pathname !== '/business/dashboard';
   const isConsultancyPage = location.pathname.endsWith('/consultancies');
-  const hideChrome = isPlaceRoute || isRestaurantProfile || isConsultancyPage;
+  const hideChrome = isPlaceRoute || isPublicBusinessProfile || isConsultancyPage;
 
   return (
     <div className="flex min-h-screen flex-col bg-paper">

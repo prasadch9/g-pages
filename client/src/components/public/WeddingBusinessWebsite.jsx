@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import ReviewsSection from '../ReviewsSection';
 import { getProfileData, ImageFrame, VideoGallery } from './PublicProfileShared';
 import { getWhatsAppUrl } from '../../utils/healthcare';
 
 const configs = {
-  'marriage-bureau': { label: 'Marriage Bureau', eyebrow: 'Meaningful connections. New beginnings.', nav: ['Home', 'About', 'Services', 'How It Works', 'Gallery', 'Contact'], cta: 'Enquire Now' },
+  'marriage-bureau': {
+    label: 'Marriage Bureau',
+    eyebrow: 'TRUSTED MATRIMONIAL SERVICE',
+    nav: ['Home', 'About', 'Services', 'Gallery', 'Success Stories', 'Contact'],
+    cta: 'Call Now',
+    tagline: 'Find Your Perfect Life Partner',
+  },
   'function-hall': { label: 'Function Hall', eyebrow: 'A beautiful setting for your celebration.', nav: ['Home', 'About', 'Venue', 'Packages', 'Gallery', 'Contact'], cta: 'Check Availability' },
   'event-organizer': { label: 'Event Organizer', eyebrow: 'Thoughtful planning for unforgettable moments.', nav: ['Home', 'About', 'Services', 'Packages', 'Portfolio', 'Contact'], cta: 'Request a Quote' },
   'catering-service': { label: 'Catering Services', eyebrow: 'Food, hospitality, and celebrations made memorable.', nav: ['Home', 'About', 'Services', 'Menu', 'Gallery', 'Contact'], cta: 'Enquire Now' },
@@ -14,53 +20,542 @@ const configs = {
   'saloon-spa': { label: 'Saloon & Spa', eyebrow: 'Relax, refresh, and get celebration-ready.', nav: ['Home', 'About', 'Services', 'Packages', 'Gallery', 'Contact'], cta: 'Book Now' },
 };
 
-const list = (value) => Array.isArray(value) ? value.filter(Boolean) : String(value || '').split(/[\n,]/).map((item) => item.trim()).filter(Boolean);
-const safeUrl = (value) => value && (/^https?:\/\//i.test(value) ? value : `https://${value}`);
-const profileValue = (profile, ...keys) => keys.map((key) => profile[key]).find((value) => value !== undefined && value !== null && value !== '');
+const list = (value) => {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (!value) return [];
+  return String(value)
+    .split(/[\n,]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
+const toUrl = (value) => {
+  if (!value) return '';
+  return /^https?:\/\//i.test(value) ? value : `https://${value}`;
+};
+
+const getValue = (profile, ...keys) => keys.map((key) => profile[key]).find((value) => value !== undefined && value !== null && value !== '');
+
+const defaultImages = [
+  'https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=900&q=80',
+  'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=900&q=80',
+  'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=900&q=80',
+  'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=900&q=80',
+  'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=900&q=80',
+  'https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=900&q=80',
+  'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=80',
+  'https://images.unsplash.com/photo-1527049979667-7a9d7a0fa6c8?auto=format&fit=crop&w=900&q=80',
+  'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=900&q=80',
+  'https://images.unsplash.com/photo-1529636798458-92182e662485?auto=format&fit=crop&w=900&q=80',
+];
+
+const defaultServices = [
+  'Profile Registration',
+  'Match Suggestions',
+  'Premium Membership',
+  'Community Search',
+  'Horoscope Matching',
+  'Family Consultation',
+  'Event Meetups',
+  'Customer Support',
+];
+
+const defaultFeatures = [
+  { title: 'Verified Profiles', text: '100% genuine profiles', icon: '✓' },
+  { title: 'Secure & Private', text: 'Your data is always safe', icon: '🔒' },
+  { title: 'Experienced Team', text: 'Professional matchmakers', icon: '👥' },
+  { title: 'Modern Office', text: 'Comfortable meeting area', icon: '🏢' },
+  { title: 'Personal Consultation', text: 'One-to-one guidance', icon: '💬' },
+  { title: 'Pan India Service', text: 'Available across India', icon: '📍' },
+];
+
+const defaultVideoCards = [
+  { title: 'Happy Couple Story', duration: '02:15', image: defaultImages[3] },
+  { title: 'Client Testimonial', duration: '03:20', image: defaultImages[7] },
+  { title: 'Marriage Event Highlights', duration: '01:45', image: defaultImages[1] },
+  { title: 'Success Story - 2', duration: '02:38', image: defaultImages[8] },
+];
+
+const produceGallery = (profile, place) => {
+  const raw = profile.gallery && profile.gallery.length ? profile.gallery : place.images && place.images.length ? place.images : defaultImages;
+  return raw.filter(Boolean).slice(0, 10);
+};
 
 export default function WeddingBusinessWebsite({ place, weddingType }) {
   const profile = getProfileData(place);
-  const config = configs[weddingType] || configs['event-organizer'];
+  const config = configs[weddingType] || configs['marriage-bureau'];
   const [menuOpen, setMenuOpen] = useState(false);
   const [lightbox, setLightbox] = useState(null);
-  const gallery = (profile.gallery?.length ? profile.gallery : place.images || []).filter(Boolean).slice(0, 10);
-  const videos = profile.videos?.length ? profile.videos : (Array.isArray(place.video) ? place.video : place.video ? [place.video] : []);
-  const services = list(profile.services || place.services);
-  const facilities = list(profile.infrastructure || place.facilities);
-  const packages = profileValue(profile, 'packages', 'packageDetails');
-  const packageList = Array.isArray(packages) ? packages : [];
-  const social = profile.socialMedia || {};
-  const phone = place.phone || profile.phone;
-  const whatsapp = getWhatsAppUrl(social.whatsapp || profile.whatsapp || phone);
-  const website = safeUrl(place.website || profile.website);
-  const maps = place.coordinates?.lat ? `https://www.google.com/maps/search/?api=1&query=${place.coordinates.lat},${place.coordinates.lng}` : place.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.address)}` : '';
-  const location = [place.address, place.location?.area?.name, place.location?.city?.name, place.location?.district?.name, place.location?.state?.name, profile.pincode].filter(Boolean).join(', ');
-  const enquiry = profileValue(profile, 'enquiryUrl', 'bookingUrl', 'appointmentUrl') || (phone ? `tel:${phone}` : '#contact');
-  const callUrl = phone ? `tel:${String(phone).replace(/\s/g, '')}` : '';
-  const actionClass = 'inline-flex items-center justify-center rounded-md px-5 py-3 text-sm font-bold transition hover:brightness-95';
-  const hrefFor = (label) => `#${label.toLowerCase().replace(/[^a-z]+/g, '-')}`;
 
-  return <div className="min-h-screen bg-[#fffafa] text-[#351b25]" style={{ '--wedding-accent': '#941f43', '--wedding-gold': '#c69b52', '--wedding-dark': '#4b1227' }}>
-    <header className="sticky top-0 z-40 border-b border-[#ead9df] bg-white/95 shadow-sm backdrop-blur"><div className="mx-auto flex max-w-[1500px] items-center justify-between gap-4 px-5 py-3 sm:px-8"><a href="#home" className="flex min-w-0 items-center gap-3"><div className="h-12 w-12 shrink-0 overflow-hidden rounded-full border border-[#ead9df] bg-white"><ImageFrame src={profile.logo} alt={`${place.name} logo`} /></div><div className="min-w-0"><p className="truncate font-display text-xl font-bold text-[#4b1227]">{place.name}</p><p className="truncate text-[11px] text-[#8c6b75]">{profile.tagline || config.label}</p></div></a><nav className="hidden items-center gap-6 text-xs font-bold lg:flex">{config.nav.map((item) => <a key={item} href={hrefFor(item)} className="hover:text-[#941f43]">{item}</a>)}</nav><div className="hidden items-center gap-2 md:flex">{whatsapp && <a href={whatsapp} target="_blank" rel="noreferrer" title="Chat on WhatsApp" className="grid h-10 w-10 place-items-center rounded-full bg-emerald-500 text-xl text-white">💬</a>}{enquiry && <a href={enquiry} target={enquiry.startsWith('http') ? '_blank' : undefined} rel="noreferrer" className={`${actionClass} bg-[#941f43] text-white`}>{config.cta}</a>}</div><button type="button" onClick={() => setMenuOpen((value) => !value)} className="rounded border border-[#ead9df] px-3 py-2 text-lg lg:hidden" aria-label="Open navigation">☰</button></div>{menuOpen && <nav className="border-t border-[#ead9df] bg-white px-5 py-2 lg:hidden">{config.nav.map((item) => <a key={item} href={hrefFor(item)} onClick={() => setMenuOpen(false)} className="block border-b border-[#f0e2e7] py-3 text-sm font-semibold">{item}</a>)}</nav>}</header>
+  const gallery = useMemo(() => produceGallery(profile, place), [profile, place]);
+  const heroImage = profile.coverImage || gallery[0] || defaultImages[0];
+  const services = useMemo(() => {
+    const fromProfile = list(profile.services || place.services);
+    return fromProfile.length ? fromProfile : defaultServices;
+  }, [profile, place]);
 
-    <main><section id="home" className="relative isolate min-h-[480px] overflow-hidden text-white sm:min-h-[570px]"><div className="absolute inset-0"><ImageFrame src={profile.coverImage || gallery[0]} alt={`${place.name} cover`} eager /><div className="absolute inset-0 bg-gradient-to-r from-[#4b1227e8] via-[#4b122799] to-transparent" /></div><div className="relative mx-auto flex min-h-[480px] max-w-[1500px] items-end px-6 py-12 sm:min-h-[570px] sm:px-12 sm:py-16"><div className="max-w-2xl"><p className="text-xs font-bold uppercase tracking-[0.24em] text-[#f4dca9]">{config.eyebrow}</p><p className="mt-4 text-sm font-semibold uppercase tracking-[0.15em] text-white/75">{place.subcategory?.name || config.label}</p><h1 className="mt-2 font-display text-5xl font-bold leading-[0.98] sm:text-7xl">{profile.tagline || place.name}</h1>{profile.about && <p className="mt-5 max-w-xl text-base leading-7 text-white/85">{profile.about}</p>}<div className="mt-7 flex flex-wrap gap-3"><a href="#services" className={`${actionClass} bg-[#941f43] text-white`}>Explore Services</a><a href={enquiry} target={enquiry.startsWith('http') ? '_blank' : undefined} rel="noreferrer" className={`${actionClass} border border-white/70 bg-white/10 text-white`}>{config.cta}</a></div>{location && <p className="mt-5 text-sm text-white/75">⌖ {location}</p>}</div></div></section>
+  const social = profile.socialMedia || place.socialLinks || {};
+  const primaryPhone = place.phone || profile.phone || '';
+  const primaryWhatsApp = place.whatsapp || profile.whatsapp || social.whatsapp || primaryPhone;
+  const website = toUrl(place.website || profile.website);
+  const callUrl = primaryPhone ? `tel:${String(primaryPhone).replace(/\s+/g, '')}` : '';
+  const whatsappUrl = getWhatsAppUrl(primaryWhatsApp);
 
-    {services.length > 0 && <section className="border-b border-[#ead9df] bg-white"><div className="mx-auto grid max-w-[1400px] grid-cols-2 divide-x divide-[#ead9df] sm:grid-cols-3 lg:grid-cols-6">{services.slice(0, 6).map((service) => <div key={service} className="px-4 py-6 text-center"><div className="mx-auto mb-2 text-2xl text-[#c69b52]">✿</div><p className="text-sm font-bold">{service}</p></div>)}</div></section>}
+  const locationText = [
+    place.address,
+    place.location?.area?.name,
+    place.location?.city?.name,
+    place.location?.district?.name,
+    place.location?.state?.name,
+    profile.pincode,
+  ].filter(Boolean).join(', ');
 
-    <section id="about" className="mx-auto grid max-w-7xl gap-8 px-5 py-14 sm:px-8 lg:grid-cols-[.9fr_1.1fr] lg:items-center"><div className="h-72 overflow-hidden rounded-lg sm:h-96"><ImageFrame src={gallery[1] || profile.coverImage} alt={`${place.name} gallery`} /></div><div><p className="text-xs font-bold uppercase tracking-[0.25em] text-[#941f43]">About Us</p><h2 className="mt-2 font-display text-4xl font-bold text-[#4b1227]">{place.name}</h2>{profile.about && <p className="mt-5 whitespace-pre-line text-sm leading-7 text-black/65">{profile.about}</p>}{facilities.length > 0 && <div className="mt-6 flex flex-wrap gap-2">{facilities.map((item) => <span key={item} className="rounded-full bg-[#f7e9ee] px-3 py-2 text-xs font-semibold text-[#701d38]">{item}</span>)}</div>}</div></section>
+  const mapsUrl = place.coordinates?.lat ? `https://www.google.com/maps/search/?api=1&query=${place.coordinates.lat},${place.coordinates.lng}` : place.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.address)}` : '';
+  const businessDescription = place.description || profile.about || 'A trusted matrimonial service dedicated to helping families discover meaningful matches with care, privacy and confidence.';
+  const businessName = place.name || 'Sri Lakshmi Marriage Bureau';
+  const logo = profile.logo || place.logo || '';
+  const heroTitle = config.tagline || 'Find Your Perfect Life Partner';
 
-    {services.length > 0 && <section id="services" className="bg-[#fff3f6] px-5 py-14 sm:px-8"><div className="mx-auto max-w-7xl"><p className="text-xs font-bold uppercase tracking-[0.25em] text-[#941f43]">What We Do</p><h2 className="mt-2 font-display text-4xl font-bold text-[#4b1227]">{config.label} Services</h2><div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{services.map((service) => <div key={service} className="rounded-lg border border-[#ead9df] bg-white p-5 shadow-sm"><div className="text-2xl text-[#c69b52]">✿</div><h3 className="mt-4 font-bold">{service}</h3></div>)}</div></div></section>}
+  const navLinks = config.nav.map((item) => ({ label: item, href: `#${item.toLowerCase().replace(/[^a-z]+/g, '-')}` }));
 
-    {packageList.length > 0 && <section id="packages" className="mx-auto max-w-7xl px-5 py-14 sm:px-8"><p className="text-xs font-bold uppercase tracking-[0.25em] text-[#941f43]">Curated Options</p><h2 className="mt-2 font-display text-4xl font-bold text-[#4b1227]">Packages</h2><div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{packageList.map((item, index) => <article key={`${item.name || item.title}-${index}`} className="rounded-lg border border-[#ead9df] bg-white p-5 shadow-sm"><h3 className="font-bold">{item.name || item.title}</h3>{item.description && <p className="mt-2 text-sm text-black/60">{item.description}</p>}{item.price && <p className="mt-4 font-bold text-[#941f43]">{item.price}</p>}</article>)}</div></section>}
+  return (
+    <div className="min-h-screen bg-[#fffaf7] text-[#4b1227]">
+      <header className="sticky top-0 z-40 border-b border-[#f3dfe5] bg-white/95 shadow-[0_8px_20px_rgba(75,18,39,0.05)] backdrop-blur-sm">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-4 py-3 sm:px-8">
+          <a href="#home" className="flex min-w-0 items-center gap-3">
+            <div className="h-12 w-12 overflow-hidden rounded-full border border-[#f6dfe6] bg-white shadow-sm">
+              <ImageFrame src={logo} alt={`${businessName} logo`} className="object-cover" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate font-display text-xl font-bold text-[#4b1227]">{businessName}</p>
+              <p className="truncate text-[11px] uppercase tracking-[0.08em] text-[#8a5a6a]">{place.tagline || 'Find Your Perfect Life Partner'}</p>
+            </div>
+          </a>
 
-    {gallery.length > 0 && <section id="gallery" className="bg-[#4b1227] px-5 py-14 text-white sm:px-8"><div className="mx-auto max-w-7xl"><p className="text-xs font-bold uppercase tracking-[0.25em] text-[#f4dca9]">Portfolio</p><h2 className="mt-2 font-display text-4xl font-bold">Gallery</h2><div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">{gallery.map((image, index) => <button type="button" key={`${image}-${index}`} onClick={() => setLightbox(image)} className="aspect-square overflow-hidden rounded-lg"><img src={image} alt={`${place.name} gallery ${index + 1}`} loading="lazy" className="h-full w-full object-cover transition hover:scale-105" /></button>)}</div></div></section>}
-    {videos.length > 0 && <VideoGallery videos={videos} title="Wedding videos" />}
+          <nav className="hidden items-center gap-8 text-sm font-semibold text-[#4b1227] lg:flex">
+            {navLinks.map((link) => (
+              <a key={link.label} href={link.href} className="relative pb-1 after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-full after:origin-left after:scale-x-0 after:bg-[#d4145a] after:transition-transform hover:after:scale-x-100">
+                {link.label}
+              </a>
+            ))}
+          </nav>
 
-    <section id="reviews" className="bg-white px-5 py-14 sm:px-8"><div className="mx-auto max-w-5xl">{place.rating?.count > 0 && <ReviewsSection placeId={place._id} />}</div></section>
-    <section id="contact" className="mx-auto grid max-w-7xl gap-8 px-5 py-14 sm:px-8 lg:grid-cols-[1fr_.8fr]"><div><p className="text-xs font-bold uppercase tracking-[0.25em] text-[#941f43]">Contact</p><h2 className="mt-2 font-display text-4xl font-bold text-[#4b1227]">Let&apos;s plan something memorable</h2><div className="mt-5 space-y-3 text-sm text-black/65">{location && <p>⌖ {location}</p>}{phone && <p>☎ {phone}</p>}{place.email && <p>✉ {place.email}</p>}{website && <p>◉ {website}</p>}</div><div className="mt-6 flex flex-wrap gap-2">{phone && <a href={callUrl} className={`${actionClass} bg-[#941f43] text-white`}>Call</a>}{whatsapp && <a href={whatsapp} target="_blank" rel="noreferrer" className={`${actionClass} bg-emerald-500 text-white`}>WhatsApp</a>}{maps && <a href={maps} target="_blank" rel="noreferrer" className={`${actionClass} border border-[#ead9df] bg-white`}>Directions</a>}</div><div className="mt-6 flex flex-wrap gap-3 text-sm font-semibold text-[#941f43]">{Object.entries(social).filter(([, value]) => value).map(([name, value]) => <a key={name} href={safeUrl(value)} target="_blank" rel="noreferrer">{name}</a>)}</div></div>{place.address && <iframe title={`${place.name} map`} src={`https://www.google.com/maps?q=${encodeURIComponent(place.address)}&output=embed`} className="h-72 w-full rounded-lg border border-[#ead9df]" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />}</section></main>
+          <div className="hidden items-center gap-3 md:flex">
+            {primaryPhone && (
+              <a href={callUrl} className="inline-flex items-center gap-2 rounded-full border border-[#f4d6e1] bg-[#fff7fa] px-4 py-2 text-sm font-semibold text-[#4b1227] shadow-sm transition hover:bg-[#fff0f5]">
+                <span className="text-base">📞</span>
+                <span>Call Now</span>
+                <span className="text-[#7d3051]">{primaryPhone}</span>
+              </a>
+            )}
+            {whatsappUrl && (
+              <a href={whatsappUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[#0ba046] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-105">
+                <span className="text-base">💬</span>
+                WhatsApp
+              </a>
+            )}
+          </div>
 
-    <footer className="bg-[#4b1227] px-5 py-10 text-white sm:px-8"><div className="mx-auto grid max-w-7xl gap-8 sm:grid-cols-2 lg:grid-cols-4"><div><div className="flex items-center gap-3"><div className="h-11 w-11 overflow-hidden rounded-full bg-white"><ImageFrame src={profile.logo} alt={`${place.name} logo`} /></div><p className="font-display text-xl font-bold">{place.name}</p></div>{profile.about && <p className="mt-4 text-sm leading-6 text-white/65">{profile.about}</p>}</div><div><h3 className="font-bold">Quick Links</h3><div className="mt-3 space-y-2 text-sm text-white/70">{config.nav.slice(0, 6).map((item) => <a key={item} href={hrefFor(item)} className="block hover:text-white">{item}</a>)}</div></div><div><h3 className="font-bold">Contact</h3><div className="mt-3 space-y-2 text-sm text-white/70">{phone && <a href={callUrl} className="block">{phone}</a>}{place.email && <a href={`mailto:${place.email}`} className="block">{place.email}</a>}{location && <p>{location}</p>}</div></div><div><h3 className="font-bold">Social</h3><div className="mt-3 flex flex-wrap gap-2 text-sm text-white/70">{Object.entries(social).filter(([, value]) => value).map(([name, value]) => <a key={name} href={safeUrl(value)} target="_blank" rel="noreferrer" className="rounded-full border border-white/20 px-3 py-2">{name}</a>)}</div></div></div><div className="mx-auto mt-8 max-w-7xl border-t border-white/15 pt-4 text-xs text-white/45">© {new Date().getFullYear()} {place.name}. All rights reserved.</div></footer>
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#ead9df] bg-white/95 p-2 shadow-xl backdrop-blur lg:hidden"><div className="mx-auto flex max-w-md gap-2">{phone && <a href={callUrl} className="flex-1 rounded bg-[#941f43] px-2 py-2.5 text-center text-xs font-bold text-white">Call</a>}{whatsapp && <a href={whatsapp} target="_blank" rel="noreferrer" className="flex-1 rounded bg-emerald-500 px-2 py-2.5 text-center text-xs font-bold text-white">WhatsApp</a>}<a href={enquiry} className="flex-1 rounded bg-[#c69b52] px-2 py-2.5 text-center text-xs font-bold text-[#4b1227]">{config.cta}</a></div></div>
-    {lightbox && <div className="fixed inset-0 z-50 grid place-items-center bg-black/90 p-4" onClick={() => setLightbox(null)}><button type="button" onClick={() => setLightbox(null)} className="absolute right-4 top-4 rounded bg-white px-3 py-2 text-sm font-bold text-black">Close</button><img src={lightbox} alt={`${place.name} enlarged gallery`} className="max-h-[90vh] max-w-[94vw] object-contain" onClick={(event) => event.stopPropagation()} /></div>}
-  </div>;
+          <button
+            type="button"
+            aria-label="Toggle menu"
+            className="rounded-full border border-[#f3dfe5] bg-white px-3 py-2 text-xl text-[#4b1227] lg:hidden"
+            onClick={() => setMenuOpen((value) => !value)}
+          >
+            ☰
+          </button>
+        </div>
+
+        {menuOpen && (
+          <nav className="border-t border-[#f5e2e9] bg-white px-4 py-3 lg:hidden">
+            {navLinks.map((link) => (
+              <a key={link.label} href={link.href} onClick={() => setMenuOpen(false)} className="block border-b border-[#f9edf2] py-3 text-sm font-semibold text-[#4b1227] last:border-b-0">
+                {link.label}
+              </a>
+            ))}
+            <div className="mt-3 flex gap-2">
+              {primaryPhone && <a href={callUrl} className="flex-1 rounded-full bg-[#d4145a] px-3 py-2 text-center text-xs font-bold text-white">Call now</a>}
+              {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer" className="flex-1 rounded-full bg-[#0ba046] px-3 py-2 text-center text-xs font-bold text-white">WhatsApp</a>}
+            </div>
+          </nav>
+        )}
+      </header>
+
+      <main className="bg-[#fffaf7]">
+        <section id="home" className="relative overflow-hidden bg-[#fff5f2]">
+          <div className="absolute inset-0 opacity-40" aria-hidden="true">
+            <div className="absolute left-[-5%] top-[-8%] h-44 w-44 rounded-full bg-[#f9dfe5] blur-3xl" />
+            <div className="absolute bottom-[-10%] right-[-3%] h-48 w-48 rounded-full bg-[#f5d7d2] blur-3xl" />
+          </div>
+
+          <div className="relative mx-auto grid max-w-[1440px] items-center gap-8 px-4 pb-16 pt-8 sm:px-8 lg:grid-cols-[1.08fr_1.02fr] lg:pb-20 lg:pt-14">
+            <div className="max-w-[620px]">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.3em] text-[#d4145a]">{config.eyebrow}</p>
+              <h1 className="mt-5 font-display text-5xl leading-[0.95] text-[#4b1227] sm:text-6xl lg:text-[72px]">
+                Find Your
+                <span className="block">Perfect</span>
+                <span className="block">Life Partner</span>
+              </h1>
+              <p className="mt-5 max-w-[510px] text-lg leading-8 text-[#5a3845]">
+                Bringing hearts together for a brighter tomorrow.
+                <span className="mt-2 block">Trusted by thousands of happy families.</span>
+              </p>
+
+              <div className="mt-7 flex flex-wrap gap-4 text-sm font-medium text-[#5a3845]">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 shadow-sm ring-1 ring-[#f3dfe5]">✓ Verified Profiles</span>
+                <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 shadow-sm ring-1 ring-[#f3dfe5]">✓ Personalized Support</span>
+                <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 shadow-sm ring-1 ring-[#f3dfe5]">✓ 100% Secure</span>
+              </div>
+
+              <div className="relative z-10 mt-8 max-w-[760px] rounded-[26px] bg-white p-4 shadow-[0_26px_60px_rgba(75,18,39,0.12)] ring-1 ring-[#f0d4dd] sm:p-5">
+                <div className="flex gap-2 pb-3 text-sm font-semibold text-[#7a4360]">
+                  <button type="button" className="rounded-full bg-[#f9edf2] px-4 py-2 text-[#4b1227]">Bride</button>
+                  <button type="button" className="rounded-full px-4 py-2">Groom</button>
+                  <button type="button" className="rounded-full px-4 py-2">By Profile ID</button>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <label className="block rounded-xl border border-[#f3dfe5] bg-[#fff8fa] p-3 text-sm">
+                    <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.18em] text-[#7d3051]">Age</span>
+                    <select className="w-full bg-transparent text-[#4b1227] outline-none">
+                      <option>18 - 30</option>
+                    </select>
+                  </label>
+                  <label className="block rounded-xl border border-[#f3dfe5] bg-[#fff8fa] p-3 text-sm">
+                    <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.18em] text-[#7d3051]">Religion</span>
+                    <select className="w-full bg-transparent text-[#4b1227] outline-none">
+                      <option>Any</option>
+                    </select>
+                  </label>
+                  <label className="block rounded-xl border border-[#f3dfe5] bg-[#fff8fa] p-3 text-sm">
+                    <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.18em] text-[#7d3051]">Community</span>
+                    <select className="w-full bg-transparent text-[#4b1227] outline-none">
+                      <option>Any</option>
+                    </select>
+                  </label>
+                  <label className="block rounded-xl border border-[#f3dfe5] bg-[#fff8fa] p-3 text-sm">
+                    <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.18em] text-[#7d3051]">Location</span>
+                    <select className="w-full bg-transparent text-[#4b1227] outline-none">
+                      <option>Any</option>
+                    </select>
+                  </label>
+                </div>
+                <button type="button" className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#d4145a] px-5 py-3 text-base font-bold text-white shadow-lg shadow-[#d4145a]/25 transition hover:brightness-110">
+                  🔍 Search Matches
+                </button>
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="relative overflow-hidden rounded-[34px] border border-[#f0d4dd] bg-[#f6dfe5] shadow-[0_28px_70px_rgba(75,18,39,0.15)]">
+                <div className="absolute left-8 top-6 rounded-full bg-[#fff5f7]/80 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-[#7d3051] shadow-sm">
+                  trusted
+                </div>
+                <ImageFrame src={heroImage} alt={`${businessName} hero`} className="h-[560px] w-full object-cover" eager />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#4b1227]/10 via-[#4b1227]/0 to-[#4b1227]/15" />
+              </div>
+
+              <div className="absolute bottom-12 right-4 max-w-[220px] -rotate-[8deg] rounded-[20px] bg-[#fff3f7]/90 px-4 py-3 text-center shadow-[0_18px_35px_rgba(75,18,39,0.15)] backdrop-blur-sm">
+                <p className="font-display text-3xl font-bold leading-none text-[#4b1227]">Together</p>
+                <p className="mt-1 text-xl text-[#7d3051]">is a</p>
+                <p className="font-display text-3xl font-bold leading-none text-[#4b1227]">Beautiful</p>
+                <p className="mt-1 text-xl text-[#7d3051]">Beginning</p>
+                <span className="mt-2 block text-2xl text-[#d4145a]">♥</span>
+              </div>
+
+              <div className="absolute bottom-3 right-3 rounded-[20px] bg-white/90 p-4 shadow-[0_18px_35px_rgba(75,18,39,0.15)] backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-10 w-10 place-items-center rounded-full bg-[#fbe8ee] text-xl text-[#d4145a]">👩‍❤️‍👨</div>
+                  <div>
+                    <p className="text-2xl font-black text-[#4b1227]">5,000+</p>
+                    <p className="text-xs font-semibold text-[#7d3051]">Successful Matches</p>
+                  </div>
+                </div>
+                <div className="mt-3 flex -space-x-2">
+                  {[1, 2, 3].map((item) => (
+                    <div key={item} className="h-8 w-8 rounded-full border-2 border-white bg-gradient-to-br from-[#f7d9a7] via-[#f3c0c9] to-[#e5c4fc]" />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="about" className="mx-auto max-w-[1440px] px-4 py-16 sm:px-8">
+          <div className="grid items-center gap-8 lg:grid-cols-[1fr_1.2fr_0.8fr]">
+            <div>
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-[#d4145a]">ABOUT US</p>
+              <h2 className="mt-4 font-display text-4xl leading-tight text-[#4b1227] sm:text-[50px]">
+                Helping You Find
+                <span className="block">A Happier Tomorrow</span>
+              </h2>
+              <p className="mt-5 text-base leading-8 text-[#5a3845]">{businessDescription}</p>
+              <button type="button" className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#fbeaf0] px-5 py-3 text-sm font-bold text-[#4b1227] transition hover:bg-[#f8dfe9]">
+                Know More About Us →
+              </button>
+            </div>
+
+            <div className="relative">
+              <div className="overflow-hidden rounded-[28px] border border-[#f1dfe7] shadow-[0_22px_40px_rgba(75,18,39,0.12)]">
+                <ImageFrame src={gallery[1] || heroImage} alt={`${businessName} couple photo`} className="h-[370px] w-full object-cover sm:h-[440px]" />
+              </div>
+              <div className="absolute -bottom-5 left-6 rounded-[18px] bg-white px-4 py-3 text-center shadow-[0_18px_32px_rgba(75,18,39,0.12)]">
+                <div className="text-3xl text-[#d9a441]">🏆</div>
+                <div className="mt-1 text-xl font-black text-[#4b1227]">10+</div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#7a4360]">Years of Experience</div>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+              {[
+                { value: '5000+', label: 'Happy Couples' },
+                { value: '100+', label: 'Communities Covered' },
+                { value: '10+', label: 'Years of Experience' },
+                { value: '100%', label: 'Verified Profiles' },
+              ].map((stat) => (
+                <div key={stat.label} className="rounded-[22px] border border-[#f4dfe7] bg-[#fff7f9] p-4 shadow-sm">
+                  <p className="font-display text-3xl font-bold text-[#d4145a]">{stat.value}</p>
+                  <p className="mt-1 text-sm font-medium text-[#6c4253]">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="services" className="bg-[#fff6f8] px-4 py-16 sm:px-8">
+          <div className="mx-auto max-w-[1440px]">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.26em] text-[#d4145a]">OUR SERVICES</p>
+                <h2 className="mt-3 font-display text-4xl leading-tight text-[#4b1227] sm:text-[52px]">Our Matrimonial Services</h2>
+              </div>
+              <button type="button" className="hidden items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-[#4b1227] shadow-sm ring-1 ring-[#f0d4dd] md:inline-flex">
+                View All Services →
+              </button>
+            </div>
+
+            <p className="mt-5 max-w-[740px] text-base leading-8 text-[#5a3845]">
+              We offer a wide range of matrimonial services to help you find the right match with ease and confidence.
+            </p>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {services.map((service, index) => {
+                const iconMap = ['📝', '💑', '💎', '👥', '🔮', '👨‍👩‍👧‍👦', '🎉', '💬'];
+                return (
+                  <div key={`${service}-${index}`} className="group rounded-[24px] border border-[#f1dfe7] bg-white p-5 shadow-[0_14px_28px_rgba(75,18,39,0.05)] transition hover:-translate-y-1 hover:shadow-[0_18px_38px_rgba(212,20,90,0.08)]">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#fff0f5] text-2xl text-[#d4145a] shadow-sm">
+                      {iconMap[index % iconMap.length]}
+                    </div>
+                    <h3 className="mt-5 text-xl font-bold text-[#4b1227]">{service}</h3>
+                    <p className="mt-3 text-sm leading-7 text-[#6e4758]">
+                      {service === 'Profile Registration' && 'Create your profile with verified details'}
+                      {service === 'Match Suggestions' && 'Personalized partner recommendations'}
+                      {service === 'Premium Membership' && 'Access to verified & exclusive profiles'}
+                      {service === 'Community Search' && 'Search within your preferred community'}
+                      {service === 'Horoscope Matching' && 'Match based on horoscope compatibility'}
+                      {service === 'Family Consultation' && 'Expert guidance for better matches'}
+                      {service === 'Event Meetups' && 'Exclusive meet & greet events'}
+                      {service === 'Customer Support' && 'Dedicated support at every step'}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section id="gallery" className="mx-auto max-w-[1440px] px-4 py-16 sm:px-8">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-[#d4145a]">GALLERY</p>
+              <h2 className="mt-3 font-display text-4xl leading-tight text-[#4b1227] sm:text-[52px]">Our Happy Couples & Events</h2>
+            </div>
+            <button type="button" className="inline-flex items-center gap-2 rounded-full border border-[#f0d4dd] bg-white px-5 py-3 text-sm font-bold text-[#4b1227] shadow-sm">
+              View All Photos ({gallery.length})
+            </button>
+          </div>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {gallery.map((image, index) => (
+              <button
+                key={`${image}-${index}`}
+                type="button"
+                onClick={() => setLightbox(image)}
+                className="group overflow-hidden rounded-[24px] border border-[#f3dfe5] bg-white shadow-[0_16px_30px_rgba(75,18,39,0.05)]"
+              >
+                <div className="aspect-[4/5] overflow-hidden">
+                  <ImageFrame src={image} alt={`${businessName} gallery ${index + 1}`} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section id="success-stories" className="bg-white px-4 py-16 sm:px-8">
+          <div className="mx-auto max-w-[1440px]">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-[#d4145a]">VIDEOS</p>
+                <h2 className="mt-3 font-display text-4xl leading-tight text-[#4b1227] sm:text-[52px]">Success Stories & Special Moments</h2>
+              </div>
+              <button type="button" className="inline-flex items-center gap-2 rounded-full border border-[#f0d4dd] bg-white px-5 py-3 text-sm font-bold text-[#4b1227] shadow-sm">
+                View All Videos
+              </button>
+            </div>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {(defaultVideoCards || []).map((video, index) => (
+                <div key={`${video.title}-${index}`} className="overflow-hidden rounded-[22px] border border-[#f3dfe5] bg-white shadow-[0_12px_24px_rgba(75,18,39,0.06)]">
+                  <div className="relative aspect-video overflow-hidden bg-[#f4e1e8]">
+                    <ImageFrame src={video.image} alt={video.title} className="h-full w-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#4b1227]/40 to-transparent" />
+                    <div className="absolute inset-0 grid place-items-center">
+                      <div className="grid h-16 w-16 place-items-center rounded-full bg-white/85 text-3xl text-[#d4145a] shadow-lg">▶</div>
+                    </div>
+                    <span className="absolute bottom-3 right-3 rounded-full bg-[#ffffffdd] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#4b1227]">
+                      {video.duration}
+                    </span>
+                  </div>
+                  <div className="p-4">
+                    <p className="text-lg font-bold text-[#4b1227]">{video.title}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-[#fff7f9] px-4 py-16 sm:px-8">
+          <div className="mx-auto max-w-[1440px]">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-[#d4145a]">FEATURES</p>
+            <h2 className="mt-3 font-display text-4xl leading-tight text-[#4b1227] sm:text-[52px]">Features & Infrastructure</h2>
+            <h3 className="mt-2 text-xl font-semibold text-[#7a4360]">Why Choose Us</h3>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {defaultFeatures.map((feature, index) => (
+                <div key={feature.title} className="rounded-[24px] border border-[#f1dfe7] bg-white p-5 shadow-[0_12px_26px_rgba(75,18,39,0.04)]">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#fbeaf0] text-2xl text-[#d4145a]">
+                    {feature.icon}
+                  </div>
+                  <h3 className="mt-4 text-xl font-bold text-[#4b1227]">{feature.title}</h3>
+                  <p className="mt-2 text-sm leading-7 text-[#684555]">{feature.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="reviews" className="mx-auto max-w-[1440px] px-4 py-16 sm:px-8">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-[#d4145a]">REVIEWS</p>
+              <h2 className="mt-3 font-display text-4xl leading-tight text-[#4b1227] sm:text-[52px]">What Our Clients Say</h2>
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+            <div className="rounded-[26px] border border-[#f2dfe6] bg-[#fff7fa] p-5 shadow-[0_16px_28px_rgba(75,18,39,0.05)]">
+              <h3 className="font-display text-3xl text-[#4b1227]">Share Your Experience</h3>
+              <div className="mt-6 flex gap-1 text-3xl text-[#d9a441]">
+                {[1, 2, 3, 4, 5].map((star) => <span key={star}>★</span>)}
+              </div>
+              <textarea
+                rows={5}
+                placeholder="Write your review here..."
+                className="mt-5 w-full rounded-2xl border border-[#f0d4dd] bg-white px-4 py-3 text-sm text-[#4b1227] outline-none placeholder:text-[#9b7081]"
+              />
+              <button type="button" className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-[#d4145a] px-5 py-3 text-base font-bold text-white shadow-lg shadow-[#d4145a]/20 transition hover:brightness-110">
+                Submit Review
+              </button>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-3">
+              {[
+                { name: 'Priya Sharma', date: '12 Sep 2024', content: 'Very professional and supportive team. I found the perfect match through Sri Lakshmi Marriage Bureau.' },
+                { name: 'Ramesh Kumar', date: '5 Aug 2024', content: 'Great service and genuine profiles. The team guided us throughout the entire process.' },
+                { name: 'Anjali Reddy', date: '20 Jul 2024', content: 'Good communication and very helpful support. Thank you for helping us find the right match.' },
+              ].map((review) => (
+                <div key={review.name} className="rounded-[24px] border border-[#f0d4dd] bg-white p-5 shadow-[0_14px_30px_rgba(75,18,39,0.05)]">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#f0d4dd] to-[#f5e2d7] text-sm font-bold text-[#4b1227]">
+                      {review.name.slice(0, 1)}
+                    </div>
+                    <div>
+                      <p className="font-bold text-[#4b1227]">{review.name}</p>
+                      <p className="text-xs text-[#7a4360]">{review.date}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 text-[#d9a441]">★★★★★</div>
+                  <p className="mt-3 text-sm leading-7 text-[#5a3845]">“{review.content}”</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-8 rounded-[24px] border border-[#f0d4dd] bg-white p-4 shadow-[0_14px_30px_rgba(75,18,39,0.04)]">
+            <ReviewsSection placeId={place._id} />
+          </div>
+        </section>
+      </main>
+
+      <footer className="bg-[#4b1227] text-[#fef7f7]">
+        <div className="mx-auto grid max-w-[1440px] gap-8 px-4 py-12 sm:px-8 lg:grid-cols-4">
+          <div>
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 overflow-hidden rounded-full border border-white/15 bg-white/10">
+                <ImageFrame src={logo} alt={`${businessName} logo`} className="object-cover" />
+              </div>
+              <div>
+                <h3 className="font-display text-2xl font-bold">{businessName}</h3>
+              </div>
+            </div>
+            <p className="mt-4 max-w-xs text-sm leading-7 text-[#f4dfe7]">
+              {businessDescription}
+            </p>
+          </div>
+
+          <div>
+            <h3 className="font-display text-2xl font-bold text-white">Our Location</h3>
+            <p className="mt-4 text-sm leading-7 text-[#f4dfe7]">{locationText || 'Address will be updated soon.'}</p>
+            {mapsUrl && (
+              <a href={mapsUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex text-sm font-semibold text-[#ffd7e6] hover:text-white">
+                View on Map
+              </a>
+            )}
+          </div>
+
+          <div>
+            <h3 className="font-display text-2xl font-bold text-white">Contact Details</h3>
+            <div className="mt-4 space-y-2 text-sm text-[#f4dfe7]">
+              {primaryPhone && <a href={callUrl} className="block">{primaryPhone}</a>}
+              {place.email && <a href={`mailto:${place.email}`} className="block">{place.email}</a>}
+              <p>Mon - Sat: 9:00 AM - 7:00 PM</p>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="font-display text-2xl font-bold text-white">Quick Links</h3>
+            <div className="mt-4 space-y-2 text-sm text-[#f4dfe7]">
+              <a href="#contact" className="block">Contact</a>
+              <a href="#home" className="block">Back to Home</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      <div className="fixed bottom-3 left-1/2 z-50 w-[92%] max-w-md -translate-x-1/2 rounded-full border border-[#f0d4dd] bg-white/95 p-2 shadow-[0_18px_50px_rgba(75,18,39,0.18)] backdrop-blur md:hidden">
+        <div className="flex gap-2">
+          {primaryPhone && <a href={callUrl} className="flex-1 rounded-full bg-[#d4145a] px-3 py-2 text-center text-xs font-bold text-white">Call</a>}
+          {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer" className="flex-1 rounded-full bg-[#0ba046] px-3 py-2 text-center text-xs font-bold text-white">WhatsApp</a>}
+          <a href="#home" className="flex-1 rounded-full bg-[#f9edf2] px-3 py-2 text-center text-xs font-bold text-[#4b1227]">Top</a>
+        </div>
+      </div>
+
+      {lightbox && (
+        <div className="fixed inset-0 z-[60] grid place-items-center bg-black/80 p-4" onClick={() => setLightbox(null)}>
+          <button type="button" onClick={() => setLightbox(null)} className="absolute right-5 top-5 rounded-full bg-white px-4 py-2 text-sm font-bold text-[#4b1227]">Close</button>
+          <img src={lightbox} alt={`${businessName} preview`} className="max-h-[90vh] max-w-[92vw] rounded-2xl object-contain" onClick={(event) => event.stopPropagation()} />
+        </div>
+      )}
+    </div>
+  );
 }
