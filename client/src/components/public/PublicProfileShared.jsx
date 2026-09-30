@@ -3,6 +3,7 @@ import FavoriteButton from '../FavoriteButton';
 import ReviewsSection from '../ReviewsSection';
 import api from '../../services/api';
 import mediaUrl from '../../utils/mediaUrl';
+import { getParentBusinessGroup, isAmbiguousBusinessSubcategory } from '../../utils/categoryRouting';
 
 export const safeUrl = (value) => {
   if (!value) return '';
@@ -63,9 +64,8 @@ export const resolveFoodBusinessType = (place) => {
 };
 
 export const resolveWeddingBusinessType = (place) => {
-  const parent = place?.subcategory?.parent;
-  const parentKey = parent && String(parent.name || parent.slug || parent).trim().toLowerCase().replace(/[_\s]+/g, '-');
-  if (parentKey === 'food-and-dining') return '';
+  const parentGroup = getParentBusinessGroup(place);
+  if (parentGroup ? parentGroup !== 'marriage wedding' : isAmbiguousBusinessSubcategory(place)) return '';
   const businessType = place?.attributes?.businessProfile?.businessType || place?.attributes?.restaurantProfile?.businessType;
   const candidates = [businessType, place?.subcategory?.slug, place?.subcategory?.name, place?.category?.slug, place?.category?.name];
   for (const candidate of candidates) {
@@ -77,7 +77,11 @@ export const resolveWeddingBusinessType = (place) => {
 };
 
 export const resolvePropertyBusinessType = (place) => {
+  const normalizedGroup = getParentBusinessGroup(place);
+  if (normalizedGroup && normalizedGroup !== 'real estate construction') return '';
+
   const businessType = place?.attributes?.businessProfile?.businessType;
+  if (!normalizedGroup && businessType?.startsWith('category-')) return '';
   const candidates = [businessType, place?.subcategory?.slug, place?.subcategory?.name, place?.category?.slug, place?.category?.name];
   for (const candidate of candidates) {
     if (!candidate) continue;
@@ -111,7 +115,7 @@ export const collectVideos = (...sources) => {
   const seenUrls = new Set();
   for (const item of rawList) {
     const url = typeof item === 'string' ? item : item.url || item.src || item.videoUrl || '';
-    const cleanUrl = String(url).trim();
+    const cleanUrl = mediaUrl(String(url).trim());
     if (cleanUrl && !seenUrls.has(cleanUrl)) {
       seenUrls.add(cleanUrl);
       normalized.push(typeof item === 'string' ? { url: cleanUrl } : { ...item, url: cleanUrl });

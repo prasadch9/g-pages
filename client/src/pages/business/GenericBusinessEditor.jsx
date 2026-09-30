@@ -5,6 +5,7 @@ import BusinessMediaUploader from '../../components/business/BusinessMediaUpload
 import BusinessVideoUploader from '../../components/business/BusinessVideoUploader';
 import LocationCascadeFields from '../../components/LocationCascadeFields';
 import { getCategoryFieldNames } from '../../components/business/CategorySpecificFields';
+import { collectVideos } from '../../components/public/PublicProfileShared';
 import { CATEGORY_ICONS } from '../../data/categoryGroups';
 
 const inputClass = 'mt-1 w-full rounded-xl border border-[#e2e8f0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/10 transition';
@@ -83,7 +84,14 @@ export default function GenericBusinessEditor({ place = null, groupName, subcate
     logo: place?.logo || common.logo || '',
     coverImage: place?.coverImage || common.coverImage || '',
     gallery: place?.images || common.gallery || [],
-    videos: Array.isArray(common.videos) ? common.videos : [],
+    videos: collectVideos(
+      common.videos,
+      place?.videos,
+      place?.video,
+      place?.attributes?.videos,
+      place?.attributes?.video,
+      place?.attributes?.videoUrls,
+    ),
     social: { ...(place?.socialLinks || {}), ...(common.socialMedia || {}) },
     hours: Array.isArray(place?.workingHours)
       ? place.workingHours.reduce((acc, item) => ({ ...acc, [item.day]: item }), { ...emptyHours })
@@ -118,6 +126,8 @@ export default function GenericBusinessEditor({ place = null, groupName, subcate
       logo: form.logo || undefined,
       coverImage: form.coverImage || undefined,
       images: form.gallery.slice(0, 10),
+      videos: form.videos,
+      video: form.videos,
       services: split(form.specific['Travel Services'] || form.specific['Services'] || form.specific['Professional Services'] || form.specific['Medical Services'] || ''),
       facilities: split(form.specific['Facilities'] || ''),
       socialLinks: { ...form.social, whatsapp: form.whatsapp || undefined },

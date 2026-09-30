@@ -36,13 +36,18 @@ export default function ReviewsSection({ placeId, onReviewPosted }) {
   const [editingReview, setEditingReview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [loadError, setLoadError] = useState('');
 
   const loadReviews = () => {
     setLoading(true);
+    setLoadError('');
     api
       .get(`/reviews/${placeId}`)
       .then(({ data }) => setReviews(data.data || []))
-      .catch(() => setReviews([]))
+      .catch((err) => {
+        setReviews([]);
+        setLoadError(err.message || 'Unable to load reviews. Please try again.');
+      })
       .finally(() => setLoading(false));
   };
 
@@ -196,6 +201,7 @@ export default function ReviewsSection({ placeId, onReviewPosted }) {
                 value={reviewerName}
                 onChange={(e) => setReviewerName(e.target.value)}
                 placeholder="Enter your name"
+                required
                 className="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2 text-xs font-medium text-gray-900 outline-none focus:border-amber-500"
               />
             </div>
@@ -249,7 +255,14 @@ export default function ReviewsSection({ placeId, onReviewPosted }) {
         </div>
       )}
 
-      {!loading && reviews.length === 0 && (
+      {!loading && loadError && (
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <span>{loadError}</span>
+          <button type="button" onClick={loadReviews} className="font-semibold underline">Retry</button>
+        </div>
+      )}
+
+      {!loading && !loadError && reviews.length === 0 && (
         <div className="my-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50/50 p-8 text-center">
           <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-amber-100 text-xl text-amber-600">
             ★

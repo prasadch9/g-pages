@@ -237,7 +237,9 @@ const createPlace = async (req, res, next) => {
     const category = await Category.findById(body.category).select('name group');
     if (!category) return next(new AppError('Select a valid category.', 400));
     const subcategory = body.subcategory || category.name;
-    const businessGroup = getBusinessGroup(subcategory) || normalizeBusinessGroup(body.businessGroup);
+    const selectedBusinessGroup = normalizeBusinessGroup(body.businessGroup);
+    const businessGroup = selectedBusinessGroup || getBusinessGroup(subcategory);
+    const categoryGroup = selectedBusinessGroup ? String(body.businessGroup).trim() : category.group || getCategoryGroup(category.name);
     const pageType = body.pageType || 'static';
     body.location = parseMultipartValue(body.location, body.location);
     body.socialLinks = parseMultipartValue(body.socialLinks, {});
@@ -333,7 +335,7 @@ const createPlace = async (req, res, next) => {
     })() : undefined;
     const place = await Place.create({
       ...body,
-      categoryGroup: category.group || getCategoryGroup(category.name),
+      categoryGroup,
       subcategory,
       businessGroup,
       pageType,
@@ -411,6 +413,7 @@ const updatePlace = async (req, res, next) => {
     if (ownerUpdates.services !== undefined) ownerUpdates.services = parseStringList(ownerUpdates.services);
     if (ownerUpdates.facilities !== undefined) ownerUpdates.facilities = parseStringList(ownerUpdates.facilities);
     ownerUpdates.images = parseMultipartValue(ownerUpdates.images, ownerUpdates.images);
+    ownerUpdates.video = parseMultipartValue(ownerUpdates.video, ownerUpdates.video);
     ownerUpdates.videos = parseMultipartValue(ownerUpdates.videos, ownerUpdates.videos);
     ownerUpdates.workingHours = parseMultipartValue(ownerUpdates.workingHours, ownerUpdates.workingHours);
     ownerUpdates.socialLinks = parseMultipartValue(ownerUpdates.socialLinks, ownerUpdates.socialLinks);
@@ -496,8 +499,10 @@ const updatePlace = async (req, res, next) => {
     if (uploadedUrls('coverImage')[0]) updateFields.coverImage = uploadedUrls('coverImage')[0];
     if (newImages.length) updateFields.images = [...(place.images || []), ...newImages];
     if (newVideos.length) {
-      const currentVideos = Array.isArray(place.video) ? place.video : place.video ? [place.video] : [];
-      updateFields.video = [...currentVideos, ...newVideos];
+      const submittedVideos = ownerUpdates.video !== undefined
+        ? (Array.isArray(ownerUpdates.video) ? ownerUpdates.video : ownerUpdates.video ? [ownerUpdates.video] : [])
+        : (Array.isArray(place.video) ? place.video : place.video ? [place.video] : []);
+      updateFields.video = [...submittedVideos, ...newVideos];
     }
     // Keep the listing's current publication and approval state when its owner
     // edits it. The existing document is excluded from the slug lookup so an

@@ -15,6 +15,13 @@ const reviewSchema = new mongoose.Schema(
       required: true,
     },
 
+    name: {
+      type: String,
+      trim: true,
+      maxlength: 120,
+      default: '',
+    },
+
     rating: {
       type: Number,
       required: true,

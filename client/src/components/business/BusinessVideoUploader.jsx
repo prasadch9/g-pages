@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import api from '../../services/api';
+import { parseVideoUrl } from '../../utils/video';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -200,17 +201,16 @@ function AddVideoModal({ onAdd, onClose, placeId }) {
     setUrlPreview(null);
     const trimmed = urlInput.trim();
     if (!trimmed) { setError('Please enter a URL.'); return; }
-    try { new URL(trimmed); } catch { setError('Invalid URL.'); return; }
-    const srcType = detectUrlType(trimmed);
-    const embedUrl = getEmbedUrl({ type: srcType, url: trimmed });
-    setUrlPreview({ embedUrl, srcType });
+    const details = parseVideoUrl(trimmed);
+    if (!details) { setError('Enter a valid YouTube, Vimeo, Google Drive, or direct video URL.'); return; }
+    setUrlPreview({ embedUrl: details.embedUrl, srcType: details.type });
   };
 
   const confirmUrl = () => {
     const trimmed = urlInput.trim();
-    if (!trimmed) return;
-    const srcType = detectUrlType(trimmed);
-    onAdd({ type: srcType === 'youtube' || srcType === 'vimeo' ? srcType : 'url', url: trimmed, title: urlTitle.trim() });
+    const details = parseVideoUrl(trimmed);
+    if (!details) { setError('Enter a valid YouTube, Vimeo, Google Drive, or direct video URL.'); return; }
+    onAdd({ type: details.type, url: details.url, title: urlTitle.trim() });
   };
 
   // Tab 2 — Google Video
@@ -219,18 +219,19 @@ function AddVideoModal({ onAdd, onClose, placeId }) {
     setGooglePreview(null);
     const trimmed = googleInput.trim();
     if (!trimmed) { setError('Please enter a Google Drive URL.'); return; }
-    if (!trimmed.includes('drive.google.com') && !trimmed.includes('docs.google.com')) {
+    const details = parseVideoUrl(trimmed);
+    if (!details || details.type !== 'google') {
       setError('Please enter a Google Drive sharing URL.');
       return;
     }
-    const embedUrl = normalizeGoogleDriveUrl(trimmed);
-    setGooglePreview({ embedUrl });
+    setGooglePreview({ embedUrl: details.embedUrl });
   };
 
   const confirmGoogle = () => {
     const trimmed = googleInput.trim();
-    if (!trimmed) return;
-    onAdd({ type: 'google', url: trimmed, title: googleTitle.trim() });
+    const details = parseVideoUrl(trimmed);
+    if (!details || details.type !== 'google') { setError('Please enter a Google Drive sharing URL.'); return; }
+    onAdd({ type: 'google', url: details.url, title: googleTitle.trim() });
   };
 
   return (
