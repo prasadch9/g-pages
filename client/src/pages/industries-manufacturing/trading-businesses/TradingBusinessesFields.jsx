@@ -1,6 +1,65 @@
-import CategoryBusinessFields from '../../../components/business/CategoryBusinessFields';
-import fields from './tradingBusinessesFields';
+import React from 'react';
 
-export default function TradingBusinessesFields(props) {
-  return <CategoryBusinessFields {...props} fieldNames={fields} />;
+const DEFAULTS = { aboutUs: '', aboutImageUrl: '', logoUrl: '', promoBackgroundUrl: '', promoBackgroundFile: null, googleMapsUrl: '', productCategories: [], brands: [], supplyCapabilities: [], marketsServed: [], catalogue: [], galleryImages: [], galleryVideos: [], tagline: '' };
+const inputClass = 'mt-1 w-full rounded-md border border-[#d8e4f0] bg-white px-3 py-2.5 text-sm text-[#172d48] outline-none focus:border-[#0879ee] focus:ring-2 focus:ring-[#0879ee]/10';
+
+function Section({ title, description, children }) {
+  return <section className="rounded-xl border border-[#dce7f2] bg-white p-5 shadow-sm sm:p-6"><h2 className="text-lg font-extrabold text-[#102d4b]">{title}</h2>{description && <p className="mt-1 text-sm text-[#64778d]">{description}</p>}<div className="mt-4 space-y-4">{children}</div></section>;
+}
+function TextField({ label, value, onChange, multiline = false, placeholder = '' }) {
+  return <label className="block text-sm font-semibold text-[#304966]">{label}{multiline ? <textarea rows={3} value={value || ''} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className={inputClass} /> : <input value={value || ''} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className={inputClass} />}</label>;
+}
+function FileField({ label, accept = 'image/*', file, onChange }) {
+  return <label className="block text-sm font-semibold text-[#304966]">{label}<input type="file" accept={accept} onChange={(event) => onChange(event.target.files?.[0] || null)} className={`${inputClass} file:mr-3 file:rounded file:border-0 file:bg-[#eaf3fd] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[#0879ee]`} />{file && <span className="mt-1 block text-xs font-normal text-slate-500">Selected: {file.name}</span>}</label>;
+}
+
+export default function TradingBusinessesFields({ form, setForm, logoFile, setLogoFile, existingLogo, aboutImageFile, setAboutImageFile, existingAboutImage }) {
+  const details = { ...DEFAULTS, ...(form.tradingBusinesses || {}) };
+  const update = (key, value) => setForm((current) => ({ ...current, tradingBusinesses: { ...DEFAULTS, ...(current.tradingBusinesses || {}), [key]: value } }));
+  const updateItem = (key, index, changes) => update(key, (Array.isArray(details[key]) ? details[key] : []).map((item, i) => i === index ? { ...item, ...changes } : item));
+  const addItem = (key, item) => update(key, [...(Array.isArray(details[key]) ? details[key] : []), item]);
+  const removeItem = (key, index) => update(key, (Array.isArray(details[key]) ? details[key] : []).filter((_, i) => i !== index));
+  const updateList = (key, value) => update(key, value.split(/[\n,]/).map((item) => item.trim()).filter(Boolean));
+
+  return <div className="col-span-2 space-y-5">
+    <div className="rounded-xl border border-[#b8d8f7] bg-gradient-to-r from-[#eff7ff] to-white p-5 sm:p-6"><p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#0879ee]">Industries &amp; Manufacturing</p><h2 className="mt-1 text-2xl font-extrabold text-[#102d4b]">Trading Business Profile</h2><p className="mt-1 text-sm text-[#52647a]">Add your product range, brands, wholesale capabilities, business photos and contact information.</p></div>
+
+    <Section title="Business Introduction and Branding">
+      <TextField label="Business tagline" value={details.tagline} onChange={(value) => update('tagline', value)} placeholder="Your trusted trading partner" />
+      <TextField label="About your business" value={details.aboutUs} onChange={(value) => update('aboutUs', value)} multiline placeholder="Describe your trading business and experience" />
+      <div className="grid gap-3 sm:grid-cols-2"><TextField label="About Us image URL" value={aboutImageFile ? '' : details.aboutImageUrl} onChange={(value) => { setAboutImageFile?.(null); update('aboutImageUrl', value); }} placeholder="https://example.com/about.jpg" /><FileField label="Upload About Us image" file={aboutImageFile} onChange={(file) => { setAboutImageFile?.(file); if (file) update('aboutImageUrl', ''); }} /></div>
+      {!aboutImageFile && existingAboutImage && <p className="text-xs text-slate-500">An About Us image is already saved.</p>}
+      <div className="grid gap-3 sm:grid-cols-2"><TextField label="Logo image URL" value={logoFile ? '' : details.logoUrl || ''} onChange={(value) => { setLogoFile?.(null); update('logoUrl', value); }} placeholder="https://example.com/logo.png" /><FileField label="Upload logo" file={logoFile} onChange={(file) => { setLogoFile?.(file); if (file) update('logoUrl', ''); }} /></div>
+      {!logoFile && existingLogo && <p className="text-xs text-slate-500">A logo is already saved.</p>}
+      <div className="grid gap-3 sm:grid-cols-2"><TextField label="Promo banner image URL" value={details.promoBackgroundFile ? '' : details.promoBackgroundUrl || details.promoBackgroundImage} onChange={(value) => update('promoBackgroundUrl', value)} placeholder="https://example.com/banner.jpg" /><FileField label="Upload promo banner image" file={details.promoBackgroundFile} onChange={(file) => update('promoBackgroundFile', file)} /></div>
+    </Section>
+
+    <Section title="Business Location" description="Your business address is entered in the main listing fields. Add a Google Maps link so visitors can open your exact location.">
+      <TextField label="Google Maps location URL" value={details.googleMapsUrl} onChange={(value) => update('googleMapsUrl', value)} placeholder="https://maps.google.com/..." />
+    </Section>
+
+    <Section title="Product Categories" description="Add the product categories your business supplies. You can upload a photo or use an image URL for each category.">
+      {(details.productCategories || []).map((category, index) => { const item = typeof category === 'string' ? { name: category } : category; return <div key={`category-${index}`} className="grid gap-3 rounded-lg border border-[#e1eaf4] bg-[#f7faff] p-4 sm:grid-cols-2"><div className="flex items-center justify-between sm:col-span-2"><h3 className="font-bold text-[#172d48]">Category {index + 1}</h3><button type="button" onClick={() => removeItem('productCategories', index)} className="text-xs font-bold text-red-600">Remove</button></div><TextField label="Category name" value={item.name || item.title} onChange={(value) => updateItem('productCategories', index, { name: value })} placeholder="Groceries, electronics, textiles..." /><TextField label="Image URL" value={item.imageFile ? '' : item.imageUrl || item.image} onChange={(value) => updateItem('productCategories', index, { imageUrl: value, image: value, imageFile: null })} placeholder="https://example.com/category.jpg" /><div className="sm:col-span-2"><FileField label="Upload category image" file={item.imageFile} onChange={(file) => updateItem('productCategories', index, { imageFile: file, imageUrl: '', image: '' })} /></div></div>; })}
+      <button type="button" onClick={() => addItem('productCategories', { name: '', imageUrl: '', imageFile: null })} className="rounded-md bg-[#0879ee] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0069d8]">+ Add category</button>
+    </Section>
+
+    <Section title="Products and Catalogue" description="Add products with descriptions, prices and photos for the Featured Products section.">
+      {(details.catalogue || []).map((product, index) => <div key={`product-${index}`} className="grid gap-3 rounded-lg border border-[#e1eaf4] bg-[#f7faff] p-4 sm:grid-cols-2"><div className="flex items-center justify-between sm:col-span-2"><h3 className="font-bold text-[#172d48]">Product {index + 1}</h3><button type="button" onClick={() => removeItem('catalogue', index)} className="text-xs font-bold text-red-600">Remove</button></div><TextField label="Product name" value={product.name || product.title} onChange={(value) => updateItem('catalogue', index, { name: value })} placeholder="Product name" /><TextField label="Category" value={product.category} onChange={(value) => updateItem('catalogue', index, { category: value })} placeholder="Product category" /><TextField label="Price or price range" value={product.price} onChange={(value) => updateItem('catalogue', index, { price: value })} placeholder="Contact for price" /><TextField label="Product image URL" value={product.imageFile ? '' : product.imageUrl || product.image} onChange={(value) => updateItem('catalogue', index, { imageUrl: value, image: value, imageFile: null })} placeholder="https://example.com/product.jpg" /><div className="sm:col-span-2"><TextField label="Description" value={product.description} onChange={(value) => updateItem('catalogue', index, { description: value })} multiline placeholder="Product details" /></div><div className="sm:col-span-2"><FileField label="Upload product image" file={product.imageFile} onChange={(file) => updateItem('catalogue', index, { imageFile: file, imageUrl: '', image: '' })} /></div></div>)}
+      <button type="button" onClick={() => addItem('catalogue', { name: '', category: '', price: '', description: '', imageUrl: '', imageFile: null })} className="rounded-md bg-[#0879ee] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0069d8]">+ Add product</button>
+    </Section>
+
+    <Section title="Brands and Supply Capabilities">
+      <TextField label="Brands supplied" value={(details.brands || []).map((item) => typeof item === 'string' ? item : item.name).join(', ')} onChange={(value) => updateList('brands', value)} multiline placeholder="Enter brand names separated by commas" />
+      {(details.supplyCapabilities || []).map((item, index) => <div key={`supply-${index}`} className="grid gap-3 rounded-lg border border-[#e1eaf4] bg-[#f7faff] p-4 sm:grid-cols-2"><div className="flex items-center justify-between sm:col-span-2"><h3 className="font-bold text-[#172d48]">Supply capability {index + 1}</h3><button type="button" onClick={() => removeItem('supplyCapabilities', index)} className="text-xs font-bold text-red-600">Remove</button></div><TextField label="Capability" value={typeof item === 'string' ? item : item.title || item.name} onChange={(value) => updateItem('supplyCapabilities', index, { title: value })} placeholder="Wholesale and bulk supply" /><div className="sm:col-span-2"><TextField label="Details" value={typeof item === 'string' ? '' : item.description} onChange={(value) => updateItem('supplyCapabilities', index, { description: value })} multiline placeholder="Order capacity, lead times or service area" /></div></div>)}
+      <button type="button" onClick={() => addItem('supplyCapabilities', { title: '', description: '' })} className="rounded-md border border-[#b8d8f7] bg-[#eff7ff] px-4 py-2.5 text-sm font-bold text-[#0879ee]">+ Add supply capability</button>
+      <TextField label="Markets served" value={(details.marketsServed || []).map((item) => typeof item === 'string' ? item : item.name).join(', ')} onChange={(value) => updateList('marketsServed', value)} multiline placeholder="Cities, regions, countries or industries" />
+    </Section>
+
+    <Section title="Business Gallery" description="Add photos and videos for your Trading Business page. Upload files or provide URLs.">
+      {(details.galleryImages || []).map((image, index) => <div key={`image-${index}`} className="grid gap-3 rounded-lg border border-[#e1eaf4] bg-[#f7faff] p-4 sm:grid-cols-2"><div className="flex items-center justify-between sm:col-span-2"><h3 className="font-bold text-[#172d48]">Photo {index + 1}</h3><button type="button" onClick={() => removeItem('galleryImages', index)} className="text-xs font-bold text-red-600">Remove</button></div><TextField label="Caption" value={image.title} onChange={(value) => updateItem('galleryImages', index, { title: value })} placeholder="Optional photo caption" /><TextField label="Image URL" value={image.file ? '' : image.url} onChange={(value) => updateItem('galleryImages', index, { url: value, file: null })} placeholder="https://example.com/photo.jpg" /><div className="sm:col-span-2"><FileField label="Upload photo" file={image.file} onChange={(file) => updateItem('galleryImages', index, { file, url: '' })} /></div></div>)}
+      <button type="button" onClick={() => addItem('galleryImages', { title: '', url: '', file: null })} className="rounded-md bg-[#0879ee] px-4 py-2.5 text-sm font-bold text-white">+ Add photo</button>
+      {(details.galleryVideos || []).map((video, index) => <div key={`video-${index}`} className="grid gap-3 rounded-lg border border-[#e1eaf4] bg-[#f7faff] p-4 sm:grid-cols-2"><div className="flex items-center justify-between sm:col-span-2"><h3 className="font-bold text-[#172d48]">Video {index + 1}</h3><button type="button" onClick={() => removeItem('galleryVideos', index)} className="text-xs font-bold text-red-600">Remove</button></div><TextField label="Video title" value={video.title} onChange={(value) => updateItem('galleryVideos', index, { title: value })} placeholder="Video title" /><TextField label="Video URL" value={video.file ? '' : video.url} onChange={(value) => updateItem('galleryVideos', index, { url: value, file: null })} placeholder="YouTube link or video URL" /><div className="sm:col-span-2"><FileField label="Upload video" accept="video/mp4,video/webm,video/ogg,video/quicktime" file={video.file} onChange={(file) => updateItem('galleryVideos', index, { file, url: '' })} /></div></div>)}
+      <button type="button" onClick={() => addItem('galleryVideos', { title: '', url: '', file: null })} className="rounded-md border border-[#b8d8f7] bg-[#eff7ff] px-4 py-2.5 text-sm font-bold text-[#0879ee]">+ Add video</button>
+    </Section>
+  </div>;
 }

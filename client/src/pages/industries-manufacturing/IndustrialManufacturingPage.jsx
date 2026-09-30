@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 const defaultImages = {
   hero: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80',
@@ -16,6 +16,16 @@ const defaultImages = {
   process5: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80',
 };
 
+const manufacturingProcessImages = [
+  'https://cdn.prod.website-files.com/6448c4b633a1f47d13630756/694a5111f2535ebcc86fcdaf_Rectangle%20218.png',
+  'https://static.wixstatic.com/media/665b9c_a72df82123ec42d289e1ae307893d837~mv2.jpeg/v1/fill/w_900%2Ch_600%2Cal_c%2Cq_80/665b9c_a72df82123ec42d289e1ae307893d837~mv2.jpeg',
+  'https://media.licdn.com/dms/image/v2/D5622AQGM-FnXFSHayA/feedshare-shrink_800/B56Zzg4o3CI0Ag-/0/1773299470164?e=2147483647&t=VvNHtawvdTOfevBffU2u2EJiku5O3m6F0Z9o8Cuv8z0&v=beta',
+  'https://cdn.prod.website-files.com/680e89b82d3efcec91d45bdb/681433b40347a3ec7b6f3d46_Gemini_Generated_Image_lkhlf8lkhlf8lkhl.jpeg',
+  'https://www.paramountglobal.com/_next/image/?q=75&url=%2Fimages%2Fabout%2Fpallets-on-a-warehouse-dock.jpg&w=1200',
+];
+
+const toTextList = (value) => Array.isArray(value) ? value : String(value || '').split(/[\n,]/).map((item) => item.trim()).filter(Boolean);
+
 function buildInitials(name) {
   return (name || 'AgriFresh Foods').split(' ').slice(0, 2).map((part) => part[0] || '').join('').toUpperCase();
 }
@@ -27,6 +37,7 @@ function getYoutubeEmbedUrl(url) {
 
 export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, onReport }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [activeMediaIndex, setActiveMediaIndex] = useState(null);
   const categoryText = `${place?.subcategory || ''} ${place?.category?.name || ''}`.toLowerCase();
   const isFoodProcessing = categoryText.includes('food');
   const smallScale = place?.attributes?.smallScaleIndustries || {};
@@ -38,6 +49,7 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
     : 'Precision manufacturing, industrial components and dependable engineering solutions for your business.');
   const aboutDescription = pageData.aboutUs || businessDescription;
   const aboutImage = pageData.aboutImageUrl || place?.attributes?.aboutImage || defaultImages.about;
+  const logoImage = place?.logo || (isFoodProcessing ? foodProcessing.logoUrl : smallScale.logoUrl) || '';
   const address = place?.address || 'Vijayawada, Andhra Pradesh';
   const phone = place?.phone || '+91 98765 43210';
   const email = place?.email || 'info@agrifreshfoods.in';
@@ -48,9 +60,10 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
   const mapQuery = place?.coordinates?.lat && place?.coordinates?.lng
     ? `${place.coordinates.lat},${place.coordinates.lng}`
     : address;
-  const directionsUrl = mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
+  const directionsUrl = pageData.googleMapsUrl || mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
   const coverImage = place?.coverImage || defaultImages.hero;
   const galleryImageUrls = (pageData.galleryImages || []).map((item) => typeof item === 'string' ? item : item.url).filter(Boolean);
+  const facilityGallery = (foodProcessing.facilityImages || []).map((item) => typeof item === 'string' ? { url: item } : item).filter((item) => item.url);
   const gallery = [...new Set([...(Array.isArray(place?.images) ? place.images : []), ...galleryImageUrls])].slice(0, 6);
   const galleryImages = gallery.length ? gallery : [
     defaultImages.product1,
@@ -76,12 +89,31 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
   ]);
 
   const galleryVideos = pageData.galleryVideos || [];
-  const industriesServed = typeof smallScale.industriesServed === 'string'
-    ? smallScale.industriesServed.split(/[\n,]/).map((item) => item.trim()).filter(Boolean)
-    : smallScale.industriesServed || [];
+  const mediaViewerItems = [
+    ...galleryImages.map((src, index) => ({ type: 'image', src, title: `${businessName} image ${index + 1}` })),
+    ...facilityGallery.map((item, index) => ({ type: 'image', src: item.url, title: item.title || `${businessName} facility ${index + 1}` })),
+    ...galleryVideos.map((video, index) => ({ type: 'video', src: typeof video === 'string' ? video : video.url, title: typeof video === 'string' ? `${businessName} video ${index + 1}` : video.title || `${businessName} video ${index + 1}` })).filter((item) => item.src),
+  ];
+  const activeMedia = activeMediaIndex === null ? null : mediaViewerItems[activeMediaIndex];
+  const showPreviousMedia = () => setActiveMediaIndex((index) => (index - 1 + mediaViewerItems.length) % mediaViewerItems.length);
+  const showNextMedia = () => setActiveMediaIndex((index) => (index + 1) % mediaViewerItems.length);
+
+  useEffect(() => {
+    if (activeMediaIndex === null) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setActiveMediaIndex(null);
+      if (event.key === 'ArrowLeft' && mediaViewerItems.length > 1) showPreviousMedia();
+      if (event.key === 'ArrowRight' && mediaViewerItems.length > 1) showNextMedia();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeMediaIndex, mediaViewerItems.length]);
+  const industriesServed = toTextList(pageData.industriesServed || smallScale.industriesServed);
   const certifications = typeof pageData.certifications === 'string'
     ? pageData.certifications.split(/[\n,]/).map((item) => item.trim()).filter(Boolean)
     : pageData.certifications || ['FSSAI', 'ISO', 'HACCP', '100% GMP', 'Organic', 'Traceability'];
+  const facilities = toTextList(pageData.facilities || place?.facilities);
+  const qualityStandards = toTextList(pageData.qualityStandards);
   const manufacturingCapabilities = smallScale.manufacturingCapabilities || [];
   const whyChooseUs = (Array.isArray(pageData.whyChooseUs) ? pageData.whyChooseUs : pageData.whyChooseUs ? [pageData.whyChooseUs] : []).map((item) => typeof item === 'string' ? item : item.title).filter(Boolean);
 
@@ -103,11 +135,11 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
     { title: '04. Packaging', description: 'Smart packaging for freshness, safety and shelf life.', image: defaultImages.process4 },
     { title: '05. Distribution', description: 'Fast delivery to homes, stores and institutional buyers.', image: defaultImages.process5 },
   ] : [
-    { title: '01. Planning', description: 'Confirm product requirements and specifications.', image: defaultImages.process1 },
-    { title: '02. Materials', description: 'Select suitable materials and prepare production.', image: defaultImages.process2 },
-    { title: '03. Manufacturing', description: 'Produce components using the right processes.', image: defaultImages.process3 },
-    { title: '04. Quality Check', description: 'Inspect products for consistency and performance.', image: defaultImages.process4 },
-    { title: '05. Dispatch', description: 'Pack and deliver orders to the customer.', image: defaultImages.process5 },
+    { title: '01. Planning', description: 'Confirm product requirements and specifications.', image: manufacturingProcessImages[0] },
+    { title: '02. Materials', description: 'Select suitable materials and prepare production.', image: manufacturingProcessImages[1] },
+    { title: '03. Manufacturing', description: 'Produce components using the right processes.', image: manufacturingProcessImages[2] },
+    { title: '04. Quality Check', description: 'Inspect products for consistency and performance.', image: manufacturingProcessImages[3] },
+    { title: '05. Dispatch', description: 'Pack and deliver orders to the customer.', image: manufacturingProcessImages[4] },
   ];
 
   const advantages = [
@@ -143,6 +175,7 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
     { label: 'About', href: '#about' },
     { label: 'Products', href: '#products' },
     { label: 'Our Process', href: '#process' },
+    ...(isFoodProcessing ? [{ label: 'Facility', href: '#facility' }] : []),
     { label: 'Quality & Certifications', href: '#quality' },
     { label: 'Gallery', href: '#gallery' },
     { label: 'Contact', href: '#contact' },
@@ -153,8 +186,8 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
       <header className="bg-[#052d1d] text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
           <div className="flex items-center gap-3">
-            {place?.logo
-              ? <img src={place.logo} alt={`${businessName} logo`} className="h-10 w-10 rounded-full bg-white object-contain p-1" />
+            {logoImage
+              ? <img src={logoImage} alt={`${businessName} logo`} className="h-10 w-10 rounded-full bg-white object-contain p-1" />
               : <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f5b942] text-sm font-black text-[#0a311e]">{buildInitials(businessName)}</div>}
             <div>
               <div className="text-[15px] font-black tracking-tight">{businessName}</div>
@@ -229,6 +262,8 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
           </div>
         </section>
 
+        {isFoodProcessing && highlights.length > 0 && <section aria-label="Company highlights" className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">{highlights.map((item, index) => <div key={`${item.label}-${index}`} className="rounded-[16px] border border-[#dfece2] bg-white p-4 text-center shadow-sm"><div className="text-2xl font-black text-[#176b46]">{item.value}</div><div className="mt-1 text-xs font-semibold uppercase tracking-wide text-[#63776c]">{item.label}</div></div>)}</section>}
+
         <section id="about" className="mt-8 rounded-[20px] border border-[#dfece2] bg-white p-5 shadow-sm sm:p-7">
           <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
             <div>
@@ -251,6 +286,8 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
 
               {industriesServed.length > 0 && <div className="mt-5"><p className="text-xs font-bold uppercase tracking-wide text-[#63776c]">Industries served</p><div className="mt-2 flex flex-wrap gap-2">{industriesServed.map((industry) => <span key={industry} className="rounded-full bg-[#edf7f2] px-3 py-1.5 text-xs font-medium text-[#315842]">{industry}</span>)}</div></div>}
 
+              {isFoodProcessing && <div className="mt-6 grid gap-3 sm:grid-cols-2">{[["Established", foodProcessing.establishedYear], ["Founder / Owner", foodProcessing.founder], ["Production Capacity", foodProcessing.productionCapacity], ["Team Size", foodProcessing.employeeCount], ["Business Type", foodProcessing.businessType], ["Markets Served", foodProcessing.marketsServed]].filter(([, value]) => value).map(([label, value]) => <div key={label} className="rounded-xl border border-[#dfece2] bg-[#f6faf8] p-3"><div className="text-[10px] font-bold uppercase tracking-wide text-[#697d72]">{label}</div><div className="mt-1 text-sm font-semibold text-[#123b2a]">{value}</div></div>)}</div>}
+
               <a href="#contact" className="mt-6 inline-flex rounded-full bg-[#1d5a3c] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#144330]">
                 Learn More →
               </a>
@@ -261,6 +298,8 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
             </div>
           </div>
         </section>
+
+        {isFoodProcessing && (foodProcessing.rawMaterials || foodProcessing.sourcingDetails || foodProcessing.packagingOptions || foodProcessing.distributionChannels) && <section className="mt-8 grid gap-5 md:grid-cols-2">{(foodProcessing.rawMaterials || foodProcessing.sourcingDetails) && <article className="rounded-[20px] border border-[#dfece2] bg-white p-6"><p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#75b55e]">Ingredients</p><h2 className="mt-2 font-display text-2xl font-bold text-[#072d1d]">Raw Materials & Sourcing</h2>{foodProcessing.rawMaterials && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-[#42554b]">{foodProcessing.rawMaterials}</p>}{foodProcessing.sourcingDetails && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-[#42554b]">{foodProcessing.sourcingDetails}</p>}</article>}{(foodProcessing.packagingOptions || foodProcessing.distributionChannels) && <article className="rounded-[20px] border border-[#dfece2] bg-white p-6"><p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#75b55e]">Supply</p><h2 className="mt-2 font-display text-2xl font-bold text-[#072d1d]">Packaging & Distribution</h2>{foodProcessing.packagingOptions && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-[#42554b]"><strong>Packaging:</strong> {foodProcessing.packagingOptions}</p>}{foodProcessing.distributionChannels && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-[#42554b]"><strong>Distribution:</strong> {foodProcessing.distributionChannels}</p>}</article>}</section>}
 
         <section id="products" className="mt-12">
           <div className="mb-5 flex items-end justify-between gap-4">
@@ -356,7 +395,7 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
                   <p className="mt-1 text-[15px] leading-relaxed text-[#42554b]">{item.quote}</p>
                   <div className="mt-4 flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0a311e] text-sm font-bold text-white">
-                      {item.name.split(' ').map((n) => n[0]).slice(0, 2).join('')}
+                      {(item.name || 'Customer').split(' ').map((n) => n[0]).slice(0, 2).join('')}
                     </div>
                     <div>
                       <div className="font-bold text-[#072d1d]">{item.name}</div>
@@ -378,8 +417,17 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
                 </div>
               ))}
             </div>
+            {qualityStandards.length > 0 && <div className="mt-6"><h3 className="text-sm font-bold text-[#123b2a]">Quality Standards</h3><div className="mt-2 grid gap-2">{qualityStandards.map((standard, index) => <p key={`${standard}-${index}`} className="rounded-lg bg-[#f7faf8] px-3 py-2 text-sm text-[#42554b]">{standard}</p>)}</div></div>}
+            {isFoodProcessing && foodProcessing.certificationRecords?.length > 0 && <div className="mt-6"><h3 className="text-sm font-bold text-[#123b2a]">Certificate Information</h3><div className="mt-2 space-y-2">{foodProcessing.certificationRecords.filter((record) => record.name).map((record, index) => <article key={`${record.name}-${index}`} className="rounded-xl border border-[#dfece2] bg-[#f7faf8] p-3"><h4 className="text-sm font-bold text-[#123b2a]">{record.name}</h4>{record.authority && <p className="mt-1 text-xs text-[#42554b]">Issued by {record.authority}</p>}{record.number && <p className="text-xs text-[#42554b]">Certificate no. {record.number}</p>}{record.validUntil && <p className="text-xs text-[#42554b]">Valid until {record.validUntil}</p>}{record.url && <a className="mt-2 inline-block text-xs font-semibold text-[#176b46] underline" href={record.url} target="_blank" rel="noreferrer">Verify certificate</a>}</article>)}</div></div>}
+            {facilities.length > 0 && <div className="mt-6"><h3 className="text-sm font-bold text-[#123b2a]">Facilities</h3><div className="mt-2 flex flex-wrap gap-2">{facilities.map((facility, index) => <span key={`${facility}-${index}`} className="rounded-full bg-[#edf7f2] px-3 py-1.5 text-xs font-semibold text-[#1d5a3c]">{facility}</span>)}</div></div>}
           </div>
         </section>
+
+        {isFoodProcessing && (facilityGallery.length > 0 || foodProcessing.facilityDetails) && <section id="facility" className="mt-12 rounded-[22px] border border-[#dfece2] bg-white p-5 shadow-sm sm:p-7"><p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#75b55e]">Our Facility</p><h2 className="mt-2 font-display text-3xl font-bold text-[#072d1d]">Inside Our Processing Facility</h2>{foodProcessing.facilityDetails && <p className="mt-3 max-w-3xl whitespace-pre-line text-sm leading-relaxed text-[#42554b]">{foodProcessing.facilityDetails}</p>}{facilityGallery.length > 0 && <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{facilityGallery.map((item, index) => <figure key={`${item.url}-${index}`} className="overflow-hidden rounded-2xl border border-[#dfece2] bg-[#f8fbf9]"><button type="button" onClick={() => setActiveMediaIndex(galleryImages.length + index)} aria-label={`Open ${item.title || `facility image ${index + 1}`}`} className="block w-full cursor-zoom-in"><img src={item.url} alt={item.title || `Facility ${index + 1}`} className="h-56 w-full object-cover" loading="lazy" /></button>{item.title && <figcaption className="p-3 text-sm font-semibold text-[#123b2a]">{item.title}</figcaption>}</figure>)}</div>}</section>}
+
+        {isFoodProcessing && foodProcessing.teamMembers?.some((member) => member.name || member.bio) && <section className="mt-12"><p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#75b55e]">People behind our products</p><h2 className="mt-2 font-display text-3xl font-bold text-[#072d1d]">Meet Our Team</h2><div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{foodProcessing.teamMembers.filter((member) => member.name || member.bio).map((member, index) => <article key={`${member.name}-${index}`} className="rounded-[18px] border border-[#dfece2] bg-white p-5 shadow-sm">{member.photoUrl && <img src={member.photoUrl} alt={member.name || 'Team member'} className="mb-4 h-40 w-full rounded-xl object-cover" loading="lazy" />}<h3 className="text-lg font-bold text-[#123b2a]">{member.name}</h3>{member.role && <p className="text-xs font-semibold uppercase tracking-wide text-[#698477]">{member.role}</p>}{member.bio && <p className="mt-2 text-sm leading-relaxed text-[#42554b]">{member.bio}</p>}</article>)}</div></section>}
+
+        {isFoodProcessing && (foodProcessing.bulkOrderDetails || foodProcessing.minimumOrder || foodProcessing.privateLabel) && <section className="mt-12 rounded-[22px] bg-[#0a311e] p-6 text-white sm:p-8"><p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#b9f39b]">For Businesses</p><h2 className="mt-2 font-display text-3xl font-bold">Wholesale & Bulk Orders</h2>{foodProcessing.bulkOrderDetails && <p className="mt-3 max-w-3xl whitespace-pre-line text-sm leading-relaxed text-[#d5efd6]">{foodProcessing.bulkOrderDetails}</p>}<div className="mt-4 flex flex-wrap gap-3 text-sm">{foodProcessing.minimumOrder && <span className="rounded-full bg-white/10 px-4 py-2">Minimum order: {foodProcessing.minimumOrder}</span>}{foodProcessing.privateLabel && <span className="rounded-full bg-white/10 px-4 py-2">Private label: {foodProcessing.privateLabel}</span>}</div><a href="#contact" className="mt-5 inline-flex rounded-full bg-[#f5b942] px-5 py-3 text-sm font-bold text-[#0a311e]">Request a Bulk Quote</a></section>}
 
         <section id="gallery" className="mt-12 rounded-[22px] border border-[#dfece2] bg-white p-5 shadow-sm sm:p-7">
           <div className="flex items-end justify-between gap-4">
@@ -394,14 +442,14 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
 
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {galleryImages.slice(0, 6).map((image, index) => (
-              <img key={`${image}-${index}`} src={image} alt={`${businessName} gallery ${index + 1}`} className="h-56 w-full rounded-[16px] object-cover shadow-sm" />
+              <button type="button" key={`${image}-${index}`} onClick={() => setActiveMediaIndex(index)} aria-label={`Open gallery image ${index + 1}`} className="cursor-zoom-in overflow-hidden rounded-[16px] shadow-sm"><img src={image} alt={`${businessName} gallery ${index + 1}`} className="h-56 w-full object-cover transition hover:scale-[1.02]" /></button>
             ))}
           </div>
           {galleryVideos.length > 0 && <div className="mt-7"><h3 className="font-display text-2xl font-semibold text-[#072d1d]">Videos</h3><div className="mt-4 grid gap-4 md:grid-cols-2">{galleryVideos.map((video, index) => {
             const url = typeof video === 'string' ? video : video.url;
             const title = typeof video === 'string' ? `${businessName} video ${index + 1}` : video.title || `${businessName} video ${index + 1}`;
             const embedUrl = getYoutubeEmbedUrl(url);
-            return <div key={`${url}-${index}`} className="overflow-hidden rounded-[16px] border border-[#dfece2] bg-[#f8fbf9]">{embedUrl ? <iframe src={embedUrl} title={title} allowFullScreen className="aspect-video w-full" /> : <video src={url} controls preload="metadata" className="aspect-video w-full bg-black" />}<p className="px-3 py-2 text-sm font-semibold text-[#1d2d25]">{title}</p></div>;
+            return <button type="button" key={`${url}-${index}`} onClick={() => setActiveMediaIndex(galleryImages.length + facilityGallery.length + index)} className="group overflow-hidden rounded-[16px] border border-[#dfece2] bg-[#f8fbf9] text-left"><span className="flex aspect-video items-center justify-center bg-[#0a311e] text-5xl text-white transition group-hover:bg-[#15583b]">▶</span><span className="block px-3 py-2 text-sm font-semibold text-[#1d2d25]">{title}</span></button>;
           })}</div></div>}
         </section>
 
@@ -456,8 +504,8 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
         <div className="mx-auto grid max-w-7xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[1.2fr_0.8fr_0.8fr_1fr]">
           <div>
             <div className="flex items-center gap-3">
-              {place?.logo
-                ? <img src={place.logo} alt={`${businessName} logo`} className="h-10 w-10 rounded-full bg-white object-contain p-1" />
+              {logoImage
+                ? <img src={logoImage} alt={`${businessName} logo`} className="h-10 w-10 rounded-full bg-white object-contain p-1" />
                 : <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f5b942] text-sm font-black text-[#0a311e]">{buildInitials(businessName)}</div>}
               <div>
                 <div className="text-[18px] font-black text-white">{businessName}</div>
@@ -509,6 +557,21 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
           </div>
         </div>
       </footer>
+      {activeMedia && <div role="dialog" aria-modal="true" aria-label={activeMedia.title} className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 p-3 sm:p-6" onClick={() => setActiveMediaIndex(null)}>
+        <div className="relative flex max-h-[94vh] w-full max-w-6xl flex-col items-center" onClick={(event) => event.stopPropagation()}>
+          <button type="button" onClick={() => setActiveMediaIndex(null)} aria-label="Close media viewer" className="absolute -top-1 right-0 z-10 grid h-11 w-11 place-items-center rounded-full bg-white text-3xl text-slate-900 shadow sm:-right-12 sm:top-0">×</button>
+          {activeMediaIndex > 0 && <button type="button" onClick={showPreviousMedia} aria-label="Previous image or video" className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/60 px-4 py-3 text-2xl font-bold text-white hover:bg-black/80 sm:left-4">‹</button>}
+          {activeMediaIndex < mediaViewerItems.length - 1 && <button type="button" onClick={showNextMedia} aria-label="Next image or video" className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/60 px-4 py-3 text-2xl font-bold text-white hover:bg-black/80 sm:right-4">›</button>}
+          <div className="flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden rounded-xl">
+            {activeMedia.type === 'image'
+              ? <img src={activeMedia.src} alt={activeMedia.title} className="max-h-[82vh] max-w-full object-contain" />
+              : getYoutubeEmbedUrl(activeMedia.src)
+                ? <iframe src={getYoutubeEmbedUrl(activeMedia.src)} title={activeMedia.title} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen className="aspect-video w-full max-w-5xl" />
+                : <video src={activeMedia.src} controls autoPlay className="max-h-[82vh] max-w-full" />}
+          </div>
+          <div className="mt-3 text-center text-sm font-medium text-white">{activeMedia.title}<span className="ml-3 text-white/65">{activeMediaIndex + 1} / {mediaViewerItems.length}</span></div>
+        </div>
+      </div>}
       {selectedProduct && <div role="dialog" aria-modal="true" aria-label={`${selectedProduct.name || 'Product'} details`} className="fixed inset-0 z-50 flex items-center justify-center bg-[#061c31]/85 p-4" onClick={() => setSelectedProduct(null)}>
         <div className="relative grid max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-[20px] bg-white shadow-2xl md:grid-cols-2" onClick={(event) => event.stopPropagation()}>
           <img src={selectedProduct.image || defaultImages.product1} alt={selectedProduct.name || 'Product'} onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = defaultImages.product1; }} className="h-56 w-full object-cover md:h-full md:min-h-[360px]" />

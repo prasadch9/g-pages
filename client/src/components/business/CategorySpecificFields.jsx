@@ -60,13 +60,13 @@ import SubcategoryForm29 from '../../pages/marriage-wedding/beauty-parlours/Beau
 import subcategoryFields29 from '../../pages/marriage-wedding/beauty-parlours/beautyParloursFields';
 import SubcategoryForm30 from '../../pages/marriage-wedding/salon-spa/SalonSpaFields';
 import subcategoryFields30 from '../../pages/marriage-wedding/salon-spa/salonSpaFields';
-import SubcategoryForm31 from '../../pages/travel-hospitality/tours-travels/ToursTravelsFields';
+import SubcategoryForm31 from '../../pages/travel-hospitality/tours-travels/ToursTravelsFields.jsx';
 import subcategoryFields31 from '../../pages/travel-hospitality/tours-travels/toursTravelsFields';
-import SubcategoryForm32 from '../../pages/travel-hospitality/hotels/HotelsFields';
+import SubcategoryForm32 from '../../pages/travel-hospitality/hotels/HotelsFields.jsx';
 import subcategoryFields32 from '../../pages/travel-hospitality/hotels/hotelsFields';
-import SubcategoryForm33 from '../../pages/travel-hospitality/resorts/ResortsFields';
+import SubcategoryForm33 from '../../pages/travel-hospitality/resorts/ResortsFields.jsx';
 import subcategoryFields33 from '../../pages/travel-hospitality/resorts/resortsFields';
-import SubcategoryForm34 from '../../pages/travel-hospitality/party-zones/PartyZonesFields';
+import SubcategoryForm34 from '../../pages/travel-hospitality/party-zones/PartyZonesFields.jsx';
 import subcategoryFields34 from '../../pages/travel-hospitality/party-zones/partyZonesFields';
 import SubcategoryForm35 from '../../pages/real-estate-construction/real-estate/RealEstateFields';
 import subcategoryFields35 from '../../pages/real-estate-construction/real-estate/realEstateFields';
@@ -104,14 +104,15 @@ import SubcategoryForm51 from '../../pages/shopping-retail/nurseries/NurseriesFi
 import subcategoryFields51 from '../../pages/shopping-retail/nurseries/nurseriesFields';
 import SubcategoryForm52 from '../../pages/automotive/car-showrooms/CarShowroomsFields';
 import subcategoryFields52 from '../../pages/automotive/car-showrooms/carShowroomsFields';
-import SubcategoryForm53 from '../../pages/industries-manufacturing/small-scale-industries/SmallScaleIndustriesFields';
+import SubcategoryForm53 from '../../pages/industries-manufacturing/small-scale-industries/SmallScaleIndustriesFields.jsx';
 import subcategoryFields53 from '../../pages/industries-manufacturing/small-scale-industries/smallScaleIndustriesFields';
-import SubcategoryForm54 from '../../pages/industries-manufacturing/food-processing/FoodProcessingFields';
+import SubcategoryForm54 from '../../pages/industries-manufacturing/food-processing/FoodProcessingFields.jsx';
 import subcategoryFields54 from '../../pages/industries-manufacturing/food-processing/foodProcessingFields';
-import SubcategoryForm55 from '../../pages/industries-manufacturing/trading-businesses/TradingBusinessesFields';
+import SubcategoryForm55 from '../../pages/industries-manufacturing/trading-businesses/TradingBusinessesFields.jsx';
 import subcategoryFields55 from '../../pages/industries-manufacturing/trading-businesses/tradingBusinessesFields';
 import SubcategoryForm56 from '../../pages/arts-creative/sculptures/SculpturesFields';
 import subcategoryFields56 from '../../pages/arts-creative/sculptures/sculpturesFields';
+import CategoryBusinessFields from './CategoryBusinessFields';
 
 const CATEGORY_FORMS = {
   "Business & Professional Services::Consultancies": SubcategoryForm0,
@@ -248,6 +249,15 @@ export function getCategoryFieldNames(groupName, subcategoryName) {
 export default function CategorySpecificFields(props) {
   const key = props.groupName + '::' + props.subcategoryName;
   const Form = CATEGORY_FORMS[key];
-  if (!Form) return <p className="col-span-2 text-sm text-ink/50">Select a subcategory to load its specific form.</p>;
-  return <Form {...props} />;
+  if (typeof Form === 'function') return <Form {...props} />;
+
+  // Some category modules expose their field list as the default export rather
+  // than a renderable component. Render the shared fields UI in that case so a
+  // subtype selection cannot crash the whole listing page.
+  const fieldNames = CATEGORY_FIELDS[key];
+  if (Array.isArray(fieldNames)) {
+    return <CategoryBusinessFields {...props} fieldNames={fieldNames} />;
+  }
+
+  return <p className="col-span-2 text-sm text-ink/50">Select a subcategory to load its specific form.</p>;
 }

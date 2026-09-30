@@ -61,6 +61,7 @@ export default function GenericBusinessCreateForm({ groupName, categories, onBac
         </div>
       )}
       <GenericBusinessEditor
+        key={selected._id}
         place={draft}
         groupName={groupName}
         subcategoryName={selected.name}

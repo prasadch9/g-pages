@@ -133,7 +133,7 @@ export default function BusinessCategoryForm({ place = null }) {
   }
   // Generic create form for remaining 9 groups
   if (!isEdit && GENERIC_GROUPS.has(selectedGroup)) {
-    return <GenericBusinessCreateForm groupName={selectedGroup} categories={categories} onBack={() => setSelectedGroup('')} />;
+    return <GenericBusinessCreateForm key={selectedGroup} groupName={selectedGroup} categories={categories} onBack={() => setSelectedGroup('')} />;
   }
 
   const save = async (event) => {

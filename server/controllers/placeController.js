@@ -303,6 +303,7 @@ const createPlace = async (req, res, next) => {
         products: (body.attributes.foodProcessing.products || []).map(({ imageUploadIndex, ...item }) => ({ ...item, image: imageUploadIndex !== undefined ? foodProcessingImages[imageUploadIndex] || item.image : item.image })),
         processSteps: (body.attributes.foodProcessing.processSteps || []).map(({ imageUploadIndex, ...item }) => ({ ...item, image: imageUploadIndex !== undefined ? foodProcessingImages[imageUploadIndex] || item.image : item.image })),
         galleryImages: (body.attributes.foodProcessing.galleryImages || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? foodProcessingImages[uploadIndex] || item.url : item.url })),
+        facilityImages: (body.attributes.foodProcessing.facilityImages || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? foodProcessingImages[uploadIndex] || item.url : item.url })),
         galleryVideos: (body.attributes.foodProcessing.galleryVideos || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? foodProcessingVideos[uploadIndex] || item.url : item.url })),
       } } : {}),
       ...(body.attributes?.tradingBusinesses ? { tradingBusinesses: {
@@ -445,6 +446,7 @@ const updatePlace = async (req, res, next) => {
         ...details,
         products: (details.products || []).map(({ imageUploadIndex, ...item }) => ({ ...item, image: imageUploadIndex !== undefined ? images[imageUploadIndex] || item.image : item.image })),
         galleryImages: (details.galleryImages || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? images[uploadIndex] || item.url : item.url })),
+        facilityImages: (details.facilityImages || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? images[uploadIndex] || item.url : item.url })),
         galleryVideos: (details.galleryVideos || []).map(({ uploadIndex, ...item }) => ({ ...item, url: uploadIndex !== undefined ? videos[uploadIndex] || item.url : item.url })),
       };
     }

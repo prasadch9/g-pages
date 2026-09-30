@@ -26,9 +26,9 @@ import TrustRegistrationFields from '../religious-social/trusts/TrustRegistratio
 import NgoRegistrationFields from '../religious-social/ngos/NgoRegistrationFields';
 import AssociationRegistrationFields from '../religious-social/associations/AssociationRegistrationFields';
 import SculptureRegistrationFields from '../arts-creative/sculptures/SculptureRegistrationFields';
-import SmallScaleIndustriesFields from '../industries-manufacturing/small-scale-industries/SmallScaleIndustriesFields';
-import FoodProcessingFields from '../food-dining/food-processing/FoodProcessingFields';
-import TradingBusinessesFields from '../industries-manufacturing/trading-businesses/TradingBusinessesFields';
+import SmallScaleIndustriesFields from '../industries-manufacturing/small-scale-industries/SmallScaleIndustriesFields.jsx';
+import IndustryFoodProcessingFields from '../industries-manufacturing/food-processing/IndustryFoodProcessingFields.jsx';
+import TradingBusinessesFields from '../industries-manufacturing/trading-businesses/TradingBusinessesFields.jsx';
 
 const initialLocation = { state: '', district: '', city: '', area: '', areaText: '' };
 const MALL_DAYS = [['mon', 'Monday'], ['tue', 'Tuesday'], ['wed', 'Wednesday'], ['thu', 'Thursday'], ['fri', 'Friday'], ['sat', 'Saturday'], ['sun', 'Sunday']];
@@ -587,7 +587,7 @@ export default function CreateListing() {
         galleryVideos: (smallScaleData.galleryVideos || []).map(({ file, ...item }) => ({ ...item, uploadIndex: file ? smallScaleVideoIndex++ : undefined })),
       } : undefined;
       const foodProcessingData = form.foodProcessing || initialForm.foodProcessing;
-      const foodProcessingImageFiles = [...(foodProcessingData.products || []).map((item) => item.imageFile).filter(Boolean), ...(foodProcessingData.processSteps || []).map((item) => item.imageFile).filter(Boolean), ...(foodProcessingData.galleryImages || []).map((item) => item.file).filter(Boolean)];
+      const foodProcessingImageFiles = [...(foodProcessingData.products || []).map((item) => item.imageFile).filter(Boolean), ...(foodProcessingData.processSteps || []).map((item) => item.imageFile).filter(Boolean), ...(foodProcessingData.galleryImages || []).map((item) => item.file).filter(Boolean), ...(foodProcessingData.facilityImages || []).map((item) => item.file).filter(Boolean)];
       const foodProcessingVideoFiles = (foodProcessingData.galleryVideos || []).map((item) => item.file).filter(Boolean);
       let foodProcessingImageIndex = 0;
       let foodProcessingVideoIndex = 0;
@@ -597,6 +597,7 @@ export default function CreateListing() {
         products: (foodProcessingData.products || []).map(({ imageFile, imageUrl, ...item }) => ({ ...item, image: imageFile ? undefined : imageUrl || item.image, imageUploadIndex: imageFile ? foodProcessingImageIndex++ : undefined })),
         processSteps: (foodProcessingData.processSteps || []).map(({ imageFile, imageUrl, ...item }) => ({ ...item, image: imageFile ? undefined : imageUrl || item.image, imageUploadIndex: imageFile ? foodProcessingImageIndex++ : undefined })),
         galleryImages: (foodProcessingData.galleryImages || []).map(({ file, ...item }) => ({ ...item, uploadIndex: file ? foodProcessingImageIndex++ : undefined })),
+        facilityImages: (foodProcessingData.facilityImages || []).map(({ file, ...item }) => ({ ...item, uploadIndex: file ? foodProcessingImageIndex++ : undefined })),
         galleryVideos: (foodProcessingData.galleryVideos || []).map(({ file, ...item }) => ({ ...item, uploadIndex: file ? foodProcessingVideoIndex++ : undefined })),
       } : undefined;
       const tradingData = form.tradingBusinesses || initialForm.tradingBusinesses;
@@ -778,6 +779,9 @@ export default function CreateListing() {
       if (form.mainCategory) payload.append('businessGroup', form.mainCategory);
       if (coverFile) payload.append('coverImage', coverFile);
       if (logoFile) payload.append('logo', logoFile);
+      else if (isSmallScaleIndustries && smallScaleData.logoUrl) payload.append('logo', smallScaleData.logoUrl);
+      else if (isFoodProcessingForManufacturing && foodProcessingData.logoUrl) payload.append('logo', foodProcessingData.logoUrl);
+      else if (isTradingBusinessesForManufacturing && tradingData.logoUrl) payload.append('logo', tradingData.logoUrl);
       if (footerLogoFile) payload.append('footerLogo', footerLogoFile);
       if (principalImageFile) payload.append('principalImage', principalImageFile);
       if (aboutImageFile) payload.append('aboutImage', aboutImageFile);
@@ -840,7 +844,7 @@ export default function CreateListing() {
         services: splitList(form.services),
         facilities: splitList(form.facilities),
         socialLinks: { facebook: form.facebook, instagram: form.instagram, youtube: form.youtube, linkedin: form.linkedin, whatsapp: form.whatsapp },
-        logo: editedLogo || undefined,
+        logo: logoFile ? undefined : (isSmallScaleIndustries ? smallScaleData.logoUrl || editedLogo : isFoodProcessingForManufacturing ? foodProcessingData.logoUrl || editedLogo : isTradingBusinessesForManufacturing ? tradingData.logoUrl || editedLogo : editedLogo) || undefined,
         coverImage: editedCoverImage || undefined,
         aboutImage: editedAboutImage || undefined,
         images: editedGalleryImages,
@@ -943,7 +947,7 @@ export default function CreateListing() {
           <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Website</label><input type="url" value={form.website} onChange={update('website')} placeholder="https://" className={inputClass} /></div>
           {renderSingleImageUpload('coverImage', 'Cover image', false)}
           {isSmallScaleIndustries && <SmallScaleIndustriesFields form={form} setForm={setForm} inputClass={inputClass} logoFile={logoFile} setLogoFile={setLogoFile} existingLogo={existingMedia.logo} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} existingAboutImage={existingMedia.about} />}
-          {isFoodProcessingForManufacturing && <FoodProcessingFields form={form} setForm={setForm} inputClass={inputClass} logoFile={logoFile} setLogoFile={setLogoFile} existingLogo={existingMedia.logo} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} existingAboutImage={existingMedia.about} />}
+          {isFoodProcessingForManufacturing && <IndustryFoodProcessingFields form={form} setForm={setForm} logoFile={logoFile} setLogoFile={setLogoFile} existingLogo={existingMedia.logo} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} existingAboutImage={existingMedia.about} />}
           {isTradingBusinessesForManufacturing && <TradingBusinessesFields form={form} setForm={setForm} inputClass={inputClass} logoFile={logoFile} setLogoFile={setLogoFile} existingLogo={existingMedia.logo} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} existingAboutImage={existingMedia.about} />}
           <div className="col-span-2 grid gap-4 sm:grid-cols-2"><label className="text-sm text-ink/70">Facebook URL<input value={form.facebook} onChange={update('facebook')} placeholder="https://facebook.com/" className={inputClass} /></label><label className="text-sm text-ink/70">Instagram URL<input value={form.instagram} onChange={update('instagram')} placeholder="https://instagram.com/" className={inputClass} /></label><label className="text-sm text-ink/70">WhatsApp<input value={form.whatsapp} onChange={update('whatsapp')} placeholder="https://wa.me/" className={inputClass} /></label></div>
           {error && <p className="col-span-2 text-sm text-vermilion">{error}</p>}
