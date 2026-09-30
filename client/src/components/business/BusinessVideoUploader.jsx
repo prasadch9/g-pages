@@ -155,7 +155,6 @@ function AddVideoModal({ onAdd, onClose, placeId }) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadedFile, setUploadedFile] = useState(null);
-  const [uploadTitle, setUploadTitle] = useState('');
   const [urlInput, setUrlInput] = useState('');
   const [urlTitle, setUrlTitle] = useState('');
   const [urlPreview, setUrlPreview] = useState(null);
@@ -171,7 +170,6 @@ function AddVideoModal({ onAdd, onClose, placeId }) {
     if (!file) return;
     setError('');
     setUploadedFile(null);
-    setUploadTitle('');
     setUploading(true);
     setUploadProgress(0);
     const formData = new FormData();
@@ -183,8 +181,7 @@ function AddVideoModal({ onAdd, onClose, placeId }) {
           if (evt.total) setUploadProgress(Math.round((evt.loaded / evt.total) * 100));
         },
       });
-    setUploadedFile({ url: data.data.url, name: file.name, size: file.size });
-    setUploadTitle(file.name.replace(/\.[^.]+$/, ''));
+      setUploadedFile({ url: data.data.url, name: file.name, size: file.size });
     } catch (err) {
       setError(err.message || 'Upload failed.');
     } finally {
@@ -194,8 +191,7 @@ function AddVideoModal({ onAdd, onClose, placeId }) {
 
   const confirmUpload = () => {
     if (!uploadedFile) return;
-    const title = uploadTitle.trim() || uploadedFile.name;
-    onAdd({ type: 'upload', url: uploadedFile.url, title, caption: title, originalName: uploadedFile.name });
+    onAdd({ type: 'upload', url: uploadedFile.url, title: uploadedFile.name, originalName: uploadedFile.name });
   };
 
   // Tab 1 — Video URL
@@ -214,7 +210,7 @@ function AddVideoModal({ onAdd, onClose, placeId }) {
     const trimmed = urlInput.trim();
     if (!trimmed) return;
     const srcType = detectUrlType(trimmed);
-    onAdd({ type: srcType === 'youtube' || srcType === 'vimeo' ? srcType : 'url', url: trimmed, title: urlTitle.trim(), caption: urlTitle.trim() });
+    onAdd({ type: srcType === 'youtube' || srcType === 'vimeo' ? srcType : 'url', url: trimmed, title: urlTitle.trim() });
   };
 
   // Tab 2 — Google Video
@@ -234,7 +230,7 @@ function AddVideoModal({ onAdd, onClose, placeId }) {
   const confirmGoogle = () => {
     const trimmed = googleInput.trim();
     if (!trimmed) return;
-    onAdd({ type: 'google', url: trimmed, title: googleTitle.trim(), caption: googleTitle.trim() });
+    onAdd({ type: 'google', url: trimmed, title: googleTitle.trim() });
   };
 
   return (
@@ -306,7 +302,6 @@ function AddVideoModal({ onAdd, onClose, placeId }) {
                 <div className="rounded-xl border border-[#ebded8] bg-[#fffaf8] p-3 space-y-3">
                   <video src={uploadedFile.url} controls className="aspect-video w-full rounded-lg bg-black" />
                   <p className="truncate text-xs font-semibold text-[#2d2323]">{uploadedFile.name}</p>
-                  <input value={uploadTitle} onChange={(event) => setUploadTitle(event.target.value)} placeholder="Video caption (optional)" className="w-full rounded-xl border border-[#e7dcd7] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#a83f32]" />
                   <p className="text-xs text-[#776763]">{formatSize(uploadedFile.size)}</p>
                   <div className="flex gap-2">
                     <button type="button" onClick={confirmUpload} className="flex-1 rounded-lg bg-[#a83f32] py-2 text-sm font-bold text-white">

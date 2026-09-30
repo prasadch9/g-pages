@@ -82,7 +82,6 @@ export default function GenericBusinessEditor({ place = null, groupName, subcate
     pincode: common.pincode || '',
     logo: place?.logo || common.logo || '',
     coverImage: place?.coverImage || common.coverImage || '',
-    aboutImage: place?.aboutImage || common.aboutImage || place?.attributes?.aboutImage || '',
     gallery: place?.images || common.gallery || [],
     videos: Array.isArray(common.videos) ? common.videos : [],
     social: { ...(place?.socialLinks || {}), ...(common.socialMedia || {}) },
@@ -118,7 +117,6 @@ export default function GenericBusinessEditor({ place = null, groupName, subcate
       website: form.website || undefined,
       logo: form.logo || undefined,
       coverImage: form.coverImage || undefined,
-      aboutImage: form.aboutImage || undefined,
       images: form.gallery.slice(0, 10),
       services: split(form.specific['Travel Services'] || form.specific['Services'] || form.specific['Professional Services'] || form.specific['Medical Services'] || ''),
       facilities: split(form.specific['Facilities'] || ''),
@@ -137,7 +135,6 @@ export default function GenericBusinessEditor({ place = null, groupName, subcate
             about: form.description,
             logo: form.logo,
             coverImage: form.coverImage,
-            aboutImage: form.aboutImage,
             gallery: form.gallery.slice(0, 10),
             videos: form.videos,
             pincode: form.pincode,
@@ -276,7 +273,6 @@ export default function GenericBusinessEditor({ place = null, groupName, subcate
           <section className="rounded-2xl border bg-white p-5 shadow-sm sm:p-7" style={{ borderColor: palette.border }}>
             <h2 className="font-display text-xl font-semibold" style={{ color: palette.dark }}>Gallery & Videos</h2>
             <div className="mt-5 space-y-6">
-              <BusinessMediaUploader label="About section image" value={form.aboutImage} onChange={(v) => setField('aboutImage', v)} placeId={place?._id} previewClassName="h-40" />
               <BusinessMediaUploader label="Gallery Images" helpText="Add up to 10 images." value={form.gallery} onChange={(v) => setField('gallery', v)} placeId={place?._id} multiple max={10} previewClassName="h-28" />
               <BusinessVideoUploader label="Video Gallery" value={form.videos} onChange={(v) => setField('videos', v)} placeId={place?._id} />
             </div>
