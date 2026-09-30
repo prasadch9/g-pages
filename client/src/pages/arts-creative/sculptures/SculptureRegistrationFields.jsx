@@ -1,4 +1,5 @@
 import React from 'react';
+import BusinessVideoUploadSection from '../../business-professional/BusinessVideoUploadSection';
 
 const ic = 'mt-1 w-full rounded border border-line bg-white px-3 py-2.5 text-[15px] outline-none focus:border-ink/40';
 const tc = `${ic} resize-y`;
@@ -42,6 +43,14 @@ export default function SculptureRegistrationFields({
   renderSingleImageUpload,
   handleLocalFiles,
   removeUploadedImage,
+  mallVideos = [],
+  setMallVideos,
+  mallVideoUrl = '',
+  setMallVideoUrl,
+  mallVideoCaption = '',
+  setMallVideoCaption,
+  handleMallVideoFiles,
+  addMallVideoUrl,
 }) {
   const lf = (key, label, ph, rows = 2) => (
     <F label={label} col={2}>
@@ -156,10 +165,19 @@ export default function SculptureRegistrationFields({
             </label>
           </div>
         </div>
-        <F label="Studio Tour / Carving Process Video URL (optional)" col={2}>
-          <input type="url" value={form.videoUrls || ''} onChange={update('videoUrls')} placeholder="https://youtube.com/watch?v=..." className={ic} />
-          <p className="mt-1 text-xs text-ink/40">Paste a YouTube video link demonstrating stone carving, bronze lost-wax casting, or studio gallery tour.</p>
-        </F>
+        <BusinessVideoUploadSection
+          mallVideos={mallVideos}
+          setMallVideos={setMallVideos}
+          mallVideoUrl={mallVideoUrl}
+          setMallVideoUrl={setMallVideoUrl}
+          mallVideoCaption={mallVideoCaption}
+          setMallVideoCaption={setMallVideoCaption}
+          handleMallVideoFiles={handleMallVideoFiles}
+          addMallVideoUrl={addMallVideoUrl}
+          theme="orange"
+          title="Arts & Creative Videos & Portfolio (Optional)"
+          description="Upload videos or add links to showcase your creative work, studio, and portfolio."
+        />
       </Section>
 
       {/* Step 8 — Social Links */}
