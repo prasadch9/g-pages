@@ -3,17 +3,6 @@ import ReviewsSection from '../../components/ReviewsSection';
 import { getProfileData, ImageFrame, PublicVideoCard } from '../../components/public/PublicProfileShared';
 import { getWhatsAppUrl } from '../healthcare-medical/healthcareUtils';
 
-const DEFAULT_BOUTIQUE_SERVICES = [
-  'Custom Stitching',
-  'Bridal Wear',
-  'Ethnic Wear',
-  'Western Wear',
-  'Party Wear',
-  'Alterations',
-  'Designer Consultation',
-  'Blouse Designing',
-];
-
 const SERVICE_ICONS = {
   'Custom Stitching': '✂️',
   'Bridal Wear': '👑',
@@ -110,14 +99,14 @@ export default function BoutiquePublicPage({ place }) {
     const raw = specific.services || specific.specialtyServices || place.services || [];
     const list = Array.isArray(raw) ? raw.filter(Boolean) : String(raw).split(/[\n,]/).map((s) => s.trim()).filter(Boolean);
     const result = list.map((item) => (typeof item === 'object' ? item.name || item.title : item));
-    return result.length > 0 ? result : DEFAULT_BOUTIQUE_SERVICES;
+    return result;
   }, [specific.services, specific.specialtyServices, place.services]);
 
   // Dynamic Brands
   const brands = useMemo(() => {
-    const raw = specific.featuredBrands || specific.brands || [];
+    const raw = specific.featuredBrands || specific.brands || specific.features || [];
     return Array.isArray(raw) ? raw.filter(Boolean) : String(raw).split(/[\n,]/).map((b) => b.trim()).filter(Boolean);
-  }, [specific.featuredBrands, specific.brands]);
+  }, [specific.featuredBrands, specific.brands, specific.features]);
 
   // Contact links
   const phone = place.phone || profile.phone || '';
@@ -138,7 +127,7 @@ export default function BoutiquePublicPage({ place }) {
     ['About', '#about'],
     ...(collections.length > 0 ? [['Collections', '#collections']] : []),
     ...(products.length > 0 ? [['Designs', '#designs']] : []),
-    ['Services', '#services'],
+    ...(services.length > 0 ? [['Services', '#services']] : []),
     ...(gallery.length > 0 ? [['Gallery', '#gallery']] : []),
     ...(videos.length > 0 ? [['Videos', '#videos']] : []),
     ['Reviews', '#reviews'],
@@ -273,7 +262,7 @@ export default function BoutiquePublicPage({ place }) {
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#861638]">Our Story</p>
               <h2 className="mt-2 font-serif text-3xl font-bold text-[#3d0c1e] sm:text-4xl">About Our Boutique</h2>
-              <p className="mt-4 text-sm leading-relaxed text-[#5c3e49] sm:text-base">{about || `${businessName} offers custom-tailored outfits and designer wear crafted with care and elegance.`}</p>
+              {about && <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-[#5c3e49] sm:text-base">{about}</p>}
 
               {years && (
                 <div className="mt-6 inline-flex items-center gap-3 rounded-2xl border border-[#f5c6d3] bg-[#fff5f8] px-5 py-3">
@@ -345,7 +334,7 @@ export default function BoutiquePublicPage({ place }) {
         )}
 
         {/* SERVICES SECTION */}
-        <section id="services" className="bg-[#fff8fa] px-5 py-12 sm:px-8">
+        {services.length > 0 && <section id="services" className="bg-[#fff8fa] px-5 py-12 sm:px-8">
           <div className="mx-auto max-w-[1500px]">
             <div className="text-center">
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#861638]">What We Offer</p>
@@ -357,12 +346,11 @@ export default function BoutiquePublicPage({ place }) {
                 <div key={`${service}-${idx}`} className="rounded-2xl border border-[#f5c6d3] bg-white p-5 shadow-xs transition hover:shadow-md">
                   <span className="text-2xl">{SERVICE_ICONS[service] || '✨'}</span>
                   <h3 className="mt-3 font-serif text-lg font-bold text-[#3d0c1e]">{service}</h3>
-                  <p className="mt-1 text-xs text-[#70525d]">Tailored specifically to match your vision and personal taste.</p>
                 </div>
               ))}
             </div>
           </div>
-        </section>
+        </section>}
 
         {/* BRANDS SECTION (Only if provided) */}
         {brands.length > 0 && (

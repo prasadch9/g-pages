@@ -30,6 +30,7 @@ import {
   NurseryDetailLayout,
 } from './shopping-retail/ChandhuuRetailDetailLayouts';
 import { ChandhuuRetailGenericLayout } from './shopping-retail/ChandhuuRetailGenericLayout';
+import { getParentBusinessGroup, isAmbiguousBusinessSubcategory } from '../utils/categoryRouting';
 
 const DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
 const REPORT_REASONS = [
@@ -474,7 +475,10 @@ export default function PlaceDetailPage() {
   }
 
   const isAutomotiveCategory = ['automotive', 'automotive-dealers', 'car-showrooms', 'automobile-dealers'].includes((place.category?.slug || '').toLowerCase()) || ['automotive', 'car showrooms', 'automobile dealers'].includes((place.category?.name || '').toLowerCase());
-  const isShoppingCategory = ['shopping-retail', 'shopping-malls', 'boutique', 'home-appliances', 'furniture-shops', 'mattress-shops', 'nurseries', 'fashion-stores', 'gift-stationery', 'groceries-essentials'].includes((place.category?.slug || '').toLowerCase()) || ['shopping & retail', 'shopping malls', 'boutique', 'home appliances', 'furniture shops', 'mattress shops', 'nurseries', 'fashion stores', 'gift & stationery', 'groceries & essentials'].includes((place.category?.name || '').toLowerCase());
+  const normalizedParentGroup = getParentBusinessGroup(place);
+  const isShoppingCategory = normalizedParentGroup
+    ? normalizedParentGroup === 'shopping retail'
+    : !isAmbiguousBusinessSubcategory(place) && (['shopping-retail', 'shopping-malls', 'boutique', 'home-appliances', 'furniture-shops', 'mattress-shops', 'nurseries', 'fashion-stores', 'gift-stationery', 'groceries-essentials'].includes((place.category?.slug || '').toLowerCase()) || ['shopping & retail', 'shopping malls', 'boutique', 'home appliances', 'furniture shops', 'mattress shops', 'nurseries', 'fashion stores', 'gift & stationery', 'groceries & essentials'].includes((place.category?.name || '').toLowerCase()));
   const isShoppingMall = (place.attributes?.subCategory || '').toLowerCase() === 'shopping malls' || ((place.category?.slug || '').toLowerCase() === 'shopping-malls' && !(place.attributes?.subCategory));
   const retailSubcategory = String(place.subcategory?.name || place.attributes?.subCategory || place.category?.name || '').toLowerCase();
   const chandhuuRetailLayout = /home appliances|appliance|refrigerator|washing machine|air conditioner|led tv|microwave/.test(retailSubcategory)

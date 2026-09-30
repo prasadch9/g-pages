@@ -31,6 +31,7 @@ import ResortWebsite from './travel-hospitality/resorts/ResortWebsite';
 import PartyZoneWebsite from './travel-hospitality/party-zones/PartyZoneWebsite';
 import { ProfileLoading, resolveFoodBusinessType, resolvePropertyBusinessType, resolveWeddingBusinessType } from '../components/public/PublicProfileShared';
 import { isHealthcareBusiness } from './healthcare-medical/healthcareUtils';
+import { getParentBusinessGroup } from '../utils/categoryRouting';
 
 const normalizeCategoryLabel = (value) => String(value?.name || value?.slug || value || '')
   .trim()
@@ -101,6 +102,13 @@ const isSaloonSpaListing = (place) => {
 };
 
 const isShoppingRetailListing = (place, subcategories) => {
+  const normalizedParent = getParentBusinessGroup(place);
+  if (normalizedParent) {
+    if (normalizedParent !== 'shopping retail') return false;
+  } else if (subcategories.includes('furniture shops')) {
+    return false;
+  }
+
   const candidates = [
     place?.subcategory?.name,
     place?.subcategory?.slug,

@@ -43,7 +43,8 @@ const createReview = async (req, res, next) => {
       return next(new AppError('You can only review a live listing.', 400));
     }
 
-    const review = await Review.create({ user: req.user._id, place, rating, comment });
+    const name = String(req.body.name || req.user.name || '').trim().slice(0, 120);
+    const review = await Review.create({ user: req.user._id, place, name, rating, comment });
     await recalculateRating(place);
 
     await Notification.create({
@@ -71,6 +72,7 @@ const updateReview = async (req, res, next) => {
 
     if (req.body.rating) review.rating = req.body.rating;
     if (req.body.comment) review.comment = req.body.comment;
+    if (typeof req.body.name === 'string') review.name = req.body.name.trim().slice(0, 120);
     await review.save();
     await recalculateRating(review.place);
 
