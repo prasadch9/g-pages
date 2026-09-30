@@ -25,10 +25,10 @@ import {
 } from './shopping-retail/ShoppingRetailPublicPages';
 import PropertyBusinessWebsite from './real-estate-construction/PropertyBusinessWebsite';
 import HealthcareWebsite from './healthcare-medical/hospitals/HealthcareWebsite';
-import ToursTravelWebsite from './travel-hospitality/tours-travels/ToursTravelWebsite';
-import HotelResidencyWebsite from './travel-hospitality/hotels/HotelResidencyWebsite';
-import ResortWebsite from './travel-hospitality/resorts/ResortWebsite';
-import PartyZoneWebsite from './travel-hospitality/party-zones/PartyZoneWebsite';
+import ToursTravelsPublicPage from './travel-hospitality/tours-travels/ToursTravelsPublicPage';
+import HotelsResidenciesPublicPage from './travel-hospitality/hotels/HotelsResidenciesPublicPage';
+import ResortsPublicPage from './travel-hospitality/resorts/ResortsPublicPage';
+import PartyZonePublicPage from './travel-hospitality/party-zones/PartyZonePublicPage';
 import { ProfileLoading, resolveFoodBusinessType, resolvePropertyBusinessType, resolveWeddingBusinessType } from '../components/public/PublicProfileShared';
 import { isHealthcareBusiness } from './healthcare-medical/healthcareUtils';
 import { getParentBusinessGroup } from '../utils/categoryRouting';
@@ -139,20 +139,24 @@ export default function PublicBusinessProfilePage() {
   const weddingType = useMemo(() => resolveWeddingBusinessType(place), [place]);
   const propertyType = useMemo(() => resolvePropertyBusinessType(place), [place]);
   const isToursTravel = useMemo(() => {
-    const values = [place?.subcategory?.name, place?.subcategory?.slug, place?.category?.name, place?.category?.slug, place?.attributes?.businessProfile?.businessType];
-    return values.some((value) => String(value || '').toLowerCase().replace(/[_\s]+/g, '-').includes('tours-and-travels'));
+    const parent = getParentBusinessGroup(place);
+    const subcategory = normalizeCategoryLabel(place?.subcategory?.name || place?.subcategory?.slug || place?.subcategory || place?.attributes?.subCategory);
+    return parent === 'travel hospitality' && subcategory === 'tours travels';
   }, [place]);
   const isHotelResidency = useMemo(() => {
-    const values = [place?.subcategory?.name, place?.subcategory?.slug, place?.category?.name, place?.category?.slug, place?.attributes?.businessProfile?.businessType];
-    return values.some((value) => String(value || '').toLowerCase().replace(/[_\s]+/g, '-').replace(/&/g, 'and').includes('hotels-and-residencies'));
+    const parent = getParentBusinessGroup(place);
+    const subcategory = normalizeCategoryLabel(place?.subcategory?.name || place?.subcategory?.slug || place?.subcategory || place?.attributes?.subCategory);
+    return parent === 'travel hospitality' && subcategory === 'hotels residencies';
   }, [place]);
   const isResort = useMemo(() => {
-    const values = [place?.subcategory?.name, place?.subcategory?.slug, place?.category?.name, place?.category?.slug, place?.attributes?.businessProfile?.businessType];
-    return values.some((value) => String(value || '').toLowerCase().replace(/[_\s]+/g, '-').includes('resort'));
+    const parent = getParentBusinessGroup(place);
+    const subcategory = normalizeCategoryLabel(place?.subcategory?.name || place?.subcategory?.slug || place?.subcategory || place?.attributes?.subCategory);
+    return parent === 'travel hospitality' && subcategory === 'resorts';
   }, [place]);
   const isPartyZone = useMemo(() => {
-    const values = [place?.subcategory?.name, place?.subcategory?.slug, place?.category?.name, place?.category?.slug, place?.attributes?.businessProfile?.businessType];
-    return values.some((value) => String(value || '').toLowerCase().replace(/[_\s]+/g, '-').includes('party-zone'));
+    const parent = getParentBusinessGroup(place);
+    const subcategory = normalizeCategoryLabel(place?.subcategory?.name || place?.subcategory?.slug || place?.subcategory || place?.attributes?.subCategory);
+    return parent === 'travel hospitality' && subcategory === 'party zones';
   }, [place]);
   if (loading) return <ProfileLoading />;
   if (error || !place) return <ProfileLoading error={error || 'The business could not be found.'} />;
@@ -172,10 +176,10 @@ export default function PublicBusinessProfilePage() {
   if (isShoppingRetailListing(place, ['nursery', 'nurseries'])) return <NurseryPublicPage place={place} />;
   if (weddingType) return <WeddingBusinessWebsite place={place} weddingType={weddingType} />;
   if (propertyType) return <PropertyBusinessWebsite place={place} propertyType={propertyType} />;
-  if (isToursTravel) return <ToursTravelWebsite place={place} />;
-  if (isHotelResidency) return <HotelResidencyWebsite place={place} />;
-  if (isResort) return <ResortWebsite place={place} />;
-  if (isPartyZone) return <PartyZoneWebsite place={place} />;
+  if (isToursTravel) return <ToursTravelsPublicPage place={place} />;
+  if (isHotelResidency) return <HotelsResidenciesPublicPage place={place} />;
+  if (isResort) return <ResortsPublicPage place={place} />;
+  if (isPartyZone) return <PartyZonePublicPage place={place} />;
   if (type) return <FoodBusinessWebsite place={place} />;
 
   if (type === 'restaurant') return <RestaurantProfilePage place={place} />;

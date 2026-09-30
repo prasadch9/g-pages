@@ -31,6 +31,10 @@ import SculptureRegistrationFields from '../arts-creative/sculptures/SculptureRe
 import SmallScaleIndustriesFields from '../industries-manufacturing/small-scale-industries/SmallScaleIndustriesFields';
 import FoodProcessingFields from '../food-dining/food-processing/FoodProcessingFields';
 import TradingBusinessesFields from '../industries-manufacturing/trading-businesses/TradingBusinessesFields';
+import ToursTravelsListingFields from '../travel-hospitality/tours-travels/ToursTravelsListingFields';
+import HotelsResidenciesListingFields from '../travel-hospitality/hotels/HotelsResidenciesListingFields';
+import ResortsListingFields from '../travel-hospitality/resorts/ResortsListingFields';
+import PartyZonesListingFields from '../travel-hospitality/party-zones/PartyZonesListingFields';
 
 const initialLocation = { state: '', district: '', city: '', area: '', areaText: '' };
 const MALL_DAYS = [['mon', 'Monday'], ['tue', 'Tuesday'], ['wed', 'Wednesday'], ['thu', 'Thursday'], ['fri', 'Friday'], ['sat', 'Saturday'], ['sun', 'Sunday']];
@@ -228,6 +232,25 @@ export default function CreateListing() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (editId) return;
+    try {
+      const draft = ['tours-travels-listing-draft', 'hotels-residencies-listing-draft', 'resorts-listing-draft', 'party-zones-listing-draft']
+        .map((key) => JSON.parse(localStorage.getItem(key) || 'null'))
+        .filter((entry) => entry?.form?.mainCategory === 'Travel & Hospitality' && ['Tours & Travels', 'Hotels & Residencies', 'Resorts', 'Party Zones'].includes(entry.form.subcategory))
+        .sort((left, right) => (right.savedAt || 0) - (left.savedAt || 0))[0];
+      if (draft) {
+        setForm((current) => ({ ...current, ...draft.form }));
+        setLocation(draft.location || initialLocation);
+        setTravelDetails(draft.travelDetails || {});
+        setWorkingHours(draft.workingHours || []);
+        setUploadedFiles((current) => ({ ...current, ...(draft.uploadedFiles || {}) }));
+      }
+    } catch {
+      localStorage.removeItem('tours-travels-listing-draft');
+    }
+  }, [editId]);
 
   useEffect(() => {
     api.get('/categories').then(({ data }) => setCategories(data.data)).catch(() => setCategories([]));
@@ -441,6 +464,10 @@ export default function CreateListing() {
   const categoryName = (selectedCategory?.name || form.subcategory || '').toLowerCase().trim();
   const isUniversity = ['university', 'universities'].includes(categoryName);
   const isTravelCategory = form.mainCategory === 'Travel & Hospitality';
+  const isToursTravels = form.mainCategory === 'Travel & Hospitality' && healthcareSubcategory === 'tours & travels';
+  const isHotelsResidencies = form.mainCategory === 'Travel & Hospitality' && healthcareSubcategory === 'hotels & residencies';
+  const isResortCategory = form.mainCategory === 'Travel & Hospitality' && healthcareSubcategory === 'resorts';
+  const isPartyZones = form.mainCategory === 'Travel & Hospitality' && healthcareSubcategory === 'party zones';
   const isFoodCategory = form.mainCategory === 'Food & Dining';
   const isWeddingCategory = form.mainCategory === 'Marriage & Wedding';
   const foodBusinessType = ({ Restaurant: 'restaurant', Restaurants: 'restaurant', 'Coffee Shop': 'coffee-shop', 'Coffee Shops': 'coffee-shop', 'Sweet Shop & Bakery': 'bakery', 'Sweet Shops & Bakery': 'bakery', 'Catering Service': 'catering', 'Catering Services': 'catering', 'Food Processing': 'food-processing' })[form.subcategory] || 'restaurant';
@@ -540,6 +567,12 @@ export default function CreateListing() {
       return;
     }
 
+    if ((isToursTravels || isHotelsResidencies || isResortCategory || isPartyZones) && (!form.phone.trim() || !form.email.trim() || !form.description.trim())) {
+      const travelSubcategory = isPartyZones ? 'Party Zones' : isResortCategory ? 'Resorts' : isHotelsResidencies ? 'Hotels & Residencies' : 'Tours & Travels';
+      setError(`Business name, phone, email, and description are required for ${travelSubcategory}.`);
+      return;
+    }
+
     if (!form.address.trim()) {
       setError('Please enter the exact business location for Google Maps.');
       return;
@@ -551,13 +584,13 @@ export default function CreateListing() {
     }
 
     const hasCoverImage = Boolean(coverFile || uploadedFiles.coverImage || existingMedia.cover);
-    if (!hasCoverImage) {
+    if (!hasCoverImage && !isToursTravels && !isHotelsResidencies && !isResortCategory && !isPartyZones) {
       setError('Cover page image is required.');
       return;
     }
 
     const hasAboutImage = Boolean(aboutImageFile || academyAboutImageFile || uploadedFiles.aboutImage || existingMedia.about);
-    if (!isSchool && !isDedicatedIndustryForm && !hasAboutImage) {
+    if (!isSchool && !isDedicatedIndustryForm && !isToursTravels && !isHotelsResidencies && !isResortCategory && !isPartyZones && !hasAboutImage) {
       setError('About us image is required.');
       return;
     }
@@ -873,6 +906,10 @@ export default function CreateListing() {
         await api.post('/places', payload);
       }
       setSuccess(isEditing ? 'Changes updated successfully.' : 'Listing submitted! It will appear publicly once an admin approves it.');
+      localStorage.removeItem('tours-travels-listing-draft');
+      localStorage.removeItem('hotels-residencies-listing-draft');
+      if (isResortCategory) localStorage.removeItem('resorts-listing-draft');
+      if (isPartyZones) localStorage.removeItem('party-zones-listing-draft');
       setTimeout(() => navigate('/business/dashboard'), 1600);
     } catch (err) {
       setError(err.message || 'Something went wrong while submitting the listing.');
@@ -918,7 +955,84 @@ export default function CreateListing() {
             </select>
             <p className="mt-1 text-xs text-ink/45">Your public page modules will follow this choice.</p>
           </div>
-          {isDedicatedHealthcare ? <div className="col-span-2">
+          {isPartyZones ? <PartyZonesListingFields
+            form={form}
+            setForm={setForm}
+            location={location}
+            setLocation={setLocation}
+            details={travelDetails}
+            setDetails={setTravelDetails}
+            workingHours={workingHours}
+            setWorkingHours={setWorkingHours}
+            uploadedFiles={uploadedFiles}
+            setUploadedFiles={setUploadedFiles}
+            onSaveDraft={() => {
+              localStorage.setItem('party-zones-listing-draft', JSON.stringify({ form, location, travelDetails, workingHours, uploadedFiles, savedAt: Date.now() }));
+              setSuccess('Draft saved on this device.');
+              setError('');
+            }}
+            submitting={submitting}
+            isEditing={isEditing}
+            error={error}
+            success={success}
+          /> : isResortCategory ? <ResortsListingFields
+            form={form}
+            setForm={setForm}
+            location={location}
+            setLocation={setLocation}
+            details={travelDetails}
+            setDetails={setTravelDetails}
+            uploadedFiles={uploadedFiles}
+            setUploadedFiles={setUploadedFiles}
+            onSaveDraft={() => {
+              localStorage.setItem('resorts-listing-draft', JSON.stringify({ form, location, travelDetails, uploadedFiles, savedAt: Date.now() }));
+              setSuccess('Draft saved on this device.');
+              setError('');
+            }}
+            submitting={submitting}
+            isEditing={isEditing}
+            error={error}
+            success={success}
+          /> : isHotelsResidencies ? <HotelsResidenciesListingFields
+            form={form}
+            setForm={setForm}
+            location={location}
+            setLocation={setLocation}
+            details={travelDetails}
+            setDetails={setTravelDetails}
+            uploadedFiles={uploadedFiles}
+            setUploadedFiles={setUploadedFiles}
+            onSaveDraft={() => {
+              localStorage.setItem('hotels-residencies-listing-draft', JSON.stringify({ form, location, travelDetails, uploadedFiles, savedAt: Date.now() }));
+              setSuccess('Draft saved on this device.');
+              setError('');
+            }}
+            submitting={submitting}
+            isEditing={isEditing}
+            error={error}
+            success={success}
+          /> : isToursTravels ? <ToursTravelsListingFields
+            form={form}
+            setForm={setForm}
+            location={location}
+            setLocation={setLocation}
+            details={travelDetails}
+            setDetails={setTravelDetails}
+            workingHours={workingHours}
+            setWorkingHours={setWorkingHours}
+            uploadedFiles={uploadedFiles}
+            setUploadedFiles={setUploadedFiles}
+            onSaveDraft={() => {
+              localStorage.setItem('tours-travels-listing-draft', JSON.stringify({ form, location, travelDetails, workingHours, uploadedFiles, savedAt: Date.now() }));
+              setSuccess('Draft saved on this device.');
+              setError('');
+            }}
+            onPublish={undefined}
+            submitting={submitting}
+            isEditing={isEditing}
+            error={error}
+            success={success}
+          /> : isDedicatedHealthcare ? <div className="col-span-2">
             <HealthcareBusinessEditor
               key={`${editId || 'new'}-${healthcareSubcategory}-${editBusinessPlace?._id || 'loading'}`}
               place={editBusinessPlace || { category: form.category, location, attributes: { businessProfile: { businessType: 'healthcare' } } }}
