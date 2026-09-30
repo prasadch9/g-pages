@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
-import BusinessMediaManager from '../../components/BusinessMediaManager';
 import BusinessChatInbox from '../../components/BusinessChatInbox';
 import { getCategoryConfig } from '../../data/businessConfig';
 
@@ -135,7 +134,6 @@ export default function BusinessDashboard() {
                 <button type="button" onClick={() => handleDelete(place)} disabled={deletingId === place._id} className="rounded border border-vermilion/30 px-3 py-1.5 text-xs font-semibold text-vermilion hover:bg-vermilion/10 disabled:opacity-50">{deletingId === place._id ? 'Deleting…' : 'Delete'}</button>
               </div>
               </div>
-              <BusinessMediaManager place={place} onUpdated={(updated) => setPlaces((current) => current.map((item) => item._id === updated._id ? updated : item))} />
             </div>
           ))}
         </div>
