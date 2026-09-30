@@ -1,4 +1,5 @@
 import React from 'react';
+import BusinessVideoUploadSection from '../../business-professional/BusinessVideoUploadSection';
 
 const ic = 'mt-1 w-full rounded border border-line bg-white px-3 py-2.5 text-[15px] outline-none focus:border-ink/40';
 const tc = `${ic} resize-y`;
@@ -40,6 +41,14 @@ export default function NgoRegistrationFields({
   renderSingleImageUpload,
   handleLocalFiles,
   removeUploadedImage,
+  mallVideos = [],
+  setMallVideos,
+  mallVideoUrl = '',
+  setMallVideoUrl,
+  mallVideoCaption = '',
+  setMallVideoCaption,
+  handleMallVideoFiles,
+  addMallVideoUrl,
 }) {
   const lf = (key, label, ph, rows = 2) => (
     <F label={label} col={2}>
@@ -155,10 +164,7 @@ export default function NgoRegistrationFields({
             </label>
           </div>
         </div>
-        <F label="Impact Documentary / YouTube video link (optional)" col={2}>
-          <input type="url" value={form.videoUrls || ''} onChange={update('videoUrls')} placeholder="https://youtube.com/..." className={ic} />
-          <p className="mt-1 text-xs text-ink/40">Paste YouTube link for impact documentary or annual outreach report video.</p>
-        </F>
+        <BusinessVideoUploadSection mallVideos={mallVideos} setMallVideos={setMallVideos} mallVideoUrl={mallVideoUrl} setMallVideoUrl={setMallVideoUrl} mallVideoCaption={mallVideoCaption} setMallVideoCaption={setMallVideoCaption} handleMallVideoFiles={handleMallVideoFiles} addMallVideoUrl={addMallVideoUrl} theme="indigo" title="NGO Videos & Impact Stories (Optional)" description="Upload video files or add links featuring field work, programs, and community impact." />
       </Section>
 
       {/* Step 8 — Social Links */}

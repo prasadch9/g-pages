@@ -11,8 +11,6 @@ import CategorySpecificFields from '../../components/business/CategorySpecificFi
 import FoodBusinessSpecificFields from '../food-dining/forms/FoodBusinessSpecificFields';
 import WeddingBusinessSpecificFields from '../marriage-wedding/forms/WeddingBusinessSpecificFields';
 import mediaUrl from '../../utils/mediaUrl';
-import { parseVideoUrl } from '../../utils/video';
-import { selectCategoryForGroup } from '../../utils/categoryRouting';
 import AcademyRegistrationFields from '../education-learning/academies/AcademyRegistrationFields';
 import SportsAcademyRegistrationFields from '../education-learning/sports-academies/SportsAcademyRegistrationFields';
 import HealthcareBusinessEditor from '../healthcare-medical/forms/HealthcareBusinessEditor';
@@ -21,6 +19,7 @@ import ConsultancyRegistrationFields from '../business-professional/consultancie
 import AgencyRegistrationFields from '../business-professional/agencies/AgencyRegistrationFields';
 import ManpowerAgencyRegistrationFields from '../business-professional/manpower-agencies/ManpowerAgencyRegistrationFields';
 import ProfessionRegistrationFields from '../business-professional/professions/ProfessionRegistrationFields';
+import BusinessVideoUploadSection from '../business-professional/BusinessVideoUploadSection';
 import PackersMoversRegistrationFields from '../logistics-moving/packers-movers/PackersMoversRegistrationFields';
 import TempleRegistrationFields from '../religious-social/temples/TempleRegistrationFields';
 import ChurchRegistrationFields from '../religious-social/churches/ChurchRegistrationFields';
@@ -121,7 +120,7 @@ const shoppingProfileDetails = (subcategory, details) => {
   switch (subcategory) {
     case 'Boutique': return { shopType: details.shopType || '', priceRange: details.priceRange || '', collections: list(details.collections), occasions: list(details.specialtyServices), services: list(details.services), features: list(details.featuredBrands) };
     case 'Home Appliances': return { storeType: details.storeType || '', brandFocus: details.featuredBrands || '', products: list(details.productCategories), services: list(details.specialtyServices), features: list(details.offer) };
-    case 'Furniture Shops': return { furnitureStyle: details.furnitureStyle || '', priceRange: details.priceRange || '', collections: list(details.productCategories), productCategories: list(details.productCategories), services: list(details.specialtyServices), materials: list(details.materials), featuredBrands: list(details.featuredBrands), features: [...list(details.materials), ...list(details.featuredBrands)] };
+    case 'Furniture Shops': return { furnitureStyle: details.furnitureStyle || '', priceRange: details.priceRange || '', collections: list(details.productCategories), services: list(details.specialtyServices), features: [...list(details.materials), ...list(details.featuredBrands)] };
     case 'Mattress Shops': return { sleepCategory: details.sleepCategory || '', sizes: list(details.sizes), products: list(details.productCategories), services: list(details.specialtyServices), features: [...list(details.featuredBrands), ...list(details.offer)] };
     case 'Nurseries': return { nurseryType: details.nurseryType || '', plantCategory: details.plantCategory || '', products: [...list(details.productCategories), ...list(details.gardenProducts)], services: list(details.specialtyServices), features: [] };
     default: return {};
@@ -135,7 +134,7 @@ const shoppingDetailsFromPlace = (attributes = {}) => {
   const mapped = {
     Boutique: { collections: specific.collections, specialtyServices: specific.occasions || specific.services, featuredBrands: specific.features },
     'Home Appliances': { productCategories: specific.products, featuredBrands: specific.brandFocus, specialtyServices: specific.services, offer: specific.features },
-    'Furniture Shops': { productCategories: specific.productCategories || specific.collections, specialtyServices: specific.services, materials: specific.materials || specific.features, featuredBrands: specific.featuredBrands || specific.brands },
+    'Furniture Shops': { productCategories: specific.collections, specialtyServices: specific.services, materials: specific.features },
     'Mattress Shops': { productCategories: specific.products, sizes: specific.sizes, specialtyServices: specific.services, featuredBrands: specific.features },
     Nurseries: { productCategories: specific.products, gardenProducts: specific.features, specialtyServices: specific.services },
   }[subcategory] || {};
@@ -303,15 +302,10 @@ export default function CreateListing() {
   };
 
   const addMallVideoUrl = () => {
-    const video = parseVideoUrl(mallVideoUrl);
-    if (!video) {
-      setError('Enter a valid YouTube, Vimeo, Google Drive, or direct video URL.');
-      return;
-    }
-    setMallVideos((current) => [...current, { url: video.url, type: video.type, caption: mallVideoCaption.trim() }]);
+    if (!mallVideoUrl.trim()) return;
+    setMallVideos((current) => [...current, { url: mallVideoUrl.trim(), caption: mallVideoCaption.trim() }]);
     setMallVideoUrl('');
     setMallVideoCaption('');
-    setError('');
   };
 
   const uploadSingleImage = async (image) => {
@@ -556,13 +550,20 @@ export default function CreateListing() {
       return;
     }
 
-    const hasAboutImage = Boolean(aboutImageFile || academyAboutImageFile || uploadedFiles.aboutImage || existingMedia.about);
+    const aboutImageValue = uploadedFiles.aboutImage
+      || existingMedia.about
+      || uploadedFiles.coverImage
+      || uploadedFiles.galleryImages?.[0]
+      || existingMedia.cover
+      || existingMedia.images?.[0]
+      || '';
+    const hasAboutImage = Boolean(aboutImageFile || academyAboutImageFile || aboutImageValue);
     if (!isSchool && !isDedicatedIndustryForm && !hasAboutImage) {
       setError('About us image is required.');
       return;
     }
 
-    const categoryMatch = selectCategoryForGroup(categories, form.mainCategory, form.subcategory);
+    const categoryMatch = categories.find((category) => category.name.toLowerCase() === form.subcategory.toLowerCase());
     const categoryId = categoryMatch?._id || categories.find((category) => category.name.toLowerCase() === form.category.toLowerCase())?._id;
 
     if (!categoryId) {
@@ -632,7 +633,7 @@ export default function CreateListing() {
       };
       appendImage('logo', uploadedFiles.logo, 'business-logo.jpg');
       appendImage('coverImage', uploadedFiles.coverImage, 'business-cover.jpg');
-      appendImage('aboutImage', uploadedFiles.aboutImage, 'business-about.jpg');
+      appendImage('aboutImage', aboutImageValue, 'business-about.jpg');
       (uploadedFiles.galleryImages || []).forEach((image, index) => {
         if (image.startsWith('data:')) payload.append('images', dataUrlToBlob(image), `gallery-${index + 1}.jpg`);
         else galleryUrls.push(image);
@@ -669,7 +670,10 @@ export default function CreateListing() {
         return { image, tag: details.tag || 'New', caption: details.caption?.trim() || '', features: Array.isArray(details.features) ? details.features : splitList(details.features) };
       });
       const linkedBusinessVideos = mallVideos.filter((video) => !video.file && video.url).map((video) => video.url);
-      payload.append('video', JSON.stringify(linkedBusinessVideos));
+      // For non-mall categories (consultancies, agencies, etc.) include the plain video URL field
+      const plainVideoUrls = splitList(form.videoUrls);
+      const allVideoPayload = [...linkedBusinessVideos, ...plainVideoUrls];
+      payload.append('video', JSON.stringify(allVideoPayload));
       mallVideos.filter((video) => video.file).forEach((video) => payload.append('videos', video.file));
       // Build canonical video objects for create path (URL videos only; device uploads go as files)
       let uploadedVideoObjects = mallVideos
@@ -760,11 +764,24 @@ export default function CreateListing() {
           } : {}),
         }));
       payload.append('location', JSON.stringify({
+  // Current automotive and shopping fields are included in the shared attributes payload below.
           state: location.state,
           district: location.district,
           city: location.city,
           area: location.area || undefined,
+/*
           areaText: location.areaText.trim(),
+        },
+      };
+
+      if (id) {
+        await api.put(`/places/${id}`, payload);
+        setSuccess('Listing updated successfully.');
+      } else {
+        await api.post('/places', payload);
+        setSuccess('Listing submitted! It will appear publicly once an admin approves it.');
+      }
+*/
         }));
       if (form.categoryData && Object.keys(form.categoryData).length > 0) {
         payload.append('categoryData', JSON.stringify(form.categoryData));
@@ -800,16 +817,16 @@ export default function CreateListing() {
 
       let editedLogo = uploadedFiles.logo;
       let editedCoverImage = uploadedFiles.coverImage;
-      let editedAboutImage = uploadedFiles.aboutImage;
+      let editedAboutImage = aboutImageValue;
       let editedGalleryImages = uploadedFiles.galleryImages || [];
       let editedVideoUrls = linkedBusinessVideos;
       if (isEditing) {
         [editedLogo, editedCoverImage, editedAboutImage, editedGalleryImages, editedVideoUrls] = await Promise.all([
           uploadSingleImage(uploadedFiles.logo),
           uploadSingleImage(uploadedFiles.coverImage),
-          uploadSingleImage(uploadedFiles.aboutImage),
+          uploadSingleImage(aboutImageValue),
           uploadImages(uploadedFiles.galleryImages || []),
-          isShoppingCategory || isAutomotiveCategory || isFoodCategory || isWeddingCategory ? uploadMallVideos(mallVideos) : Promise.resolve(splitList(form.videoUrls)),
+          isShoppingCategory || isAutomotiveCategory || isFoodCategory || isWeddingCategory || isAnyBizProfForm || isArtsCreativeGroup || isLogisticsGroup ? uploadMallVideos(mallVideos) : Promise.resolve(splitList(form.videoUrls)),
         ]);
         // Recompute uploadedVideoObjects with the actual server URLs returned after upload
         uploadedVideoObjects = (Array.isArray(editedVideoUrls) ? editedVideoUrls : []).map((url, index) => {
@@ -839,7 +856,6 @@ export default function CreateListing() {
         aboutImage: editedAboutImage || undefined,
         images: editedGalleryImages,
         videos: editedVideoUrls,
-        video: uploadedVideoObjects,
         workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed),
         attributes: { ...form, academy: academyForSave, smallScaleIndustries: smallScaleForSave, foodProcessing: foodProcessingForSave, tradingBusinesses: tradingBusinessesForSave, ...(isTravelCategory ? { travelDetails, businessProfile: { categorySpecific: travelDetails } } : {}), ...(isFoodCategory ? { foodDetails, businessProfile: { businessType: foodBusinessType, categorySpecific: foodDetails } } : {}), subCategory: form.subcategory || undefined, ...(isShoppingCategory ? Object.fromEntries(Object.entries(shoppingDetails).filter(([, value]) => String(value || '').trim())) : {}), ...(isShoppingCategory && form.subcategory !== 'Shopping Malls' ? { businessProfile: { ...(form.businessProfile || {}), businessType: form.subcategory, categorySpecific: shoppingProfileDetails(form.subcategory, shoppingDetails), common: { ...((form.businessProfile || {}).common || {}), videos: uploadedVideoObjects } } } : {}), ...(isShoppingCategory && form.subcategory === 'Shopping Malls' ? { mallCollections: mallCollectionDetailsPayload, mallVideos: uploadedVideoObjects.map((video) => ({ url: video.url || '', caption: video.caption || '' })) } : {}), courses: form.collegeType === 'Intermediate College' ? form.collegeGroups : form.collegePrograms, admissions: form.admissionProcess, placements: form.placementAvailable === 'Yes' ? [form.placementOfficer && `Placement officer: ${form.placementOfficer}`, form.averagePackage && `Average package: ${form.averagePackage}`, form.highestPackage && `Highest package: ${form.highestPackage}`, form.recruitingCompanies && `Recruiters: ${form.recruitingCompanies}`].filter(Boolean) : [], socialVisibility: undefined, faculty, infrastructure, schoolFacilities, galleryItems, schoolVideos, achievements, schoolEvents, principalImage: existingMedia.principal || undefined, aboutImage: editedAboutImage || undefined, galleryImages: editedGalleryImages, workingHours: workingHours.filter((entry) => entry.open || entry.close || entry.closed), ...(isUniversity ? { university: form.university, programs: form.university?.programs || [], facilities: form.university?.facilities || [], stats: form.university?.stats || [], aboutTitle: form.university?.aboutTitle, aboutDescription: form.university?.aboutDescription, rankingEnabled: form.university?.rankingEnabled, rank: form.university?.rank, rankingDescription: form.university?.rankingDescription, campusTitle: form.campusTitle, campusDescription: form.campusDescription, showAdmission: form.university?.showAdmission, admissionTitle: form.university?.admissionTitle, admissionDescription: form.university?.admissionDescription } : {}) },
       };
@@ -1042,47 +1058,47 @@ export default function CreateListing() {
           </section>}
 
           {isConsultancySubcategory && (
-            <ConsultancyRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} />
+            <ConsultancyRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} mallVideos={mallVideos} setMallVideos={setMallVideos} mallVideoUrl={mallVideoUrl} setMallVideoUrl={setMallVideoUrl} mallVideoCaption={mallVideoCaption} setMallVideoCaption={setMallVideoCaption} handleMallVideoFiles={handleMallVideoFiles} addMallVideoUrl={addMallVideoUrl} />
           )}
 
           {isAgencySubcategory && (
-            <AgencyRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} />
+            <AgencyRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} mallVideos={mallVideos} setMallVideos={setMallVideos} mallVideoUrl={mallVideoUrl} setMallVideoUrl={setMallVideoUrl} mallVideoCaption={mallVideoCaption} setMallVideoCaption={setMallVideoCaption} handleMallVideoFiles={handleMallVideoFiles} addMallVideoUrl={addMallVideoUrl} />
           )}
 
           {isManpowerAgencySubcategory && (
-            <ManpowerAgencyRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} />
+            <ManpowerAgencyRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} mallVideos={mallVideos} setMallVideos={setMallVideos} mallVideoUrl={mallVideoUrl} setMallVideoUrl={setMallVideoUrl} mallVideoCaption={mallVideoCaption} setMallVideoCaption={setMallVideoCaption} handleMallVideoFiles={handleMallVideoFiles} addMallVideoUrl={addMallVideoUrl} />
           )}
 
           {isProfessionSubcategory && (
-            <ProfessionRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} />
+            <ProfessionRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} mallVideos={mallVideos} setMallVideos={setMallVideos} mallVideoUrl={mallVideoUrl} setMallVideoUrl={setMallVideoUrl} mallVideoCaption={mallVideoCaption} setMallVideoCaption={setMallVideoCaption} handleMallVideoFiles={handleMallVideoFiles} addMallVideoUrl={addMallVideoUrl} />
           )}
 
           {isPackersMoversSubcategory && (
-            <PackersMoversRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} />
+            <PackersMoversRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} mallVideos={mallVideos} setMallVideos={setMallVideos} mallVideoUrl={mallVideoUrl} setMallVideoUrl={setMallVideoUrl} mallVideoCaption={mallVideoCaption} setMallVideoCaption={setMallVideoCaption} handleMallVideoFiles={handleMallVideoFiles} addMallVideoUrl={addMallVideoUrl} />
           )}
 
           {isTempleSubcategory && (
-            <TempleRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} />
+            <TempleRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} mallVideos={mallVideos} setMallVideos={setMallVideos} mallVideoUrl={mallVideoUrl} setMallVideoUrl={setMallVideoUrl} mallVideoCaption={mallVideoCaption} setMallVideoCaption={setMallVideoCaption} handleMallVideoFiles={handleMallVideoFiles} addMallVideoUrl={addMallVideoUrl} />
           )}
 
           {isChurchSubcategory && (
-            <ChurchRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} />
+            <ChurchRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} mallVideos={mallVideos} setMallVideos={setMallVideos} mallVideoUrl={mallVideoUrl} setMallVideoUrl={setMallVideoUrl} mallVideoCaption={mallVideoCaption} setMallVideoCaption={setMallVideoCaption} handleMallVideoFiles={handleMallVideoFiles} addMallVideoUrl={addMallVideoUrl} />
           )}
 
           {isTrustSubcategory && (
-            <TrustRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} />
+            <TrustRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} mallVideos={mallVideos} setMallVideos={setMallVideos} mallVideoUrl={mallVideoUrl} setMallVideoUrl={setMallVideoUrl} mallVideoCaption={mallVideoCaption} setMallVideoCaption={setMallVideoCaption} handleMallVideoFiles={handleMallVideoFiles} addMallVideoUrl={addMallVideoUrl} />
           )}
 
           {isNgoSubcategory && (
-            <NgoRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} />
+            <NgoRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} mallVideos={mallVideos} setMallVideos={setMallVideos} mallVideoUrl={mallVideoUrl} setMallVideoUrl={setMallVideoUrl} mallVideoCaption={mallVideoCaption} setMallVideoCaption={setMallVideoCaption} handleMallVideoFiles={handleMallVideoFiles} addMallVideoUrl={addMallVideoUrl} />
           )}
 
           {isAssociationSubcategory && (
-            <AssociationRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} />
+            <AssociationRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} mallVideos={mallVideos} setMallVideos={setMallVideos} mallVideoUrl={mallVideoUrl} setMallVideoUrl={setMallVideoUrl} mallVideoCaption={mallVideoCaption} setMallVideoCaption={setMallVideoCaption} handleMallVideoFiles={handleMallVideoFiles} addMallVideoUrl={addMallVideoUrl} />
           )}
 
           {isSculptureSubcategory && (
-            <SculptureRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} />
+            <SculptureRegistrationFields form={form} categoryData={form.categoryData || {}} update={update} updateCategoryData={updateCategoryData} uploadedFiles={uploadedFiles} renderSingleImageUpload={renderSingleImageUpload} handleLocalFiles={handleLocalFiles} removeUploadedImage={removeUploadedImage} mallVideos={mallVideos} setMallVideos={setMallVideos} mallVideoUrl={mallVideoUrl} setMallVideoUrl={setMallVideoUrl} mallVideoCaption={mallVideoCaption} setMallVideoCaption={setMallVideoCaption} handleMallVideoFiles={handleMallVideoFiles} addMallVideoUrl={addMallVideoUrl} />
           )}
 
           {isTravelCategory && form.subcategory && (
@@ -1127,7 +1143,6 @@ export default function CreateListing() {
                   <textarea rows={2} value={shoppingDetails[field] || ''} onChange={(event) => setShoppingDetails((current) => ({ ...current, [field]: event.target.value }))} placeholder={placeholder} className={inputClass} />
                 </div>
               ))}
-              {form.subcategory !== 'Shopping Malls' && <div className="col-span-2 rounded-xl border border-[#f2d9d3] bg-white p-4"><p className="text-sm font-semibold text-ink">Business videos (optional)</p><p className="mt-1 text-xs text-ink/60">Upload videos or add YouTube, Vimeo, Google Drive, or direct video URLs.</p><div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]"><input type="url" value={mallVideoUrl} onChange={(event) => setMallVideoUrl(event.target.value)} placeholder="YouTube or direct video URL" className={inputClass}/><input value={mallVideoCaption} onChange={(event) => setMallVideoCaption(event.target.value)} placeholder="Video caption (optional)" className={inputClass}/><button type="button" onClick={addMallVideoUrl} className="mt-1 rounded border border-[#a83f32] px-4 py-2 text-sm font-semibold text-[#a83f32]">Add URL</button></div><label className="mt-3 inline-flex cursor-pointer items-center rounded border border-dashed border-line px-4 py-3 text-xs font-semibold text-ink/70 hover:border-ink/40">Upload video files<input type="file" accept="video/mp4,video/webm,video/ogg,video/quicktime" multiple className="hidden" onChange={(event) => { handleMallVideoFiles(event.target.files); event.target.value = ''; }} /></label>{mallVideos.length > 0 && <div className="mt-3 grid gap-2">{mallVideos.map((video, index) => <div key={video.preview || video.url || index} className="grid items-center gap-2 rounded border border-line p-2 sm:grid-cols-[1fr_1fr_auto]"><span className="truncate text-xs text-ink/70">{video.file?.name || video.url}</span><input value={video.caption || ''} onChange={(event) => setMallVideos((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, caption: event.target.value } : item))} placeholder="Video caption" className={inputClass}/><button type="button" onClick={() => { if (video.preview) URL.revokeObjectURL(video.preview); setMallVideos((current) => current.filter((_, itemIndex) => itemIndex !== index)); }} className="rounded px-3 py-2 text-xs font-semibold text-red-600">Remove</button></div>)}</div>}</div>}
               {form.subcategory === 'Shopping Malls' && <div className="col-span-2 rounded-xl border border-[#f2d9d3] bg-white p-4"><p className="text-sm font-semibold text-ink">Mall opening hours</p><p className="mt-1 text-xs text-ink/60">These hours appear in the seasonal panel on your mall page.</p><div className="mt-4 grid gap-2">{MALL_DAYS.map(([day, label]) => { const entry = workingHours.find((item) => item.day === day) || { day, open: '', close: '', closed: false }; const updateHours = (changes) => setWorkingHours((current) => [...current.filter((item) => item.day !== day), { ...entry, ...changes }]); return <div key={day} className="grid items-center gap-2 sm:grid-cols-[100px_1fr_1fr_auto]"><span className="text-xs font-medium text-ink/75">{label}</span><input type="time" value={entry.open || ''} disabled={entry.closed} onChange={(event) => updateHours({ open: event.target.value })} className="rounded border border-line px-2 py-2 text-xs disabled:bg-slate-100" aria-label={`${label} opening time`} /><input type="time" value={entry.close || ''} disabled={entry.closed} onChange={(event) => updateHours({ close: event.target.value })} className="rounded border border-line px-2 py-2 text-xs disabled:bg-slate-100" aria-label={`${label} closing time`} /><label className="flex items-center gap-2 text-xs text-ink/70"><input type="checkbox" checked={Boolean(entry.closed)} onChange={(event) => updateHours({ closed: event.target.checked })} />Closed</label></div>; })}</div></div>}
               {form.subcategory === 'Shopping Malls' && <div className="col-span-2 rounded-xl border border-[#f2d9d3] bg-white p-4"><p className="text-sm font-semibold text-ink">Video tour (optional)</p><p className="mt-1 text-xs text-ink/60">Upload multiple video files or add video URLs. Videos appear on the mall page only when added here.</p><div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]"><input type="url" value={mallVideoUrl} onChange={(event) => setMallVideoUrl(event.target.value)} placeholder="YouTube or direct video URL" className={inputClass}/><input value={mallVideoCaption} onChange={(event) => setMallVideoCaption(event.target.value)} placeholder="Video caption" className={inputClass}/><button type="button" onClick={addMallVideoUrl} className="mt-1 rounded border border-[#b1164c] px-4 py-2 text-sm font-semibold text-[#b1164c]">Add URL</button></div><label className="mt-3 inline-flex cursor-pointer items-center rounded border border-dashed border-line px-4 py-3 text-xs font-semibold text-ink/70 hover:border-ink/40">Upload video files<input type="file" accept="video/mp4,video/webm,video/ogg,video/quicktime" multiple className="hidden" onChange={(event) => { handleMallVideoFiles(event.target.files); event.target.value = ''; }}/></label>{mallVideos.length > 0 && <div className="mt-3 grid gap-2">{mallVideos.map((video, index) => <div key={video.preview || video.url || index} className="grid items-center gap-2 rounded border border-line p-2 sm:grid-cols-[1fr_1fr_auto]"><span className="truncate text-xs text-ink/70">{video.file?.name || video.url}</span><input value={video.caption || ''} onChange={(event) => setMallVideos((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, caption: event.target.value } : item))} placeholder="Video caption" className={inputClass}/><button type="button" onClick={() => { if (video.preview) URL.revokeObjectURL(video.preview); setMallVideos((current) => current.filter((_, itemIndex) => itemIndex !== index)); }} className="rounded px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50">Remove</button></div>)}</div>}</div>}
               <div className="col-span-2"><label className="text-sm text-ink/70">Additional services (comma-separated)</label><input value={form.services} onChange={update('services')} placeholder="Home delivery, personal assistance, installation" className={inputClass} /></div>

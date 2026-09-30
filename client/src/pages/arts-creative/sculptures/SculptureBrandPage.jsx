@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import FavoriteButton from '../../../components/FavoriteButton';
 import ReviewsSection from '../../../components/ReviewsSection';
+import { collectVideos } from '../../../components/public/PublicProfileShared';
 import api from '../../../services/api';
+import mediaUrl from '../../../utils/mediaUrl';
 
 const defaultHeroImage = 'https://images.unsplash.com/photo-1544967082-d9d25d867d66?auto=format&fit=crop&w=1600&q=80';
 const defaultArtistImage = 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=800&q=80';
@@ -150,8 +152,14 @@ export default function SculptureBrandPage({ place, mapsUrl, onShare, onReport }
   const workshops = categoryData.workshops || 'Traditional stone sculpting masterclasses & classical Shilpa Shastra apprenticeship programs conducted quarterly.';
   const paymentTerms = categoryData.paymentTerms || '30% advance on order confirmation, 40% on mid-carving photographic approval, 30% prior to dispatch.';
 
-  const videoUrl = business.videoUrls || business.video || '';
-  const embedVideo = getYoutubeEmbed(videoUrl);
+  const videos = collectVideos(
+    business.videoUrls,
+    business.videos,
+    business.video,
+    business.attributes?.videoUrls,
+    business.attributes?.videos,
+    business.attributes?.mallVideos,
+  );
 
   const socialLinks = business.socialLinks || {};
   const whatsappNumber = (categoryData.whatsapp || socialLinks.whatsapp || phone || '').replace(/\D/g, '');
@@ -615,7 +623,6 @@ export default function SculptureBrandPage({ place, mapsUrl, onShare, onReport }
                 Master Creations Gallery
               </h2>
             </div>
-            <div className="text-xs text-stone-500">Click any image to view in high resolution</div>
           </div>
 
           <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3">
@@ -635,24 +642,36 @@ export default function SculptureBrandPage({ place, mapsUrl, onShare, onReport }
                 </div>
               </button>
             ))}
-          </div>
+            {videos.map((video, i) => {
+              const url = video.url;
+              const embedUrl = getYoutubeEmbed(url);
+              const isDirectVideo = /\.(mp4|webm|mov|ogg)(\?.*)?$/i.test(url) || url.includes('/uploads/');
 
-          {/* Video Tour Section (if available) */}
-          {(embedVideo || videoUrl) && (
-            <div className="mt-12 rounded-3xl border border-stone-200 bg-[#fdfbf9] p-6 sm:p-8">
-              <div className="mb-4">
-                <div className="text-xs font-bold uppercase tracking-wider text-amber-800">Watch In Action</div>
-                <h3 className="font-display text-2xl font-bold text-stone-900">Carving Yard &amp; Studio Tour</h3>
-              </div>
-              <div className="aspect-video w-full overflow-hidden rounded-2xl border border-stone-300 bg-black">
-                {embedVideo ? (
-                  <iframe src={embedVideo} title="Sculpture Studio Tour" className="h-full w-full border-0" allowFullScreen />
-                ) : (
-                  <video src={videoUrl} controls className="h-full w-full object-cover" />
-                )}
-              </div>
-            </div>
-          )}
+              return (
+                <div
+                  key={`video-${url}-${i}`}
+                  className="relative h-64 overflow-hidden rounded-2xl border border-stone-200 bg-stone-950 shadow-xs sm:h-72"
+                >
+                  {isDirectVideo ? (
+                    <video src={mediaUrl(url)} controls preload="metadata" className="h-full w-full object-cover" />
+                  ) : embedUrl ? (
+                    <iframe
+                      src={embedUrl}
+                      title={video.title || video.caption || `${studioName} video ${i + 1}`}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="h-full w-full border-0"
+                    />
+                  ) : (
+                    <a href={url} target="_blank" rel="noopener noreferrer" className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center text-white">
+                      <span className="text-3xl" aria-hidden="true">▶</span>
+                      <span className="line-clamp-2 text-sm font-semibold">{video.title || video.caption || `Watch video ${i + 1}`}</span>
+                    </a>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </section>
 

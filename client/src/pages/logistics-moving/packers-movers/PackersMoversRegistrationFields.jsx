@@ -1,4 +1,5 @@
 import React from 'react';
+import BusinessVideoUploadSection from '../../business-professional/BusinessVideoUploadSection';
 
 const ic = 'mt-1 w-full rounded border border-line bg-white px-3 py-2.5 text-[15px] outline-none focus:border-ink/40';
 const tc = ic + ' resize-y';
@@ -33,6 +34,8 @@ function F({ label, col = 2, children }) {
 export default function PackersMoversRegistrationFields({
   form, categoryData = {}, update, updateCategoryData,
   uploadedFiles = {}, renderSingleImageUpload, handleLocalFiles, removeUploadedImage,
+  mallVideos = [], setMallVideos, mallVideoUrl = '', setMallVideoUrl,
+  mallVideoCaption = '', setMallVideoCaption, handleMallVideoFiles, addMallVideoUrl,
 }) {
   const lf = (key, label, ph, rows = 2) => (
     <F label={label} col={2}>
@@ -150,10 +153,19 @@ export default function PackersMoversRegistrationFields({
             </label>
           </div>
         </div>
-        <F label="YouTube / Video URL (optional)" col={2}>
-          <input type="url" value={form.videoUrls || ''} onChange={update('videoUrls')} placeholder="https://youtube.com/..." className={ic} />
-          <p className="mt-1 text-xs text-ink/40">Paste a YouTube video showing your moving process or fleet.</p>
-        </F>
+        <BusinessVideoUploadSection
+          mallVideos={mallVideos}
+          setMallVideos={setMallVideos}
+          mallVideoUrl={mallVideoUrl}
+          setMallVideoUrl={setMallVideoUrl}
+          mallVideoCaption={mallVideoCaption}
+          setMallVideoCaption={setMallVideoCaption}
+          handleMallVideoFiles={handleMallVideoFiles}
+          addMallVideoUrl={addMallVideoUrl}
+          theme="sky"
+          title="Logistics & Moving Videos (Optional)"
+          description="Upload videos or add links to showcase your fleet, team, and moving services."
+        />
       </Section>
 
       {/* Step 8 — Social */}

@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import FavoriteButton from '../../components/FavoriteButton';
 import ReviewsSection from '../../components/ReviewsSection';
+import { collectVideos } from '../../components/public/PublicProfileShared';
 import api from '../../services/api';
+import mediaUrl from '../../utils/mediaUrl';
 
 const parseList = (val) => {
   if (!val) return [];
@@ -38,6 +40,15 @@ export default function ReligiousSocialBrandPage({ place, mapsUrl, onShare, onRe
     'https://images.unsplash.com/photo-1609342122563-a43ac8917a3a?auto=format&fit=crop&w=900&q=80',
     'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=900&q=80',
   ];
+  const videos = collectVideos(
+    business.videos,
+    business.video,
+    business.attributes?.videos,
+    business.attributes?.video,
+    business.attributes?.videoUrls,
+    business.attributes?.mallVideos,
+    business.attributes?.businessProfile?.common?.videos,
+  );
   const logo = business.logo || '';
   const ratingAvg = business.rating?.average ? Number(business.rating.average).toFixed(1) : '4.9';
   const ratingCount = business.rating?.count || 64;
@@ -653,7 +664,6 @@ export default function ReligiousSocialBrandPage({ place, mapsUrl, onShare, onRe
                 Photo Gallery &amp; Sacred Moments
               </h2>
             </div>
-            <div className="text-xs text-stone-500">Click any image to view in high resolution</div>
           </div>
 
           <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -673,6 +683,44 @@ export default function ReligiousSocialBrandPage({ place, mapsUrl, onShare, onRe
                 </div>
               </button>
             ))}
+            {videos.map((video, i) => {
+              const url = video.url;
+              const youtubeId = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/|live\/))([\w-]{11})/i)?.[1];
+              const vimeoId = url.match(/vimeo\.com\/(?:video\/)?(\d+)/i)?.[1];
+              const driveId = url.match(/drive\.google\.com\/file\/d\/([^/]+)/i)?.[1];
+              const embedUrl = youtubeId
+                ? `https://www.youtube.com/embed/${youtubeId}`
+                : vimeoId
+                  ? `https://player.vimeo.com/video/${vimeoId}`
+                  : driveId
+                    ? `https://drive.google.com/file/d/${driveId}/preview`
+                    : '';
+              const isDirectVideo = /\.(mp4|webm|mov|ogg)(\?.*)?$/i.test(url) || url.includes('/uploads/');
+
+              return (
+                <div
+                  key={`video-${url}-${i}`}
+                  className="relative h-56 overflow-hidden rounded-2xl border border-stone-200 bg-stone-950 shadow-xs sm:h-64"
+                >
+                  {isDirectVideo ? (
+                    <video src={mediaUrl(url)} controls preload="metadata" className="h-full w-full object-cover" />
+                  ) : embedUrl ? (
+                    <iframe
+                      src={embedUrl}
+                      title={video.title || video.caption || `${name} video ${i + 1}`}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="h-full w-full border-0"
+                    />
+                  ) : (
+                    <a href={url} target="_blank" rel="noopener noreferrer" className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center text-white">
+                      <span className="text-3xl" aria-hidden="true">▶</span>
+                      <span className="line-clamp-2 text-sm font-semibold">{video.title || video.caption || `Watch video ${i + 1}`}</span>
+                    </a>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
