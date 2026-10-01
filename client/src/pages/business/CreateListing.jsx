@@ -63,6 +63,7 @@ const initialForm = {
   admission: '',
   facebook: '',
   instagram: '',
+  twitter: '',
   youtube: '',
   whatsapp: '',
   chatSupport: '',
@@ -417,7 +418,7 @@ export default function CreateListing() {
       const principal = attributes.principal || {};
       const admissionDetails = attributes.admissionDetails || {};
       const fees = attributes.fees || {};
-      setForm((current) => ({ ...current, name: place.name || '', category: place.category?._id || place.category || '', subcategory: editSubcategory, mainCategory: editCategoryGroup, address: place.address || '', description: place.description || '', phone: place.phone || '', email: place.email || '', website: place.website || '', services: (place.services || []).join(', '), facilities: (place.facilities || []).join(', '), pageType: place.pageType || 'static', facebook: place.socialLinks?.facebook || '', instagram: place.socialLinks?.instagram || '', whatsapp: place.socialLinks?.whatsapp || '', youtube: place.socialLinks?.youtube || '', linkedin: place.socialLinks?.linkedin || '', ...attributes, videoUrls: existingVideos.map((video) => typeof video === 'string' ? video : video.url).filter(Boolean).join('\n'), categoryData: place.categoryData || {} }));
+      setForm((current) => ({ ...current, name: place.name || '', category: place.category?._id || place.category || '', subcategory: editSubcategory, mainCategory: editCategoryGroup, address: place.address || '', description: place.description || '', phone: place.phone || '', email: place.email || '', website: place.website || '', services: (place.services || []).join(', '), facilities: (place.facilities || []).join(', '), pageType: place.pageType || 'static', facebook: place.socialLinks?.facebook || '', instagram: place.socialLinks?.instagram || '', twitter: place.socialLinks?.twitter || '', whatsapp: place.socialLinks?.whatsapp || '', youtube: place.socialLinks?.youtube || '', linkedin: place.socialLinks?.linkedin || '', ...attributes, videoUrls: existingVideos.map((video) => typeof video === 'string' ? video : video.url).filter(Boolean).join('\n'), categoryData: place.categoryData || {} }));
       setForm((current) => ({ ...current, newsNotices: (Array.isArray(attributes.newsNotices) ? attributes.newsNotices : String(attributes.newsNotices || '').split(/[\n,]/)).map((notice) => typeof notice === 'string' ? notice.trim() : notice?.title || notice?.name || '').filter(Boolean).join('\n') }));
       setForm((current) => ({
         ...current,
@@ -697,6 +698,7 @@ export default function CreateListing() {
       payload.append('socialLinks', JSON.stringify({
           facebook: form.socialVisibility.facebook ? form.facebook || undefined : undefined,
           instagram: form.socialVisibility.instagram ? form.instagram || undefined : undefined,
+          twitter: form.twitter || undefined,
           youtube: form.socialVisibility.youtube ? form.youtube || undefined : undefined,
           linkedin: form.socialVisibility.linkedin ? form.linkedin || undefined : undefined,
           whatsapp: form.whatsapp || undefined,
@@ -889,7 +891,7 @@ export default function CreateListing() {
         website: form.website,
         services: splitList(form.services),
         facilities: splitList(form.facilities),
-        socialLinks: { facebook: form.facebook, instagram: form.instagram, youtube: form.youtube, linkedin: form.linkedin, whatsapp: form.whatsapp },
+        socialLinks: { facebook: form.facebook, instagram: form.instagram, twitter: form.twitter, youtube: form.youtube, linkedin: form.linkedin, whatsapp: form.whatsapp },
         logo: logoFile ? undefined : (isSmallScaleIndustries ? smallScaleData.logoUrl || editedLogo : isFoodProcessingForManufacturing ? foodProcessingData.logoUrl || editedLogo : isTradingBusinessesForManufacturing ? tradingData.logoUrl || editedLogo : editedLogo) || undefined,
         coverImage: editedCoverImage || undefined,
         aboutImage: editedAboutImage || undefined,
@@ -1083,7 +1085,7 @@ export default function CreateListing() {
           {isSmallScaleIndustries && <SmallScaleIndustriesFields form={form} setForm={setForm} inputClass={inputClass} logoFile={logoFile} setLogoFile={setLogoFile} existingLogo={existingMedia.logo} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} existingAboutImage={existingMedia.about} />}
           {isFoodProcessingForManufacturing && <IndustryFoodProcessingFields form={form} setForm={setForm} logoFile={logoFile} setLogoFile={setLogoFile} existingLogo={existingMedia.logo} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} existingAboutImage={existingMedia.about} />}
           {isTradingBusinessesForManufacturing && <TradingBusinessesFields form={form} setForm={setForm} inputClass={inputClass} logoFile={logoFile} setLogoFile={setLogoFile} existingLogo={existingMedia.logo} aboutImageFile={aboutImageFile} setAboutImageFile={setAboutImageFile} existingAboutImage={existingMedia.about} />}
-          <div className="col-span-2 grid gap-4 sm:grid-cols-2"><label className="text-sm text-ink/70">Facebook URL<input value={form.facebook} onChange={update('facebook')} placeholder="https://facebook.com/" className={inputClass} /></label><label className="text-sm text-ink/70">Instagram URL<input value={form.instagram} onChange={update('instagram')} placeholder="https://instagram.com/" className={inputClass} /></label><label className="text-sm text-ink/70">WhatsApp<input value={form.whatsapp} onChange={update('whatsapp')} placeholder="https://wa.me/" className={inputClass} /></label></div>
+          <div className="col-span-2 grid gap-4 sm:grid-cols-2"><label className="text-sm text-ink/70">Facebook URL<input value={form.facebook} onChange={update('facebook')} placeholder="https://facebook.com/" className={inputClass} /></label><label className="text-sm text-ink/70">Instagram URL<input value={form.instagram} onChange={update('instagram')} placeholder="https://instagram.com/" className={inputClass} /></label><label className="text-sm text-ink/70">YouTube URL<input value={form.youtube} onChange={update('youtube')} placeholder="https://youtube.com/" className={inputClass} /></label><label className="text-sm text-ink/70">LinkedIn URL<input value={form.linkedin} onChange={update('linkedin')} placeholder="https://linkedin.com/" className={inputClass} /></label><label className="text-sm text-ink/70">X / Twitter URL<input value={form.twitter} onChange={update('twitter')} placeholder="https://x.com/" className={inputClass} /></label><label className="text-sm text-ink/70">WhatsApp<input value={form.whatsapp} onChange={update('whatsapp')} placeholder="https://wa.me/" className={inputClass} /></label></div>
           {error && <p className="col-span-2 text-sm text-vermilion">{error}</p>}
           {success && <p className="col-span-2 text-sm text-moss">{success}</p>}
           <button type="submit" disabled={submitting} className="col-span-2 mt-2 rounded bg-ink py-2.5 text-[15px] font-medium text-paper transition hover:bg-ink-light disabled:opacity-60">

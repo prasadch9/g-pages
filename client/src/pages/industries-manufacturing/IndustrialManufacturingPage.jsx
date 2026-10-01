@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaWhatsapp, FaXTwitter, FaYoutube } from 'react-icons/fa6';
 
 const defaultImages = {
   hero: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80',
@@ -60,6 +61,15 @@ function seekPastVideoLeadIn(event) {
   }
 }
 
+const socialPlatforms = [
+  ['instagram', 'Instagram', FaInstagram, '#E4405F'],
+  ['facebook', 'Facebook', FaFacebookF, '#1877F2'],
+  ['youtube', 'YouTube', FaYoutube, '#FF0000'],
+  ['linkedin', 'LinkedIn', FaLinkedinIn, '#0A66C2'],
+  ['twitter', 'X / Twitter', FaXTwitter, '#111827'],
+  ['whatsapp', 'WhatsApp', FaWhatsapp, '#25D366'],
+];
+
 export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, onReport }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [activeMediaIndex, setActiveMediaIndex] = useState(null);
@@ -89,9 +99,15 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
   const address = place?.address || 'Vijayawada, Andhra Pradesh';
   const phone = place?.phone || '+91 98765 43210';
   const email = place?.email || 'info@agrifreshfoods.in';
-  const facebookUrl = normalizeSocialUrl(place?.socialLinks?.facebook, 'https://facebook.com');
-  const instagramUrl = normalizeSocialUrl(place?.socialLinks?.instagram, 'https://instagram.com');
-  const whatsappValue = place?.socialLinks?.whatsapp || pageData.whatsapp || phone;
+  const commonSocialLinks = place?.attributes?.businessProfile?.common?.socialMedia || {};
+  const categorySocialLinks = place?.attributes?.businessProfile?.categorySpecific?.socialMedia || {};
+  const socialLinks = Object.fromEntries(['facebook', 'instagram', 'youtube', 'linkedin', 'twitter', 'whatsapp'].map((key) => [
+    key,
+    place?.socialLinks?.[key] || commonSocialLinks[key] || categorySocialLinks[key] || place?.attributes?.[key] || '',
+  ]));
+  const facebookUrl = normalizeSocialUrl(socialLinks.facebook, 'https://facebook.com');
+  const instagramUrl = normalizeSocialUrl(socialLinks.instagram, 'https://instagram.com');
+  const whatsappValue = socialLinks.whatsapp || pageData.whatsapp || phone;
   const whatsappUrl = /^https?:\/\//i.test(String(whatsappValue || ''))
     ? whatsappValue
     : `https://wa.me/${String(whatsappValue || '').replace(/\D/g, '')}`;
@@ -265,7 +281,7 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
           <div className={isSmallScaleIndustries ? 'flex items-center gap-3' : 'hidden items-center gap-3 md:flex'}>
             {isSmallScaleIndustries ? (
               <a href="/" className="whitespace-nowrap rounded-full bg-[#f5b942] px-4 py-2 text-[11px] font-bold text-[#0a311e] shadow-lg shadow-[#f5b942]/25 transition hover:brightness-105">
-                Back to Home
+                ← Back to G-Pages
               </a>
             ) : (
               <>
@@ -529,9 +545,9 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
                 <p className="mt-2 text-[15px] leading-relaxed text-[#42554b]">{address}</p>
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
-                {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="rounded-full bg-[#168b57] px-4 py-2 text-xs font-bold text-white">◉ WhatsApp</a>}
                 <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="rounded-full bg-[#1d5a3c] px-4 py-2 text-xs font-bold text-white">⌖ Open in Google Maps ↗</a>
               </div>
+              {socialPlatforms.some(([key]) => key === 'whatsapp' ? whatsappUrl : socialLinks[key]) && <div className="mt-5"><h3 className="text-sm font-bold text-[#123b2a]">Follow Us</h3><div className="mt-2 flex flex-wrap gap-2">{socialPlatforms.filter(([key]) => key === 'whatsapp' ? whatsappUrl : socialLinks[key]).map(([key, label, Icon, color]) => <a key={key} href={key === 'whatsapp' ? whatsappUrl : (/^https?:\/\//i.test(socialLinks[key]) ? socialLinks[key] : `https://${socialLinks[key]}`)} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} className="grid h-10 w-10 place-items-center rounded-full border border-[#dfece2] bg-white transition hover:-translate-y-0.5 hover:border-[#1d5a3c] hover:shadow-sm"><Icon aria-hidden="true" size={19} style={{ color }} /></a>)}</div></div>}
               <div className="mt-4 overflow-hidden rounded-[16px] border border-[#dfece2]">
                 <iframe title={`Google map to ${businessName}`} src={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`} className="h-56 w-full border-0" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
               </div>
