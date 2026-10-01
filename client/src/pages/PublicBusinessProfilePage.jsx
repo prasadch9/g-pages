@@ -158,6 +158,12 @@ export default function PublicBusinessProfilePage() {
     const subcategory = normalizeCategoryLabel(place?.subcategory?.name || place?.subcategory?.slug || place?.subcategory || place?.attributes?.subCategory);
     return parent === 'travel hospitality' && subcategory === 'party zones';
   }, [place]);
+  const isIndustrialFoodProcessing = useMemo(() => {
+    const businessGroup = String(place?.businessGroup || place?.categoryGroup || place?.category?.group || '').toLowerCase();
+    const subcategory = normalizeCategoryLabel(place?.subcategory?.name || place?.subcategory?.slug || place?.subcategory || place?.category?.name || place?.category?.slug);
+    return /industr(y|ies)|manufactur/.test(businessGroup)
+      && ['food processing', 'food processing business'].includes(subcategory);
+  }, [place]);
   if (loading) return <ProfileLoading />;
   if (error || !place) return <ProfileLoading error={error || 'The business could not be found.'} />;
   if (isHealthcareBusiness(place)) return <HealthcareWebsite place={place} />;
@@ -180,6 +186,7 @@ export default function PublicBusinessProfilePage() {
   if (isHotelResidency) return <HotelsResidenciesPublicPage place={place} />;
   if (isResort) return <ResortsPublicPage place={place} />;
   if (isPartyZone) return <PartyZonePublicPage place={place} />;
+  if (isIndustrialFoodProcessing) return <Navigate to={`/place/${businessId}`} replace />;
   if (type) return <FoodBusinessWebsite place={place} />;
 
   if (type === 'restaurant') return <RestaurantProfilePage place={place} />;
