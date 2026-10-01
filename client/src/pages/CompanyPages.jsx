@@ -119,6 +119,10 @@ export function CareersPage() {
 export function BusinessSupportPage() {
   return (
     <div className="container-page py-10 sm:py-16">
+      <Link to="/" className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-ink/65 transition hover:text-ink">
+        <span aria-hidden="true">←</span>
+        <span>Back</span>
+      </Link>
       <PageHeading
         eyebrow="Business support"
         title="Help for your business listing."

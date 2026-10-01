@@ -7,6 +7,7 @@ const NAV_LINKS = [
   { label: 'Categories', to: '/categories' },
   { label: 'Explore', to: '/explore' },
   { label: 'Businesses', to: '/businesses' },
+  { label: 'Blogs', to: '/blogs' },
   { label: 'About', to: '/about' },
 ];
 

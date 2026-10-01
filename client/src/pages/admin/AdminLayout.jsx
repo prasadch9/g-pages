@@ -5,6 +5,7 @@ const TABS = [
   { label: 'Overview', to: '/admin' },
   { label: 'Categories', to: '/admin/categories' },
   { label: 'Businesses', to: '/admin/businesses' },
+  { label: 'Blogs', to: '/admin/blogs' },
   { label: 'Users', to: '/admin/users' },
   { label: 'Social links', to: '/admin/settings' },
 ];

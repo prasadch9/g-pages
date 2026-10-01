@@ -278,21 +278,18 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
             ))}
           </nav>
 
-          <div className={isSmallScaleIndustries ? 'flex items-center gap-3' : 'hidden items-center gap-3 md:flex'}>
-            {isSmallScaleIndustries ? (
-              <a href="/" className="whitespace-nowrap rounded-full bg-[#f5b942] px-4 py-2 text-[11px] font-bold text-[#0a311e] shadow-lg shadow-[#f5b942]/25 transition hover:brightness-105">
-                ← Back to G-Pages
+          <div className="flex items-center gap-3">
+            <a href="/" className="whitespace-nowrap rounded-full bg-[#f5b942] px-4 py-2 text-[11px] font-bold text-[#0a311e] shadow-lg shadow-[#f5b942]/25 transition hover:brightness-105">
+              Back to Home
+            </a>
+            {!isSmallScaleIndustries && <div className="hidden items-center gap-3 md:flex">
+              <button type="button" className="rounded-full border border-white/20 bg-white/5 px-3 py-2 text-[11px] font-semibold text-white hover:bg-white/10">
+                Search
+              </button>
+              <a href="#contact" className="rounded-full bg-[#f5b942] px-4 py-2 text-[11px] font-bold text-[#0a311e] shadow-lg shadow-[#f5b942]/25 transition hover:brightness-105">
+                Get a Quote
               </a>
-            ) : (
-              <>
-                <button type="button" className="rounded-full border border-white/20 bg-white/5 px-3 py-2 text-[11px] font-semibold text-white hover:bg-white/10">
-                  Search
-                </button>
-                <a href="#contact" className="rounded-full bg-[#f5b942] px-4 py-2 text-[11px] font-bold text-[#0a311e] shadow-lg shadow-[#f5b942]/25 transition hover:brightness-105">
-                  Get a Quote
-                </a>
-              </>
-            )}
+            </div>}
           </div>
         </div>
       </header>

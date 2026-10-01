@@ -63,6 +63,10 @@ export default function Register() {
   return (
     <div className="container-page flex min-h-[70vh] items-center justify-center py-16">
       <div className="w-full max-w-md">
+        <Link to="/" className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-ink/65 transition hover:text-ink">
+          <span aria-hidden="true">←</span>
+          <span>Back</span>
+        </Link>
         <h1 className="font-display text-2xl font-semibold text-ink">Create your account</h1>
         <p className="mt-1 text-sm text-ink/55">Join Google Pages to save favorites and write reviews.</p>
 

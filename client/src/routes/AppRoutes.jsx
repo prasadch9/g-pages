@@ -59,9 +59,17 @@ import TrendingPlacesPage from '../pages/TrendingPlacesPage';
 
 import PublicBusinessProfilePage from '../pages/PublicBusinessProfilePage';
 
+import BlogsPage from '../pages/BlogsPage';
+
+import BlogDetailPage from '../pages/BlogDetailPage';
+
 import RestaurantEditor from '../pages/food-dining/restaurants/RestaurantEditor';
 
 import BusinessEditorPage from '../pages/business/BusinessEditorPage';
+
+import AdminBlogs from '../pages/admin/AdminBlogs';
+
+import AdminBlogEditor from '../pages/admin/AdminBlogEditor';
 
 export default function AppRoutes() {
   return (
@@ -145,6 +153,9 @@ export default function AppRoutes() {
           />
           <Route path="/business/register" element={<Register />} />
 
+          <Route path="/blogs" element={<BlogsPage />} />
+          <Route path="/blogs/:slug" element={<BlogDetailPage />} />
+
           {/* Admin area */}
           <Route
             path="/admin"
@@ -158,6 +169,9 @@ export default function AppRoutes() {
             <Route path="categories" element={<AdminCategories />} />
             <Route path="businesses" element={<AdminBusinesses />} />
             <Route path="businesses/:id" element={<AdminBusinessReview />} />
+            <Route path="blogs" element={<AdminBlogs />} />
+            <Route path="blogs/new" element={<AdminBlogEditor />} />
+            <Route path="blogs/:id/edit" element={<AdminBlogEditor />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>

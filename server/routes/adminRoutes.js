@@ -16,6 +16,14 @@ const {
 const { getReportsAdmin, updateReportAdmin } = require('../controllers/reportController');
 const { getAdminSettings, updateAdminSettings } = require('../controllers/siteSettingsController');
 const { getAllReviewsAdmin, setReviewStatusAdmin } = require('../controllers/reviewController');
+const {
+  listAdminBlogs,
+  getAdminBlogMeta,
+  getAdminBlog,
+  createBlog,
+  updateBlog,
+  deleteBlog,
+} = require('../controllers/blogController');
 const { protect, authorize } = require('../middleware/auth');
 const multer = require('multer');
 const { importPlaces } = require('../controllers/adminController');
@@ -46,6 +54,13 @@ router.delete('/businesses/:id', deleteBusiness);
 
 router.get('/reviews', getAllReviewsAdmin);
 router.put('/reviews/:id/status', setReviewStatusAdmin);
+
+router.get('/blogs/meta', getAdminBlogMeta);
+router.get('/blogs', listAdminBlogs);
+router.get('/blogs/:id', getAdminBlog);
+router.post('/blogs', createBlog);
+router.put('/blogs/:id', updateBlog);
+router.delete('/blogs/:id', deleteBlog);
 
 router.get('/reports', getReportsAdmin);
 router.put('/reports/:id', updateReportAdmin);

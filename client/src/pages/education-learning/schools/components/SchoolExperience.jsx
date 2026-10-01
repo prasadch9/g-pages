@@ -174,6 +174,7 @@ function SchoolExperience({ place, mapsUrl, socialLinks = {}, academics = {}, on
         <nav aria-label="School navigation" className="school-navigation hidden items-center gap-5 whitespace-nowrap text-[11px] font-semibold text-[#31516b] lg:flex">
           {[['Home', '#top'], ['About Us', '#about'], ['Academics', '#academics'], ['Facilities', '#facilities'], ['Admissions', '#admissions'], ['Activities', '#activities'], ['Gallery', '#gallery'], ['Achievements', '#achievements'], ['Faculty', '#faculty'], ['Events', '#events'], ['Notices', '#events'], ['Contact', '#contact']].map(([label, href]) => <a key={label} href={href} onClick={label === 'Admissions' ? scrollToAdmissions : undefined} className="py-5">{label}</a>)}
         </nav>
+        <a href="/" className="hidden shrink-0 rounded-full bg-[#0c2f49] px-4 py-2 text-[10px] font-bold text-white shadow-sm transition hover:bg-[#12395d] sm:inline-flex">Back to Home</a>
         <a href="#contact" className="school-contact-link hidden shrink-0 px-4 py-2 text-[11px] font-bold sm:inline-flex">Visit us <span aria-hidden="true">↗</span></a>
       </div>
     </header>

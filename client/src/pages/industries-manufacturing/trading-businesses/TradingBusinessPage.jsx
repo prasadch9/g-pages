@@ -92,6 +92,7 @@ export default function TradingBusinessPage({ place, mapsUrl, onShare, onReport 
           <label className="ml-auto flex min-w-[220px] flex-1 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-500 lg:ml-0 lg:max-w-[300px]">
             <span aria-hidden="true">⌕</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search products or categories..." className="min-w-0 flex-1 bg-transparent text-slate-800 outline-none placeholder:text-slate-400" aria-label="Search products" />
           </label>
+          <a href="/" className="rounded-md border border-white/30 bg-white/10 px-4 py-2 text-xs font-bold text-white hover:bg-white/20">Back to Home</a>
           <a href="/login" className="rounded-md bg-[#0879ee] px-4 py-2 text-xs font-bold text-white hover:bg-[#0069d8]">Log In / Sign Up</a>
         </div>
       </header>

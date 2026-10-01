@@ -67,6 +67,10 @@ export default function Login({ businessMode = false }) {
   return (
     <div className="container-page flex min-h-[70vh] items-center justify-center py-16">
       <div className="w-full max-w-sm rounded-3xl border border-white/80 bg-white/85 p-7 shadow-[0_20px_55px_rgba(16,42,67,0.12)] backdrop-blur sm:p-8">
+        <Link to="/" className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-ink/65 transition hover:text-ink">
+          <span aria-hidden="true">←</span>
+          <span>Back</span>
+        </Link>
         <h1 className="font-display text-2xl font-semibold text-ink">{businessMode ? 'Business login' : 'Log in to Google Pages'}</h1>
         <p className="mt-1 text-sm text-ink/55">{businessMode ? 'Sign in to manage your business listings.' : 'Pick up right where you left off.'}</p>
 

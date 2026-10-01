@@ -117,7 +117,7 @@ export default function SolarPage({ place }) {
             <a key={item} href={`#${sectionIds[item]}`} className={index === 0 ? 'active' : ''}>{item}</a>
           ))}
         </nav>
-        <div className="solar-header-actions">{phone && <a className="solar-icon-action" href={`tel:${phone}`} aria-label="Call business">Call</a>}{whatsapp && <a className="solar-icon-action" href={whatsappUrl} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp business">WhatsApp</a>}<form className="solar-search-form" onSubmit={submitSearch}><input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} aria-label="Search businesses" placeholder="Search" /><button type="submit">Search</button></form><Button href="#contact">Get a Free Quote</Button><span className="solar-menu">Menu</span></div>
+        <div className="solar-header-actions"><Link to="/" className="solar-icon-action" aria-label="Back to home">Back to Home</Link>{phone && <a className="solar-icon-action" href={`tel:${phone}`} aria-label="Call business">Call</a>}{whatsapp && <a className="solar-icon-action" href={whatsappUrl} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp business">WhatsApp</a>}<form className="solar-search-form" onSubmit={submitSearch}><input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} aria-label="Search businesses" placeholder="Search" /><button type="submit">Search</button></form><Button href="#contact">Get a Free Quote</Button><span className="solar-menu">Menu</span></div>
       </header>
 
       <main>
