@@ -1,6 +1,6 @@
 const CATEGORY_GROUPS = {
   'Education & Learning': ['Schools', 'Colleges', 'Universities', 'Training Institutes', 'Academies', 'Sports Academies'],
-  'Healthcare & Medical': ['Hospitals', 'Multispeciality Hospitals', 'Cardiology', 'ENT', 'Dental', 'Hearing Solutions', 'Fitness Centres'],
+  'Healthcare & Medical': ['Hospitals', 'Multispeciality Hospitals', 'Cardiology', 'ENT', 'Dental', 'Hearing Solutions', 'Fitness Centres', 'Skin Care'],
   'Religious & Social': ['Temples', 'Churches', 'Trusts', 'NGOs', 'Associations'],
   'Marriage & Wedding': ['Marriage Bureaus', 'Function Halls', 'Event Organizers', 'Catering Services', 'Flower Decoration', 'Fashion Designers', 'Beauty Parlours', 'Saloon & Spa'],
   'Travel & Hospitality': ['Tours & Travels', 'Hotels & Residencies', 'Resorts', 'Party Zones'],
@@ -28,6 +28,7 @@ const MODULES = {
   Dental: ['services', 'dentists', 'treatments', 'facilities', 'appointment', 'gallery', 'videos', 'testimonials'],
   'Hearing Solutions': ['services', 'hearingTests', 'specialists', 'hearingProducts', 'appointment', 'facilities', 'gallery', 'videos'],
   'Fitness Centres': ['memberships', 'fitnessPrograms', 'trainers', 'classes', 'timetable', 'facilities', 'programs', 'gallery', 'videos', 'testimonials'],
+  'Skin Care': ['doctors', 'services', 'conditionsTreated', 'consultationInformation', 'packages', 'facilities', 'branches', 'gallery', 'videos', 'testimonials'],
 };
 
 const DEFAULT_MODULES = ['about', 'services', 'contact', 'hours', 'gallery', 'videos', 'reviews', 'location'];

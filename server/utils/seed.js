@@ -14,6 +14,7 @@ const dns = require('dns');
 const mongoose = require('mongoose');
 const slugify = require('slugify');
 const bcrypt = require('bcryptjs');
+const { skinCareDemoAttributes } = require('./skinCareDemoData');
 
 const dnsServers = (process.env.DNS_SERVERS || '')
   .split(',')
@@ -234,7 +235,7 @@ const LEGACY_CATEGORIES = [
 const REQUESTED_CATEGORY_NAMES = [
   'Food & Dining',
   'Schools', 'Colleges', 'Universities', 'Training Institutes', 'Academies', 'Sports Academies',
-  'Hospitals', 'Multispeciality Hospitals', 'Cardiology', 'ENT', 'Dental', 'Hearing Solutions', 'Fitness Centres',
+  'Hospitals', 'Multispeciality Hospitals', 'Cardiology', 'ENT', 'Dental', 'Hearing Solutions', 'Fitness Centres', 'Skin Care',
   'Temples', 'Churches', 'Trusts', 'NGOs', 'Associations',
   'Marriage Bureaus', 'Function Halls', 'Event Organizers', 'Catering Services', 'Flower Decoration',
   'Fashion Designers', 'Beauty Parlours', 'Saloon & Spa',
@@ -327,7 +328,6 @@ const IMAGE_SETS = [
   'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80',
   'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1200&q=80',
 ];
-
 
 // ============================================================
 // SEED FUNCTION
@@ -591,7 +591,7 @@ const run = async () => {
     }
 
     const placesToInsert = [];
-    for (const city of cities) {
+    for (const [cityIndex, city] of cities.entries()) {
       const district = city.parent;
       const stateObj = district?.parent;
       const stateId = stateObj?._id || stateObj;
@@ -600,6 +600,7 @@ const run = async () => {
 
       for (let categoryIndex = 0; categoryIndex < categories.length; categoryIndex += 1) {
         const category = categories[categoryIndex];
+        if (category.name === 'Skin Care' && cityIndex >= 5) continue;
         const area = cityAreas.length > 0 ? cityAreas[categoryIndex % cityAreas.length] : null;
         const name = `${city.name} ${category.name.replace(/s$/, '')} Hub`;
         const image = IMAGE_SETS[categoryIndex % IMAGE_SETS.length];
@@ -629,7 +630,8 @@ const run = async () => {
           services: ['Walk-in service', 'Online enquiries', 'Verified information'],
           facilities: ['Easy access', 'Customer support', 'Digital payments'],
           coordinates: { lat: 16.98 + (categoryIndex % 5) * 0.006, lng: 81.78 + (categoryIndex % 4) * 0.006 },
-          attributes: category.name === 'Schools' ? { board: categoryIndex % 2 ? 'State Board' : 'CBSE', classes: '1-12', type: 'Private', gender: 'Co-ed' } :
+          attributes: category.name === 'Skin Care' ? skinCareDemoAttributes(image, [image, IMAGE_SETS[(categoryIndex + 2) % IMAGE_SETS.length], IMAGE_SETS[(categoryIndex + 5) % IMAGE_SETS.length]]) :
+            category.name === 'Schools' ? { board: categoryIndex % 2 ? 'State Board' : 'CBSE', classes: '1-12', type: 'Private', gender: 'Co-ed' } :
             category.name === 'Hospitals' ? { specialization: 'Multi-Specialty', emergency: 'true' } :
             category.name === 'Restaurants' ? { cuisine: categoryIndex % 2 ? 'South Indian' : 'Multi-Cuisine', priceRange: '₹₹' } : {},
           rating: { average: Number((4.1 + (categoryIndex % 8) / 10).toFixed(1)), count: 18 + categoryIndex * 4 },

@@ -2,7 +2,7 @@ export const CATEGORY_GROUPS = [
   { name: 'Business & Professional Services', children: ['Consultancies', 'Agencies', 'Manpower Agencies', 'Professions'] },
   { name: 'Logistics & Moving', children: ['Packers & Movers'] },
   { name: 'Education & Learning', children: ['Schools', 'Colleges', 'Universities', 'Training Institutes', 'Academies', 'Sports Academies'] },
-  { name: 'Healthcare & Medical', children: ['Hospitals', 'Multispeciality Hospitals', 'Cardiology', 'ENT', 'Dental', 'Hearing Solutions', 'Fitness Centres'] },
+  { name: 'Healthcare & Medical', children: ['Hospitals', 'Multispeciality Hospitals', 'Cardiology', 'ENT', 'Dental', 'Hearing Solutions', 'Fitness Centres', 'Skin Care'] },
   { name: 'Religious & Social', children: ['Temples', 'Churches', 'Trusts', 'NGOs', 'Associations'] },
   { name: 'Marriage & Wedding', children: ['Marriage Bureaus', 'Function Halls', 'Event Organizers', 'Catering Services', 'Flower Decoration', 'Fashion Designers', 'Beauty Parlours', 'Saloon & Spa'] },
   { name: 'Travel & Hospitality', children: ['Tours & Travels', 'Hotels & Residencies', 'Resorts', 'Party Zones'] },
@@ -15,6 +15,7 @@ export const CATEGORY_GROUPS = [
 ];
 
 export const CATEGORY_ICONS = {
+  'Skin Care': '✨',
   Schools: '🎓', Hospitals: '🏥', Temples: '🛕', 'Marriage Bureaus': '💍', 'Tours & Travels': '🧳', 'Real Estate': '🏠', Restaurants: '🍴', 'Shopping Malls': '🏬', 'Car Showrooms': '🚗', 'Small Scale Industries': '🏭', Consultancies: '💼', 'Packers & Movers': '📦', 'Sculptures (Arts)': '🗿',
   Colleges: '🏢', Universities: '🏛️', 'Training Institutes': '📚', Academies: '🎯', 'Sports Academies': '🏅', 'Multispeciality Hospitals': '🏨', Cardiology: '❤️', ENT: '👂', Dental: '🦷', 'Hearing Solutions': '🦻', 'Fitness Centres': '🏋️', Churches: '⛪', Trusts: '🤝', NGOs: '🌍', Associations: '👥', 'Function Halls': '🏛️', 'Event Organizers': '🎉', Catering: '🍽️', 'Flower Decoration': '💐', 'Fashion Designers': '👗', 'Beauty Parlours': '💄', 'Saloon & Spa': '💆', 'Hotels & Residencies': '🏨', Resorts: '🏝️', 'Party Zones': '🎊', Construction: '🏗️', Roofing: '🧱', 'Interiors & Decorations': '🛋️', 'Tiles Shops': '🔲', 'Furniture Shops': '🪑', 'Coffee Shops': '☕', 'Sweet Shops & Bakery': '🧁', 'Food Processing': '🥫', Boutique: '🛍️', 'Home Appliances': '🔌', 'Mattress Shops': '🛏️', Nurseries: '🌱', 'Trading Businesses': '📦', Solar: '☀️', Agencies: '📣', 'Manpower Agencies': '🧑‍💼', Professions: '🧑‍⚕️',
 };

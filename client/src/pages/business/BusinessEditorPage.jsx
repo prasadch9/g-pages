@@ -9,6 +9,7 @@ import CateringEditor from '../food-dining/catering/CateringEditor';
 import FoodProcessingEditor from '../food-dining/food-processing/FoodProcessingEditor';
 import WeddingBusinessForm from '../marriage-wedding/forms/WeddingBusinessForm';
 import HealthcareBusinessEditor from '../healthcare-medical/forms/HealthcareBusinessEditor';
+import SkinCareBusinessEditor from '../healthcare-medical/forms/SkinCareBusinessEditor';
 import PropertyBusinessForm from '../real-estate-construction/forms/PropertyBusinessForm';
 import { resolveWeddingBusinessType, resolvePropertyBusinessType } from '../../components/public/PublicProfileShared';
 import { isHealthcareBusiness } from '../healthcare-medical/healthcareUtils';
@@ -61,7 +62,11 @@ export default function BusinessEditorPage() {
   if (type === 'catering') return <CateringEditor place={place} />;
   if (type === 'food-processing' && !isIndustriesManufacturing) return <FoodProcessingEditor place={place} />;
   if (weddingType) return <WeddingBusinessForm place={place} businessType={weddingType} categoryId={place.category?._id || place.category} subcategoryId={place.subcategory?._id || place.subcategory} />;
-  if (isHealthcareBusiness(place)) return <HealthcareBusinessEditor place={place} />;
+  if (isHealthcareBusiness(place)) {
+    const healthcareSubcategory = String(place.subcategory?.name || place.subcategory?.slug || place.category?.name || place.category?.slug || '').toLowerCase();
+    if (healthcareSubcategory === 'skin care' || healthcareSubcategory === 'skin-care') return <SkinCareBusinessEditor place={place} categoryId={place.category?._id || place.category} subcategoryId={place.subcategory?._id || place.subcategory} />;
+    return <HealthcareBusinessEditor place={place} />;
+  }
   if (propertyType) return <PropertyBusinessForm place={place} propertyType={propertyType} />;
 
   return <CreateListing />;

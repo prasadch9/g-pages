@@ -14,6 +14,7 @@ const HEALTHCARE_CATEGORY_NAMES = new Set([
   'fitness centres',
   'fitness centre',
   'fitness center',
+  'skin care',
 ]);
 
 const normalizeText = (value) => {
