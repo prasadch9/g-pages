@@ -1,6 +1,6 @@
 const BUSINESS_CATEGORY_GROUPS = {
   'education-learning': ['Schools', 'Colleges', 'Universities', 'Training Institutes', 'Academies', 'Sports Academies'],
-  'healthcare-medical': ['Hospitals', 'Multispeciality Hospitals', 'Cardiology', 'ENT', 'Dental', 'Hearing Solutions', 'Fitness Centres'],
+  'healthcare-medical': ['Hospitals', 'Multispeciality Hospitals', 'Cardiology', 'ENT', 'Dental', 'Hearing Solutions', 'Fitness Centres', 'Skin Care'],
   'religious-social': ['Temples', 'Churches', 'Trusts', 'NGOs', 'Associations'],
   'marriage-wedding': ['Marriage Bureaus', 'Function Halls', 'Event Organizers', 'Catering Services', 'Flower Decoration', 'Fashion Designers', 'Beauty Parlours', 'Saloon & Spa'],
   'travel-hospitality': ['Tours & Travels', 'Hotels & Residencies', 'Resorts', 'Party Zones'],

@@ -14,6 +14,7 @@ import mediaUrl from '../../utils/mediaUrl';
 import AcademyRegistrationFields from '../education-learning/academies/AcademyRegistrationFields';
 import SportsAcademyRegistrationFields from '../education-learning/sports-academies/SportsAcademyRegistrationFields';
 import HealthcareBusinessEditor from '../healthcare-medical/forms/HealthcareBusinessEditor';
+import SkinCareBusinessEditor from '../healthcare-medical/forms/SkinCareBusinessEditor';
 import PropertyBusinessForm from '../real-estate-construction/forms/PropertyBusinessForm';
 import ConsultancyRegistrationFields from '../business-professional/consultancies/ConsultancyRegistrationFields';
 import AgencyRegistrationFields from '../business-professional/agencies/AgencyRegistrationFields';
@@ -268,7 +269,8 @@ export default function CreateListing() {
   const isHospitalHealthcare = form.mainCategory === 'Healthcare & Medical' && ['hospitals', 'multispeciality hospitals'].includes(healthcareSubcategory) && Boolean(form.category);
   const isSpecialistHealthcare = form.mainCategory === 'Healthcare & Medical' && ['cardiology', 'ent', 'dental', 'hearing solutions'].includes(healthcareSubcategory) && Boolean(form.category);
   const isFitnessHealthcare = form.mainCategory === 'Healthcare & Medical' && ['fitness centre', 'fitness center', 'fitness centres', 'fitness centers'].includes(healthcareSubcategory) && Boolean(form.category);
-  const isDedicatedHealthcare = isHospitalHealthcare || isSpecialistHealthcare || isFitnessHealthcare;
+  const isSkinCareHealthcare = form.mainCategory === 'Healthcare & Medical' && ['skin care', 'skin-care'].includes(healthcareSubcategory) && Boolean(form.category);
+  const isDedicatedHealthcare = isHospitalHealthcare || isSpecialistHealthcare || isFitnessHealthcare || isSkinCareHealthcare;
   const isDedicatedRealEstate = form.mainCategory === 'Real Estate & Construction' && healthcareSubcategory === 'real estate' && Boolean(form.category);
   const isDedicatedConstructionRoofing = form.mainCategory === 'Real Estate & Construction' && ['construction', 'roofing'].includes(healthcareSubcategory) && Boolean(form.category);
   const isDedicatedShopStudio = form.mainCategory === 'Real Estate & Construction' && ['furniture shops', 'tiles shops', 'interiors & decorations'].includes(healthcareSubcategory) && Boolean(form.category);
@@ -1053,7 +1055,14 @@ export default function CreateListing() {
             error={error}
             success={success}
           /> : isDedicatedHealthcare ? <div className="col-span-2">
-            <HealthcareBusinessEditor
+            {isSkinCareHealthcare ? <SkinCareBusinessEditor
+              key={`${editId || 'new'}-${healthcareSubcategory}-${editBusinessPlace?._id || 'loading'}`}
+              place={editBusinessPlace || { category: form.category, location, attributes: { businessProfile: { businessType: 'healthcare' } } }}
+              create={!isEditing}
+              categoryId={form.category}
+              onBack={() => navigate('/business/dashboard')}
+              embedded
+            /> : <HealthcareBusinessEditor
               key={`${editId || 'new'}-${healthcareSubcategory}-${editBusinessPlace?._id || 'loading'}`}
               place={editBusinessPlace || { category: form.category, location, attributes: { businessProfile: { businessType: 'healthcare' } } }}
               create={!isEditing}
@@ -1062,7 +1071,7 @@ export default function CreateListing() {
               subcategoryName={typeof form.subcategory === 'string' ? form.subcategory : form.subcategory?.name || editBusinessPlace?.category?.name || ''}
               onBack={() => navigate('/business/dashboard')}
               embedded
-            />
+            />}
           </div> : isDedicatedRealEstate ? <div className="col-span-2"><PropertyBusinessForm key={`${editId || 'new'}-real-estate-${editBusinessPlace?._id || 'loading'}`} place={editBusinessPlace} categoryId={form.category} propertyType="real-estate" onBack={() => navigate('/business/dashboard')} embedded /></div> : isDedicatedConstructionRoofing ? <div className="col-span-2"><PropertyBusinessForm key={`${editId || 'new'}-${healthcareSubcategory}-${editBusinessPlace?._id || 'loading'}`} place={editBusinessPlace || { category: form.category, location, attributes: { businessProfile: { businessType: healthcareSubcategory } } }} categoryId={form.category} propertyType={healthcareSubcategory} onBack={() => navigate('/business/dashboard')} embedded /></div> : isDedicatedShopStudio ? <div className="col-span-2"><PropertyBusinessForm key={`${editId || 'new'}-${healthcareSubcategory}-${editBusinessPlace?._id || 'loading'}`} place={editBusinessPlace || { category: form.category, location, attributes: { businessProfile: { businessType: healthcareSubcategory } } }} categoryId={form.category} propertyType={healthcareSubcategory === 'furniture shops' ? 'furniture' : healthcareSubcategory === 'tiles shops' ? 'tiles' : 'interiors'} onBack={() => navigate('/business/dashboard')} embedded /></div> : isDedicatedIndustryForm ? <>
           <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Business name</label><input required value={form.name} onChange={update('name')} className={inputClass} /></div>
           <div className="col-span-2 sm:col-span-1"><label className="text-sm text-ink/70">Phone</label><input value={form.phone} onChange={update('phone')} className={inputClass} /></div>

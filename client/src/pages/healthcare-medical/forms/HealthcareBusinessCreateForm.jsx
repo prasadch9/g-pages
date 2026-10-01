@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import HealthcareBusinessEditor from './HealthcareBusinessEditor';
+import SkinCareBusinessEditor from './SkinCareBusinessEditor';
 import { getSubcategoriesForGroup } from '../../../components/business/businessTaxonomy';
 
 const healthcareGroup = {
@@ -12,6 +13,7 @@ const healthcareGroup = {
     'Dental',
     'Hearing Solutions',
     'Fitness Centres',
+    'Skin Care',
   ],
 };
 
@@ -52,6 +54,28 @@ export default function HealthcareBusinessCreateForm({ categories, onBack }) {
       },
     },
   };
+
+  if (selected.name === 'Skin Care') {
+    return (
+      <div>
+        <div className="container-page mx-auto max-w-5xl px-5 pt-8 sm:px-8">
+          <label className="block max-w-md text-sm font-semibold text-[#4b3d3b]">
+            Healthcare business type
+            <select
+              value={subcategoryId}
+              onChange={(event) => setSubcategoryId(event.target.value)}
+              className="mt-1 w-full rounded-xl border border-[#ebded8] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#0f6cbf]"
+            >
+              {subcategories.map((item) => (
+                <option key={item._id} value={item._id}>{item.name}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <SkinCareBusinessEditor key={selected.name} place={draft} create onBack={onBack} categoryId={selected._id} />
+      </div>
+    );
+  }
 
   return (
     <div>

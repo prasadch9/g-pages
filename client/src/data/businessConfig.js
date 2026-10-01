@@ -1,6 +1,6 @@
 export const BUSINESS_CATEGORY_GROUPS = [
   { slug: 'education-learning', name: 'Education & Learning', children: ['Schools', 'Colleges', 'Universities', 'Training Institutes', 'Academies', 'Sports Academies'] },
-  { slug: 'healthcare-medical', name: 'Healthcare & Medical', children: ['Hospitals', 'Multispeciality Hospitals', 'Cardiology', 'ENT', 'Dental', 'Hearing Solutions', 'Fitness Centres'] },
+  { slug: 'healthcare-medical', name: 'Healthcare & Medical', children: ['Hospitals', 'Multispeciality Hospitals', 'Cardiology', 'ENT', 'Dental', 'Hearing Solutions', 'Fitness Centres', 'Skin Care'] },
   { slug: 'religious-social', name: 'Religious & Social', children: ['Temples', 'Churches', 'Trusts', 'NGOs', 'Associations'] },
   { slug: 'marriage-wedding', name: 'Marriage & Wedding', children: ['Marriage Bureaus', 'Function Halls', 'Event Organizers', 'Catering Services', 'Flower Decoration', 'Fashion Designers', 'Beauty Parlours', 'Saloon & Spa'] },
   { slug: 'travel-hospitality', name: 'Travel & Hospitality', children: ['Tours & Travels', 'Hotels & Residencies', 'Resorts', 'Party Zones'] },
@@ -39,6 +39,7 @@ Object.assign(CATEGORY_MODULES, {
   Dental: ['Dental Services', 'Dentists', 'Treatments', 'Facilities', 'Appointment'],
   'Hearing Solutions': ['Hearing Services', 'Hearing Tests', 'Specialists', 'Hearing Products', 'Appointment', 'Facilities'],
   'Fitness Centres': ['Memberships', 'Fitness Programs', 'Trainers', 'Classes', 'Timetable', 'Facilities'],
+  'Skin Care': ['Dermatologists', 'Skin Treatments', 'Skin Concerns', 'Consultation', 'Skin Care Packages', 'Clinic Facilities', 'Branches'],
   Temples: ['History', 'Deity Information', 'Timings', 'Pooja Services', 'Festivals', 'Events', 'Announcements'],
   Churches: ['About', 'Worship Services', 'Timings', 'Events', 'Ministries', 'Announcements'],
   Trusts: ['Mission', 'Vision', 'Programs', 'Projects', 'Impact', 'Events'],

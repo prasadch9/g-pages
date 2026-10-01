@@ -5,7 +5,7 @@ import GroupedCategoryGrid from './GroupedCategoryGrid';
 
 const ICONS = {
   Schools: '🎓', Colleges: '🏢', Universities: '🏛️', 'Training Institutes': '📚', Academies: '🎯', 'Sports Academies': '🏅',
-  Hospitals: '🏥', 'Multispeciality Hospitals': '🏨', Cardiology: '❤️', ENT: '👂', Dental: '🦷', 'Hearing Solutions': '🦻', 'Fitness Centres': '🏋️',
+  Hospitals: '🏥', 'Multispeciality Hospitals': '🏨', Cardiology: '❤️', ENT: '👂', Dental: '🦷', 'Hearing Solutions': '🦻', 'Fitness Centres': '🏋️', 'Skin Care': '✨',
   Temples: '🛕', Churches: '⛪', Trusts: '🤝', NGOs: '🌍', Associations: '👥',
   'Marriage Bureaus': '💍', 'Function Halls': '🏛️', 'Event Organizers': '🎉', 'Catering Services': '🍽️', 'Flower Decoration': '💐', 'Fashion Designers': '👗', 'Beauty Parlours': '💄', 'Saloon & Spa': '💆',
   'Tours & Travels': '🧳', 'Hotels & Residencies': '🏨', Resorts: '🏝️', 'Party Zones': '🎊',

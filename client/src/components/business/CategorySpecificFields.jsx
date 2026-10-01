@@ -34,6 +34,8 @@ import SubcategoryForm16 from '../../pages/healthcare-medical/hearing-solutions/
 import subcategoryFields16 from '../../pages/healthcare-medical/hearing-solutions/hearingSolutionsFields';
 import SubcategoryForm17 from '../../pages/healthcare-medical/fitness-centres/FitnessCentresFields';
 import subcategoryFields17 from '../../pages/healthcare-medical/fitness-centres/fitnessCentresFields';
+import SkinCareFields from '../../pages/healthcare-medical/skin-care/SkinCareFields';
+import subcategoryFieldsSkinCare from '../../pages/healthcare-medical/skin-care/skinCareFields';
 import SubcategoryForm18 from '../../pages/religious-social/temples/TemplesFields';
 import subcategoryFields18 from '../../pages/religious-social/temples/templesFields';
 import SubcategoryForm19 from '../../pages/religious-social/churches/ChurchesFields';
@@ -133,6 +135,7 @@ const CATEGORY_FORMS = {
   "Healthcare & Medical::Dental": SubcategoryForm15,
   "Healthcare & Medical::Hearing Solutions": SubcategoryForm16,
   "Healthcare & Medical::Fitness Centres": SubcategoryForm17,
+  "Healthcare & Medical::Skin Care": SkinCareFields,
   "Religious & Social::Temples": SubcategoryForm18,
   "Religious & Social::Churches": SubcategoryForm19,
   "Religious & Social::Trusts": SubcategoryForm20,
@@ -192,6 +195,7 @@ const CATEGORY_FIELDS = {
   "Healthcare & Medical::Dental": subcategoryFields15,
   "Healthcare & Medical::Hearing Solutions": subcategoryFields16,
   "Healthcare & Medical::Fitness Centres": subcategoryFields17,
+  "Healthcare & Medical::Skin Care": subcategoryFieldsSkinCare,
   "Religious & Social::Temples": subcategoryFields18,
   "Religious & Social::Churches": subcategoryFields19,
   "Religious & Social::Trusts": subcategoryFields20,
