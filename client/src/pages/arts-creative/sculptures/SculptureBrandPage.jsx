@@ -224,7 +224,7 @@ export default function SculptureBrandPage({ place, mapsUrl, onShare, onReport }
       </div>
 
       {/* Main Studio Header */}
-      <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/95 shadow-sm backdrop-blur-md">
+      <header className="arts-creative-header sticky top-0 z-40 border-b border-stone-200 bg-white/95 shadow-sm backdrop-blur-md">
         <div className="mx-auto flex max-w-[1700px] items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             {logo ? (
@@ -253,7 +253,7 @@ export default function SculptureBrandPage({ place, mapsUrl, onShare, onReport }
             ))}
           </nav>
 
-          <div className="flex items-center gap-2.5">
+          <div className="arts-creative-header-actions flex items-center gap-2.5">
             <button
               type="button"
               onClick={() => setEnquiryModalOpen(true)}
@@ -262,10 +262,10 @@ export default function SculptureBrandPage({ place, mapsUrl, onShare, onReport }
               Commission Art
             </button>
             <Link
-              to="/categories"
-              className="hidden rounded-full border border-stone-300 bg-stone-50 px-3.5 py-2 text-xs font-semibold text-stone-700 transition hover:bg-stone-100 hover:text-stone-900 sm:inline-flex"
+              to="/"
+              className="rounded-full border border-stone-300 bg-stone-50 px-3.5 py-2 text-xs font-semibold text-stone-700 transition hover:bg-stone-100 hover:text-stone-900 inline-flex"
             >
-              ← Categories
+              ← Back to G-Pages
             </Link>
           </div>
         </div>
@@ -1069,8 +1069,8 @@ export default function SculptureBrandPage({ place, mapsUrl, onShare, onReport }
       )}
 
       {/* Footer - Professional Neutral Slate */}
-      <footer className="border-t border-stone-200 bg-[#f4efe8] py-8 text-stone-600">
-        <div className="mx-auto flex max-w-[1700px] flex-wrap items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 text-xs">
+      <footer className="border-t border-stone-200 bg-[#f4efe8] py-8 text-stone-600" data-mobile-footer-layout="columns">
+        <div className="arts-creative-footer-inner mx-auto flex max-w-[1700px] flex-wrap items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 text-xs">
           <div>
             <span className="font-display font-bold text-stone-900">{studioName}</span> · Arts &amp; Creative Directory
             <div className="mt-0.5 text-[11px] text-stone-500">{address}</div>

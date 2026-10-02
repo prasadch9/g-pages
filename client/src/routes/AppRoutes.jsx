@@ -1,5 +1,6 @@
 ﻿import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+import MobileSubcategoryMenu from '../components/public/MobileSubcategoryMenu';
 
 import Home from '../pages/Home';
 
@@ -80,10 +81,10 @@ export default function AppRoutes() {
           <Route path="/register" element={<Register />} />
           <Route path="/search" element={<SearchResultsPage />} />
           <Route path="/trending" element={<TrendingPlacesPage />} />
-          <Route path="/place/:id" element={<PlaceDetailPage />} />
+          <Route path="/place/:id" element={<><PlaceDetailPage /><MobileSubcategoryMenu /></>} />
           <Route path="/business/login" element={<Login businessMode />} />
           <Route path="/business/support" element={<BusinessSupportPage />} />
-          <Route path="/business/:businessId" element={<PublicBusinessProfilePage />} />
+          <Route path="/business/:businessId" element={<><PublicBusinessProfilePage /><MobileSubcategoryMenu /></>} />
           <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/categories/:category" element={<CategoryPlacesPage />} />
           <Route path="/explore" element={<ExplorePage />} />

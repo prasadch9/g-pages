@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import ReviewsSection from '../../components/ReviewsSection';
 import { getProfileData, ImageFrame, PublicVideoCard, VideoGallery } from '../../components/public/PublicProfileShared';
 import { getWhatsAppUrl } from '../healthcare-medical/healthcareUtils';
+import { PhoneIcon, WhatsAppIcon } from '../healthcare-medical/HealthcareIcons';
 
 const configs = {
   'marriage-bureau': {
@@ -158,16 +159,16 @@ export default function WeddingBusinessWebsite({ place, weddingType }) {
           </nav>
 
           <div className="hidden items-center gap-3 md:flex">
+            <a href="/" className="inline-flex shrink-0 items-center rounded-full border border-[#f3dfe5] bg-white px-3 py-2 text-xs font-semibold text-[#4b1227]">&larr; Back to G-Pages</a>
             {primaryPhone && (
               <a href={callUrl} className="inline-flex items-center gap-2 rounded-full border border-[#f4d6e1] bg-[#fff7fa] px-4 py-2 text-sm font-semibold text-[#4b1227] shadow-sm transition hover:bg-[#fff0f5]">
-                <span className="text-base">📞</span>
+                <PhoneIcon />
                 <span>Call Now</span>
-                <span className="text-[#7d3051]">{primaryPhone}</span>
               </a>
             )}
             {whatsappUrl && (
               <a href={whatsappUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[#0ba046] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-105">
-                <span className="text-base">💬</span>
+                <WhatsAppIcon className="h-5 w-5" />
                 WhatsApp
               </a>
             )}
@@ -190,9 +191,10 @@ export default function WeddingBusinessWebsite({ place, weddingType }) {
                 {link.label}
               </a>
             ))}
+            <a href="/" onClick={() => setMenuOpen(false)} className="block border-b border-[#f9edf2] py-3 text-sm font-semibold text-[#4b1227]">← Back to G-Pages</a>
             <div className="mt-3 flex gap-2">
-              {primaryPhone && <a href={callUrl} className="flex-1 rounded-full bg-[#d4145a] px-3 py-2 text-center text-xs font-bold text-white">Call now</a>}
-              {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer" className="flex-1 rounded-full bg-[#0ba046] px-3 py-2 text-center text-xs font-bold text-white">WhatsApp</a>}
+              {primaryPhone && <a href={callUrl} className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#d4145a] px-3 py-2 text-center text-xs font-bold text-white"><PhoneIcon />Call Now</a>}
+              {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer" className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#0ba046] px-3 py-2 text-center text-xs font-bold text-white"><WhatsAppIcon className="h-4 w-4" />WhatsApp</a>}
             </div>
           </nav>
         )}
@@ -506,8 +508,8 @@ export default function WeddingBusinessWebsite({ place, weddingType }) {
         </section>
       </main>
 
-      <footer className="bg-[#4b1227] text-[#fef7f7]">
-        <div className="mx-auto grid max-w-[1440px] gap-8 px-4 py-12 sm:px-8 lg:grid-cols-4">
+      <footer className="bg-[#4b1227] text-[#fef7f7]" data-mobile-footer-layout="columns">
+        <div className="mx-auto grid max-w-[1440px] gap-8 px-4 py-12 sm:px-8 lg:grid-cols-4" data-marriage-wedding-footer-grid>
           <div>
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 overflow-hidden rounded-full border border-white/15 bg-white/10">
@@ -517,9 +519,6 @@ export default function WeddingBusinessWebsite({ place, weddingType }) {
                 <h3 className="font-display text-2xl font-bold">{businessName}</h3>
               </div>
             </div>
-            <p className="mt-4 max-w-xs text-sm leading-7 text-[#f4dfe7]">
-              {businessDescription}
-            </p>
           </div>
 
           <div>

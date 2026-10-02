@@ -624,7 +624,7 @@ export default function PlaceDetailPage() {
           onReport={() => setShowReport(true)}
           pageType={pageType}
         />
-        <footer className="bg-[#071d33] px-5 py-8 text-paper/70 sm:px-8">
+        <footer className="bg-[#071d33] px-5 py-8 text-paper/70 sm:px-8" data-mobile-footer-layout="columns">
           <div className="container-page flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="font-display text-lg font-semibold text-paper">{place.name}</p>

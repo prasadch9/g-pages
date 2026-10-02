@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 
 export function HomeAppliancesDetailLayout({ place, mapsUrl, socialLinks, onShare, onReport }) {
   const heroImage = place.coverImage || place.images?.[0] || 'https://images.unsplash.com/photo-1586953208448-b95a79798f07?auto=format&fit=crop&w=1200&q=80';
@@ -195,7 +195,7 @@ export function HomeAppliancesDetailLayout({ place, mapsUrl, socialLinks, onShar
           </div>
         </section>
 
-        <footer className="mt-10 rounded-[18px] bg-[#071d33] px-5 py-6 text-paper/80">
+        <footer className="mt-10 rounded-[18px] bg-[#071d33] px-5 py-6 text-paper/80" data-mobile-footer-layout="columns">
           <div className="grid gap-6 md:grid-cols-4">
             <div>
               <div className="font-display text-2xl font-semibold text-paper">{place.name}</div>
@@ -450,7 +450,7 @@ export function MattressDetailLayout({ place, mapsUrl, socialLinks, onShare, onR
           </div>
         </section>
 
-        <footer className="mt-8 rounded-[18px] bg-[#071d33] px-5 py-6 text-paper/80">
+        <footer className="mt-8 rounded-[18px] bg-[#071d33] px-5 py-6 text-paper/80" data-mobile-footer-layout="columns">
           <div className="grid gap-6 md:grid-cols-4">
             <div>
               <div className="font-display text-2xl font-semibold text-paper">DreamRest</div>

@@ -64,7 +64,7 @@ function BusinessHeader({ place }) {
   return (
     <header className="sticky top-0 z-40 border-b border-[#294258] bg-[#061c31]/95 text-white shadow-lg backdrop-blur">
       <div className="mx-auto flex min-h-[72px] max-w-7xl items-center justify-between gap-5 px-5 sm:px-8">
-        <Link to="/categories" className="flex min-w-0 items-center gap-3" aria-label="Back to categories">
+        <Link to="/" className="flex min-w-0 items-center gap-3" aria-label="Back to G-Pages home">
           {place.logo && <img src={place.logo} alt={`${place.name} logo`} className="h-10 w-auto max-w-[116px] object-contain" />}
           <span className={`${place.logo ? 'border-l border-white/25 pl-3' : ''} text-sm font-semibold text-white sm:text-base`}>{place.name}</span>
         </Link>
@@ -72,13 +72,13 @@ function BusinessHeader({ place }) {
           {links.map(([href, label]) => <a key={href} href={href} className="border-b-2 border-transparent px-1 py-6 text-[13px] font-medium text-white/75 transition hover:border-[#f7b718] hover:text-white">{label}</a>)}
         </nav>
         <div className="flex shrink-0 items-center gap-2">
-          <Link to="/categories" className="hidden rounded-full border border-white/50 px-4 py-2 text-xs font-semibold text-white transition hover:border-[#f7b718] hover:bg-[#f7b718] hover:text-[#061c31] sm:block">← Back to G-Pages</Link>
+          <Link to="/" className="hidden rounded-full border border-white/50 px-4 py-2 text-xs font-semibold text-white transition hover:border-[#f7b718] hover:bg-[#f7b718] hover:text-[#061c31] sm:block">← Back to G-Pages</Link>
           <button type="button" onClick={() => setMenuOpen((open) => !open)} className="flex h-10 w-10 items-center justify-center rounded border border-white/50 lg:hidden" aria-label="Toggle business menu" aria-expanded={menuOpen}>
             <span className="relative block h-4 w-5"><span className={`absolute left-0 top-0 h-0.5 w-5 bg-white transition ${menuOpen ? 'translate-y-2 rotate-45' : ''}`} /><span className={`absolute left-0 top-2 h-0.5 w-5 bg-white transition ${menuOpen ? 'opacity-0' : ''}`} /><span className={`absolute left-0 top-4 h-0.5 w-5 bg-white transition ${menuOpen ? '-translate-y-2 -rotate-45' : ''}`} /></span>
           </button>
         </div>
       </div>
-      {menuOpen && <nav className="border-t border-[#294258] bg-[#061c31] px-5 py-3 lg:hidden" aria-label="Mobile business sections">{links.map(([href, label]) => <a key={href} href={href} onClick={() => setMenuOpen(false)} className="block border-b border-white/10 py-3 text-sm text-white/80 transition last:border-0 hover:text-[#f7b718]">{label}</a>)}<Link to="/categories" onClick={() => setMenuOpen(false)} className="block py-3 text-sm font-semibold text-[#f7b718]">← Back to G-Pages</Link></nav>}
+      {menuOpen && <nav className="border-t border-[#294258] bg-[#061c31] px-5 py-3 lg:hidden" aria-label="Mobile business sections">{links.map(([href, label]) => <a key={href} href={href} onClick={() => setMenuOpen(false)} className="block border-b border-white/10 py-3 text-sm text-white/80 transition last:border-0 hover:text-[#f7b718]">{label}</a>)}<Link to="/" onClick={() => setMenuOpen(false)} className="block py-3 text-sm font-semibold text-[#f7b718]">← Back to G-Pages</Link></nav>}
     </header>
   );
 }
@@ -92,13 +92,13 @@ function BusinessFooter({ place, socialLinks }) {
   const chatSupport = safeLinks.chatSupport ? toUrl(safeLinks.chatSupport) : null;
 
   return (
-    <footer className="bg-[#061c31] text-white/70">
+    <footer className="bg-[#061c31] text-white/70" data-mobile-footer-layout="columns">
       <div className="mx-auto grid max-w-7xl grid-cols-3 gap-3 px-4 py-8 sm:gap-6 sm:px-8 md:grid-cols-[1.2fr_1fr_1fr_1.5fr] md:gap-8 md:py-10">
         <div className="col-span-3 min-w-0 md:col-span-1">
           <div className="flex items-center gap-3">{place.logo && <img src={place.logo} alt={`${place.name} logo`} className="h-12 max-w-[150px] object-contain" />}<p className="min-w-0 break-words text-xl font-black text-white">{place.name}</p></div>
           <p className="mt-2 text-xs">Drive better · Drive safer</p>
         </div>
-        <div className="flex min-w-0 flex-col gap-2 text-[10px] sm:text-xs"><span className="font-semibold text-white">Quick Links</span><Link to="/categories" className="flex items-center gap-2 hover:text-[#f7b718]"><FooterIcon type="home" /> Home</Link>{whatsapp && <a href={whatsapp} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-[#f7b718]"><FooterIcon type="whatsapp" /> WhatsApp</a>}{place.phone && <a href={`tel:${place.phone}`} className="flex items-center gap-2 hover:text-[#f7b718]"><FooterIcon type="phone" /> Call</a>}{chatSupport && <a href={chatSupport} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-[#f7b718]"><FooterIcon type="chat" /> Chat support</a>}</div>
+        <div className="flex min-w-0 flex-col gap-2 text-[10px] sm:text-xs"><span className="font-semibold text-white">Quick Links</span><Link to="/" className="flex items-center gap-2 hover:text-[#f7b718]"><FooterIcon type="home" /> Home</Link>{whatsapp && <a href={whatsapp} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-[#f7b718]"><FooterIcon type="whatsapp" /> WhatsApp</a>}{place.phone && <a href={`tel:${place.phone}`} className="flex items-center gap-2 hover:text-[#f7b718]"><FooterIcon type="phone" /> Call</a>}{chatSupport && <a href={chatSupport} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-[#f7b718]"><FooterIcon type="chat" /> Chat support</a>}</div>
         <div className="flex min-w-0 flex-col gap-2 text-[10px] sm:text-xs"><span className="font-semibold text-white">Follow Us</span>{instagram && <a href={instagram} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-[#f7b718]"><FooterIcon type="instagram" /> Instagram</a>}{facebook && <a href={facebook} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-[#f7b718]"><FooterIcon type="facebook" /> Facebook</a>}{website && <a href={website} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-[#f7b718]"><FooterIcon type="website" /> Website</a>}</div>
         <div className="min-w-0 break-words text-[10px] sm:text-xs"><p className="font-semibold text-white">Get in touch</p>{place.phone && <a href={`tel:${place.phone}`} className="mt-2 block hover:text-[#f7b718]">☎ {place.phone}</a>}<p className="mt-1">⌖ {place.address}</p></div>
       </div>

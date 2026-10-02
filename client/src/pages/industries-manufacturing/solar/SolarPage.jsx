@@ -108,7 +108,7 @@ export default function SolarPage({ place }) {
   return (
     <div className="solar-page">
       <header className="solar-header">
-        <Link to="/categories" className="solar-brand" aria-label="Back to categories">
+        <Link to="/" className="solar-brand" aria-label="Back to G-Pages home">
           {place?.logo ? <img className="solar-brand-logo" src={place.logo} alt={`${businessName} logo`} /> : null}
           <span><b>{businessName}</b>{solarDetails.tagline && <small>{solarDetails.tagline}</small>}</span>
         </Link>
@@ -151,7 +151,7 @@ export default function SolarPage({ place }) {
         <section id="contact" className="solar-section solar-bottom"><div className="solar-copy"><p className="solar-eyebrow">Contact us</p><h2>Get In Touch</h2></div><div className="solar-touch">{phone && <a href={`tel:${phone}`}>{phone}</a>}{whatsapp && <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">WhatsApp</a>}{email && <a href={`mailto:${email}`}>{email}</a>}{address && <span>{address}</span>}</div></section>
       </main>
 
-      <footer className="solar-footer"><div className="solar-brand">{place?.logo && <img className="solar-brand-logo" src={place.logo} alt={`${businessName} logo`} />}<span><b>{businessName}</b>{solarDetails.tagline && <small>{solarDetails.tagline}</small>}</span></div><div className="solar-footer-links">Home　 About Us　 Services　 Gallery　 Videos　 Contact</div><small>© {new Date().getFullYear()} {businessName}. All rights reserved.</small></footer>
+      <footer className="solar-footer" data-mobile-footer-layout="inline"><div className="solar-brand">{place?.logo && <img className="solar-brand-logo" src={place.logo} alt={`${businessName} logo`} />}<span><b>{businessName}</b>{solarDetails.tagline && <small>{solarDetails.tagline}</small>}</span></div><div className="solar-footer-links">Home　 About Us　 Services　 Gallery　 Videos　 Contact</div><small>© {new Date().getFullYear()} {businessName}. All rights reserved.</small></footer>
       {selectedImageIndex !== null && <div className="solar-image-lightbox" role="dialog" aria-modal="true" aria-label="Image viewer" onClick={() => setSelectedImageIndex(null)}><button type="button" className="solar-lightbox-close" onClick={() => setSelectedImageIndex(null)} aria-label="Close image viewer">Close</button><div className="solar-lightbox-zoom" onClick={(event) => event.stopPropagation()}><button type="button" onClick={() => setImageZoom((zoom) => Math.max(1, +(zoom - 0.25).toFixed(2)))} disabled={imageZoom <= 1}>-</button><span>{Math.round(imageZoom * 100)}%</span><button type="button" onClick={() => setImageZoom((zoom) => Math.min(3, +(zoom + 0.25).toFixed(2)))}>+</button></div>{uploadedImages.length > 1 && <button type="button" className="solar-lightbox-prev" onClick={(event) => { event.stopPropagation(); setSelectedImageIndex((current) => (current - 1 + uploadedImages.length) % uploadedImages.length); setImageZoom(1); }}>Previous</button>}<img src={uploadedImages[selectedImageIndex]} alt={`${businessName} gallery image ${selectedImageIndex + 1}`} style={{ transform: `scale(${imageZoom})` }} onClick={(event) => event.stopPropagation()} />{uploadedImages.length > 1 && <button type="button" className="solar-lightbox-next" onClick={(event) => { event.stopPropagation(); setSelectedImageIndex((current) => (current + 1) % uploadedImages.length); setImageZoom(1); }}>Next</button>}</div>}
     </div>
   );

@@ -4,6 +4,8 @@
 
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .hide-scrollbar::-webkit-scrollbar { display: none; }
+.snap-x.overflow-x-auto { -ms-overflow-style: none; scrollbar-width: none; }
+.snap-x.overflow-x-auto::-webkit-scrollbar { display: none; }
 
 @layer base {
   html {
@@ -12,6 +14,9 @@
   body {
     @apply bg-paper text-ink font-body antialiased;
     background-image: radial-gradient(circle at top right, rgba(20, 184, 166, 0.07), transparent 30rem);
+  }
+  p {
+    overflow-wrap: anywhere;
   }
   ::selection {
     @apply bg-marigold/30;
@@ -369,3 +374,307 @@
 .solar-image-lightbox img { transition: transform .2s ease; }.solar-lightbox-zoom { align-items: center; display: flex; gap: .4rem; left: 50%; position: absolute; top: 1.5rem; transform: translateX(-50%); }.solar-lightbox-zoom button { position: static; }.solar-lightbox-zoom button:disabled { cursor: not-allowed; opacity: .5; }.solar-lightbox-zoom span { color: white; font-size: .8rem; min-width: 3rem; text-align: center; }
 @media (max-width: 800px) { .solar-nav { display: none; }.solar-menu { display: inline; }.solar-contact-card { display: none; }.solar-hero { min-height: 365px; }.solar-section, .solar-feature-band .solar-section, .solar-gallery, .solar-bottom { grid-template-columns: 1fr; }.solar-promise { grid-template-columns: 1fr 1fr; }.solar-feature-grid { grid-template-columns: repeat(2, 1fr); }.solar-footer { grid-template-columns: 1fr 1fr; }.solar-footer-links { display: none; } }
 @media (max-width: 480px) { .solar-header-actions .solar-button { display: none; }.solar-hero { padding: 3rem 1.2rem; }.solar-promise { grid-template-columns: 1fr; }.solar-project-grid, .solar-video-grid, .solar-testimonials { grid-template-columns: 1fr 1fr; }.solar-service-grid { grid-template-columns: 1fr; }.solar-footer { grid-template-columns: 1fr; }.solar-footer-line { text-align: left; } }
+
+@media (max-width: 1023px) {
+  header a[data-mobile-hide-home="true"] { display: none !important; }
+  header a[data-mobile-menu-action="true"] {
+    margin-right: 4rem !important;
+    padding-left: .75rem !important;
+    padding-right: .75rem !important;
+    font-size: .7rem !important;
+    white-space: nowrap;
+  }
+}
+
+[data-category-footer-identity] { display: none; }
+.category-footer-identity { display: none; }
+
+@media (max-width: 639px) {
+  .arts-creative-header > div {
+    gap: .5rem !important;
+  }
+  .arts-creative-header-actions {
+    flex: 0 0 auto;
+    gap: .35rem !important;
+    margin-right: 3.25rem;
+  }
+  .arts-creative-header-actions > button {
+    max-width: min(8.5rem, calc(100vw - 15rem));
+    padding: .6rem .7rem !important;
+    font-size: .6rem !important;
+    line-height: 1.2;
+    white-space: normal;
+  }
+  .arts-creative-footer-inner {
+    align-items: stretch !important;
+    flex-direction: column;
+    flex-wrap: nowrap !important;
+    gap: 1rem !important;
+    overflow-wrap: anywhere;
+  }
+  .arts-creative-footer-inner > :first-child,
+  .arts-creative-footer-inner > :last-child {
+    min-width: 0;
+    width: 100%;
+  }
+  .arts-creative-footer-inner > :last-child {
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .75rem 1rem !important;
+    justify-content: space-between;
+  }
+  .marriage-wedding-footer {
+    padding-bottom: 5rem !important;
+  }
+  .marriage-wedding-footer > .mx-auto.grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 1.25rem 1rem !important;
+    align-items: start;
+  }
+  .marriage-wedding-footer > .mx-auto.grid > :first-child,
+  .marriage-wedding-footer > .mx-auto.grid > :last-child {
+    grid-column: 1 / -1 !important;
+  }
+  .marriage-wedding-footer > .mx-auto.grid > * {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .marriage-wedding-footer h3 {
+    font-size: .9rem !important;
+    line-height: 1.3;
+  }
+  .marriage-wedding-footer p,
+  .marriage-wedding-footer a {
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+  footer[data-mobile-footer-layout="columns"] > div:first-child[data-marriage-wedding-footer-grid] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 1.25rem 1rem !important;
+  }
+  footer[data-mobile-footer-layout="columns"] [data-marriage-wedding-footer-grid] > :first-child,
+  footer[data-mobile-footer-layout="columns"] [data-marriage-wedding-footer-grid] > :nth-child(2) {
+    grid-column: 1 / -1 !important;
+  }
+  footer[data-mobile-footer-layout="columns"] [data-marriage-wedding-footer-grid] > * {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  footer[data-mobile-footer-layout="columns"] [data-marriage-wedding-footer-grid] h3 {
+    font-size: .9rem !important;
+    line-height: 1.3;
+  }
+  footer[data-mobile-footer-layout="columns"] [data-marriage-wedding-footer-grid] p,
+  footer[data-mobile-footer-layout="columns"] [data-marriage-wedding-footer-grid] a {
+    overflow-wrap: anywhere;
+  }
+  .healthcare-hospital-header-row {
+    gap: .5rem !important;
+  }
+  .healthcare-hospital-header-row > a:first-child {
+    flex: 1 1 0% !important;
+    min-width: 0;
+  }
+  .healthcare-hospital-header-row > button[aria-label="Toggle healthcare menu"] {
+    flex: 0 0 2.5rem;
+    margin-left: 0;
+  }
+  .religious-social-header-row > div:first-child { flex: 1 1 0%; min-width: 0; }
+  .religious-social-header-actions {
+    flex: 0 1 auto;
+    gap: .4rem !important;
+    margin-right: 3.25rem;
+  }
+  .religious-social-header-cta {
+    max-width: min(10rem, calc(100vw - 12rem));
+    padding: .6rem .75rem !important;
+    font-size: .62rem !important;
+    line-height: 1.2;
+    text-align: center;
+  }
+  .religious-social-footer-inner {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 1rem !important;
+    align-items: start !important;
+  }
+  .religious-social-footer-brand,
+  .religious-social-footer-links { grid-column: 1; min-width: 0; }
+  .religious-social-footer-brand { overflow-wrap: anywhere; }
+  .religious-social-footer-links {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem !important;
+  }
+  .religious-social-footer-links a { white-space: nowrap; }
+  .education-business-header-row > a:first-child { flex: 1 1 0%; }
+  .education-business-header-actions {
+    flex: 0 0 auto;
+    gap: .4rem !important;
+    margin-right: 3.25rem;
+  }
+  .education-business-enrol {
+    padding: .55rem .75rem !important;
+    font-size: .65rem !important;
+    white-space: nowrap;
+  }
+  .education-business-footer-inner {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 1rem !important;
+    align-items: start !important;
+  }
+  .education-business-footer-inner > :first-child,
+  .education-business-footer-links,
+  .education-business-footer-social,
+  .education-business-footer-copyright { min-width: 0; grid-column: 1; }
+  .education-business-footer-inner > :first-child { overflow-wrap: anywhere; }
+  .education-business-footer-links {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .65rem 1rem !important;
+    font-size: .7rem !important;
+  }
+  .education-business-footer-links a { white-space: nowrap; }
+  .education-business-footer-social { flex-wrap: wrap; }
+  .education-business-footer-copyright { line-height: 1.5; }
+  .training-institute-header-row > a:first-child { flex: 1 1 0%; }
+  .training-institute-header-actions {
+    flex: 0 0 auto;
+    gap: .4rem !important;
+    margin-right: 3.25rem;
+  }
+  .training-institute-enrol {
+    padding: .55rem .75rem !important;
+    font-size: .65rem !important;
+    white-space: nowrap;
+  }
+  .training-institute-footer-inner {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 1rem !important;
+    align-items: start !important;
+  }
+  .training-institute-footer-brand,
+  .training-institute-footer-links,
+  .training-institute-footer-copyright { min-width: 0; grid-column: 1; }
+  .training-institute-footer-brand strong { overflow-wrap: anywhere; }
+  .training-institute-footer-links {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .65rem 1rem !important;
+    font-size: .7rem !important;
+  }
+  .training-institute-footer-links a { white-space: nowrap; }
+  .training-institute-footer-copyright { line-height: 1.5; }
+  footer[data-mobile-footer-layout="columns"] .consultancy-footer-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-areas: "brand brand" "links contact" "actions actions" !important;
+    gap: 1.25rem !important;
+  }
+  .consultancy-footer-brand { grid-area: brand !important; }
+  .consultancy-footer-links { grid-area: links !important; }
+  .consultancy-footer-contact { grid-area: contact !important; min-width: 0; }
+  .consultancy-footer-contact li span:last-child { min-width: 0; overflow-wrap: anywhere; }
+  .consultancy-footer-actions {
+    grid-area: actions !important;
+    flex-direction: row !important;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .industrial-footer-contact { display: contents; }
+  .industrial-footer-links { grid-column: 1; grid-row: 2; }
+  .industrial-footer-contact-details { grid-column: 2; grid-row: 2; }
+  .industrial-footer-follow { grid-column: 3; grid-row: 2; }
+  .industrial-footer-products { grid-column: 1 / -1; grid-row: 3; }
+  [data-category-footer-identity] {
+    display: block !important;
+    grid-column: 1 / -1 !important;
+  }
+  .category-footer-identity {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .category-footer-identity img {
+    width: 2.75rem;
+    height: 2.75rem;
+    flex: 0 0 auto;
+    border-radius: .5rem;
+    background: white;
+    object-fit: contain;
+    padding: .2rem;
+  }
+  .category-footer-identity strong {
+    min-width: 0;
+    font-size: .95rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+  footer[data-mobile-footer-layout="columns"] > div:first-child {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    align-items: start;
+    gap: 1rem !important;
+    overflow: visible !important;
+  }
+  footer[data-mobile-footer-layout="columns"] > div:first-child > :first-child {
+    grid-column: 1 / -1 !important;
+  }
+  footer[data-mobile-footer-layout="columns"] > div:first-child > * {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  footer[data-mobile-footer-layout="columns"] > div:first-child h2,
+  footer[data-mobile-footer-layout="columns"] > div:first-child h3 {
+    font-size: .78rem;
+    line-height: 1.25;
+  }
+  footer[data-mobile-footer-layout="columns"] > div:first-child p,
+  footer[data-mobile-footer-layout="columns"] > div:first-child a,
+  footer[data-mobile-footer-layout="columns"] > div:first-child li {
+    font-size: .68rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+  footer[data-mobile-footer-layout="inline"] {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    align-items: start;
+    gap: 1rem !important;
+  }
+  footer[data-mobile-footer-layout="inline"] > :first-child,
+  footer[data-mobile-footer-layout="inline"] > :last-child {
+    grid-column: 1 / -1 !important;
+  }
+  footer[data-mobile-footer-layout="inline"] > * {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  footer > .mx-auto.grid, footer > div.grid, footer.solar-footer {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    align-items: start;
+    gap: 1rem !important;
+    overflow: visible !important;
+  }
+  footer > .mx-auto.grid > :first-child, footer > div.grid > :first-child, footer.solar-footer > :first-child {
+    grid-column: 1 / -1 !important;
+  }
+  footer > .mx-auto.grid > *, footer > div.grid > *, footer.solar-footer > * { min-width: 0; }
+  footer > .mx-auto.grid h2, footer > .mx-auto.grid h3, footer > div.grid h2, footer > div.grid h3, footer.solar-footer h2, footer.solar-footer h3 {
+    font-size: .78rem;
+    line-height: 1.25;
+  }
+  footer > .mx-auto.grid p, footer > .mx-auto.grid a, footer > .mx-auto.grid li, footer > div.grid p, footer > div.grid a, footer > div.grid li, footer.solar-footer p, footer.solar-footer a {
+    font-size: .68rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+  footer .solar-footer-links { display: block !important; }
+}

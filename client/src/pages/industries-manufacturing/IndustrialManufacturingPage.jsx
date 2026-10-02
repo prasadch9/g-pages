@@ -569,9 +569,9 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
         </section>
       </main>
 
-      <footer className="border-t border-[#d4e5d9] bg-[#052d1d] text-[#dfeee2]">
-        <div className="mx-auto grid max-w-7xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[1.2fr_0.8fr_0.8fr_1fr]">
-          <div>
+      <footer className="border-t border-[#d4e5d9] bg-[#052d1d] text-[#dfeee2]" data-mobile-footer-layout="columns">
+        <div className="mx-auto grid grid-cols-2 max-w-7xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[1.2fr_0.8fr_0.8fr_1fr]">
+          <div className="col-span-2 lg:col-span-1">
             <div className="flex items-center gap-3">
               {logoImage
                 ? <img src={logoImage} alt={`${businessName} logo`} className="h-10 w-10 rounded-full bg-white object-contain p-1" />
@@ -581,33 +581,35 @@ export default function IndustrialManufacturingPage({ place, mapsUrl, onShare, o
                 <div className="text-[9px] uppercase tracking-[0.2em] text-[#d8f4d7]">Fresh & Healthy</div>
               </div>
             </div>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-[#d8f4d7]">
-              {businessDescription}
-            </p>
           </div>
 
-          <div>
+          <div className="industrial-footer-links">
             <div className="text-sm font-bold uppercase tracking-[0.16em] text-white">Quick Links</div>
             <ul className="mt-4 space-y-2 text-sm text-[#dfeee2]">
               {navItems.map((item) => <li key={item.label}><a href={item.href} className="hover:text-white">{item.label}</a></li>)}
             </ul>
           </div>
 
-          {products.length > 0 && <div>
+          {products.length > 0 && <div className="industrial-footer-products">
             <div className="text-sm font-bold uppercase tracking-[0.16em] text-white">Our Products</div>
             <ul className="mt-4 space-y-2 text-sm text-[#dfeee2]">
               {products.slice(0, 6).map((product, index) => <li key={`${typeof product === 'string' ? product : product.name}-${index}`}>{typeof product === 'string' ? product : product.name}</li>)}
             </ul>
           </div>}
 
-          <div>
-            <div className="text-sm font-bold uppercase tracking-[0.16em] text-white">Contact Us</div>
-            <ul className="mt-4 space-y-2 text-sm text-[#dfeee2]">
-              <li>{address}</li>
-              <li>{phone}</li>
-              <li>{email}</li>
-            </ul>
-            {(facebookUrl || instagramUrl) && <div className="mt-4"><div className="text-xs font-bold uppercase tracking-[0.14em] text-white">Follow Us</div><div className="mt-2 flex flex-wrap gap-3 text-sm">{facebookUrl && <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="hover:text-white">Facebook</a>}{instagramUrl && <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="hover:text-white">Instagram</a>}</div></div>}
+          <div className="industrial-footer-contact">
+            <div className="industrial-footer-contact-details">
+              <div className="text-sm font-bold uppercase tracking-[0.16em] text-white">Contact Us</div>
+              <ul className="mt-4 space-y-2 text-sm text-[#dfeee2]">
+                <li>{address}</li>
+                <li>{phone}</li>
+                <li>{email}</li>
+              </ul>
+            </div>
+            {(facebookUrl || instagramUrl) && <div className="industrial-footer-follow">
+              <div className="text-sm font-bold uppercase tracking-[0.16em] text-white">Follow Us</div>
+              <div className="mt-4 flex flex-wrap gap-3 text-sm">{facebookUrl && <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="hover:text-white">Facebook</a>}{instagramUrl && <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="hover:text-white">Instagram</a>}</div>
+            </div>}
           </div>
         </div>
 

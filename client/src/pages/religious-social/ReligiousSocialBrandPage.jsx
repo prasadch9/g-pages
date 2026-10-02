@@ -236,7 +236,7 @@ export default function ReligiousSocialBrandPage({ place, mapsUrl, onShare, onRe
 
       {/* Main Sticky Header */}
       <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/95 shadow-sm backdrop-blur-md">
-        <div className="mx-auto flex max-w-[1700px] items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-8">
+        <div className="religious-social-header-row mx-auto flex max-w-[1700px] items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             {logo ? (
               <img src={logo} alt={`${name} logo`} className="h-11 w-11 rounded-xl border border-stone-200 bg-stone-50 object-contain p-1 shadow-sm sm:h-12 sm:w-12" />
@@ -269,11 +269,11 @@ export default function ReligiousSocialBrandPage({ place, mapsUrl, onShare, onRe
             <a href="#contact" className="hover:text-stone-900">Contact</a>
           </nav>
 
-          <div className="flex items-center gap-2.5">
+          <div className="religious-social-header-actions flex items-center gap-2.5">
             <button
               type="button"
               onClick={() => setInquiryModalOpen(true)}
-              className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider shadow-md transition sm:px-5 sm:py-2.5 ${theme.primaryBtn}`}
+              className={`religious-social-header-cta rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider shadow-md transition sm:px-5 sm:py-2.5 ${theme.primaryBtn}`}
             >
               {theme.cta}
             </button>
@@ -1030,13 +1030,13 @@ export default function ReligiousSocialBrandPage({ place, mapsUrl, onShare, onRe
       )}
 
       {/* Footer */}
-      <footer className="border-t border-stone-200 bg-[#f4efe8] py-8 text-stone-600">
-        <div className="mx-auto flex max-w-[1700px] flex-wrap items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 text-xs">
-          <div>
+      <footer className="religious-social-footer border-t border-stone-200 bg-[#f4efe8] py-8 text-stone-600">
+        <div className="religious-social-footer-inner mx-auto flex max-w-[1700px] flex-wrap items-center justify-between gap-4 px-4 text-xs sm:px-6 lg:px-8">
+          <div className="religious-social-footer-brand min-w-0">
             <span className="font-display font-bold text-stone-900">{name}</span> · Religious &amp; Social Directory
             <div className="mt-0.5 text-[11px] text-stone-500">{address}</div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="religious-social-footer-links flex items-center gap-4">
             <Link to="/" className="font-semibold text-stone-800 hover:text-stone-950">
               ← Back to Home
             </Link>

@@ -174,8 +174,8 @@ function SchoolExperience({ place, mapsUrl, socialLinks = {}, academics = {}, on
         <nav aria-label="School navigation" className="school-navigation hidden items-center gap-5 whitespace-nowrap text-[11px] font-semibold text-[#31516b] lg:flex">
           {[['Home', '#top'], ['About Us', '#about'], ['Academics', '#academics'], ['Facilities', '#facilities'], ['Admissions', '#admissions'], ['Activities', '#activities'], ['Gallery', '#gallery'], ['Achievements', '#achievements'], ['Faculty', '#faculty'], ['Events', '#events'], ['Notices', '#events'], ['Contact', '#contact']].map(([label, href]) => <a key={label} href={href} onClick={label === 'Admissions' ? scrollToAdmissions : undefined} className="py-5">{label}</a>)}
         </nav>
-        <a href="/" className="hidden shrink-0 rounded-full bg-[#0c2f49] px-4 py-2 text-[10px] font-bold text-white shadow-sm transition hover:bg-[#12395d] sm:inline-flex">Back to Home</a>
-        <a href="#contact" className="school-contact-link hidden shrink-0 px-4 py-2 text-[11px] font-bold sm:inline-flex">Visit us <span aria-hidden="true">↗</span></a>
+        <a href="/" className="shrink-0 rounded-full bg-[#0c2f49] px-4 py-2 text-[10px] font-bold text-white shadow-sm transition hover:bg-[#12395d] inline-flex">Back to Home</a>
+        <a href="#contact" className="school-contact-link hidden shrink-0 px-4 py-2 text-[11px] font-bold inline-flex">Visit us <span aria-hidden="true">↗</span></a>
       </div>
     </header>
 
@@ -390,7 +390,7 @@ function SchoolExperience({ place, mapsUrl, socialLinks = {}, academics = {}, on
       </section>
     </main>
 
-    <footer id="school-footer" className="school-footer text-white">
+    <footer id="school-footer" className="school-footer text-white" data-mobile-footer-layout="columns">
       <div className="mx-auto grid max-w-[1280px] gap-5 px-4 py-5 sm:px-6 lg:grid-cols-[1.2fr_.8fr_.8fr_.9fr_.9fr_1.3fr]">
         <div>
           <div className="flex items-center gap-3"><div className="school-brand-mark flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#f2cc60] bg-[#0d2d45] text-xl">📖</div><div><div className="font-display text-xl font-bold">{schoolName}</div><div className="text-[10px] uppercase tracking-[0.2em] text-white/60">Learning for life</div></div></div>

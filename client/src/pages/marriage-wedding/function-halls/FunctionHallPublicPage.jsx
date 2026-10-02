@@ -125,6 +125,7 @@ export default function FunctionHallPublicPage({ place }) {
   return (
     <div className="min-h-screen bg-[#fffdfb] text-[#34252b]">
       <header className="sticky top-0 z-40 border-b border-[#f0dce3] bg-white/95 shadow-sm backdrop-blur">
+
         <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-4 px-4 py-2.5 sm:px-7">
           <a href="#home" className="flex min-w-0 items-center gap-2.5">
             <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full border border-[#f1dbe2] bg-[#fff7f9]">
@@ -140,7 +141,7 @@ export default function FunctionHallPublicPage({ place }) {
             {navItems.map(([label, href]) => <a key={href} href={href} className="hover:text-[#b30d4b]">{label}</a>)}
           </nav>
 
-          <div className="hidden items-center gap-2 md:flex">
+          <div className="hidden items-center gap-2 md:flex"><a href="/" className="hidden shrink-0 rounded-full border border-current/20 px-3 py-1.5 text-[11px] font-bold md:inline-flex">← Back to G-Pages</a>
             {phone && <a href={callUrl} className="inline-flex items-center gap-2 rounded-md border border-[#efb6cc] px-3 py-2 text-xs font-bold text-[#34252b]"><span className="text-[#c11150]">☎</span><span>Call Now<br /><span className="font-medium">{phone}</span></span></a>}
             {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-md bg-[#12a85a] px-3 py-2 text-xs font-bold text-white"><span>◉</span> WhatsApp</a>}
           </div>
@@ -221,7 +222,7 @@ export default function FunctionHallPublicPage({ place }) {
           <div className="rounded-md border border-[#f2e4e9] bg-white p-3 sm:p-5"><ReviewsSection placeId={place._id} /></div>
         </section>
 
-        <section id="contact" className="bg-[#4a0828] px-4 py-6 text-white sm:px-7">
+        <section id="contact" className="marriage-wedding-footer bg-[#4a0828] px-4 py-6 text-white sm:px-7">
           <div className="mx-auto grid max-w-[1500px] gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <div><h3 className="font-display text-lg font-bold">Our Location</h3><p className="mt-2 text-xs leading-5 text-white/75">{location || 'Address not provided'}</p>{mapUrl && <a href={mapUrl} target="_blank" rel="noreferrer" className="mt-3 inline-block rounded border border-[#eea9c0] px-3 py-1.5 text-[10px] font-bold">⌖ View on Map</a>}</div>
             <div><h3 className="font-display text-lg font-bold">Contact Details</h3><div className="mt-2 space-y-1.5 text-xs text-white/75">{phone && <a href={callUrl} className="block">☎ {phone}</a>}{email && <a href={`mailto:${email}`} className="block">✉ {email}</a>}{website && <a href={website} target="_blank" rel="noreferrer" className="block">↗ {website}</a>}{hours.map((hour) => <p key={hour.day} className="capitalize">{hour.day}: {hour.closed ? 'Closed' : `${hour.open || ''}${hour.open && hour.close ? ' - ' : ''}${hour.close || ''}`}</p>)}{hours.length === 0 && <p>Working hours not provided</p>}</div></div>

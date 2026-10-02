@@ -71,7 +71,7 @@ function BusinessHeader({ place, sections }) {
 }
 
 function BusinessFooter({ place }) {
-  return <footer className="mt-10 bg-[#071d33] py-8 text-paper/70"><div className="container-page flex flex-wrap items-center justify-between gap-3 text-sm"><span>{place.name}</span><Link to="/" className="hover:text-white">Back to G-PAGES</Link></div></footer>;
+  return <footer className="mt-10 bg-[#071d33] py-8 text-paper/70" data-mobile-footer-layout="inline"><div className="container-page flex flex-wrap items-center justify-between gap-3 text-sm"><span>{place.name}</span><Link to="/" className="hover:text-white">Back to G-PAGES</Link></div></footer>;
 }
 
 function Hero({ place, dynamic, onShare }) {

@@ -154,6 +154,7 @@ export default function EventOrganizerPublicPage({ place }) {
   return (
     <div className="min-h-screen bg-white text-[#392532]">
       <header className="sticky top-0 z-40 border-b border-[#f2e2e9] bg-white/95 shadow-sm backdrop-blur">
+
         <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-4 px-4 py-2.5 sm:px-7">
           <a href="#home" className="flex min-w-0 items-center gap-2.5">
             <div className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border border-[#f0d9e3] bg-[#fff6fa]">
@@ -162,7 +163,7 @@ export default function EventOrganizerPublicPage({ place }) {
             <div className="min-w-0"><p className="truncate font-display text-lg font-bold text-[#a10d4c] sm:text-xl">{businessName}</p><p className="truncate text-[10px] text-[#79616d]">{tagline || 'Event Organizers'}</p></div>
           </a>
           <nav className="hidden items-center gap-6 text-xs font-semibold lg:flex xl:gap-8">{navItems.map(([label, href], index) => <a key={href} href={href} className={`relative py-3 transition-colors after:absolute after:bottom-1 after:left-0 after:h-0.5 after:w-full after:origin-left after:transition-transform ${index === 0 ? 'text-[#c20d5a] after:scale-x-100 after:bg-[#c20d5a]' : 'after:scale-x-0 after:bg-[#c20d5a] hover:text-[#c20d5a] hover:after:scale-x-100'}`}>{label}</a>)}</nav>
-          <div className="hidden items-center gap-2 md:flex">
+          <div className="hidden items-center gap-2 md:flex"><a href="/" className="hidden shrink-0 rounded-full border border-current/20 px-3 py-1.5 text-[11px] font-bold md:inline-flex">← Back to G-Pages</a>
             {phone && <a href={callUrl} className="inline-flex items-center gap-2 rounded-md border border-[#efb8ce] px-3 py-2 text-xs font-bold text-[#461b31]"><span className="text-base text-[#c10c56]">☎</span><span>Call Now<br /><span className="font-medium">{phone}</span></span></a>}
             {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-md bg-[#11a857] px-3 py-2 text-xs font-bold text-white"><span className="text-base">◉</span> WhatsApp</a>}
           </div>
@@ -243,7 +244,7 @@ export default function EventOrganizerPublicPage({ place }) {
           <div className="rounded-xl border border-[#f0e0e7] bg-white p-3 shadow-sm sm:p-5"><ReviewsSection placeId={place._id} /></div>
         </section>
 
-        <section id="contact" className="bg-[#310b26] px-4 py-7 text-white sm:px-7">
+        <section id="contact" className="marriage-wedding-footer bg-[#310b26] px-4 py-7 text-white sm:px-7">
           <div className="mx-auto grid max-w-[1500px] gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <div><h3 className="font-display text-lg font-bold">Our Location</h3><p className="mt-2 text-xs leading-5 text-white/75">{location || 'Address not provided'}</p>{mapUrl && <a href={mapUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex rounded border border-[#e3a443] px-3 py-2 text-[10px] font-bold text-[#ffd87c]">⌖ View on Map</a>}</div>
             <div><h3 className="font-display text-lg font-bold">Contact Details</h3><div className="mt-2 space-y-1.5 text-xs text-white/75">{phone && <a href={callUrl} className="block">☎ {phone}</a>}{email && <a href={`mailto:${email}`} className="block">✉ {email}</a>}{hours.length ? hours.map((hour) => <p key={hour.day} className="capitalize">◷ {hour.day}: {hour.closed ? 'Closed' : `${hour.open || ''}${hour.open && hour.close ? ' - ' : ''}${hour.close || ''}`}</p>) : <p>Working hours not provided</p>}</div></div>

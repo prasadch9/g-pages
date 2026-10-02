@@ -194,7 +194,7 @@ export function ProfileMasthead({ place }) {
 
 export function ProfileNavigation({ links, action }) {
   const [open, setOpen] = useState(false);
-  return <nav className="sticky top-0 z-40 border-y border-slate-200 bg-white/95 px-5 py-3 text-[#102d49] backdrop-blur sm:px-8"><div className="mx-auto flex max-w-[1520px] items-center justify-between gap-4"><div className="hidden flex-wrap items-center gap-x-7 gap-y-2 text-sm font-semibold lg:flex">{links.map(([label, href]) => <a key={href} href={href} className="transition-opacity hover:opacity-60">{label}</a>)}</div><div className="ml-auto flex items-center gap-2">{action}<button type="button" onClick={() => setOpen(!open)} className="rounded border border-slate-200 px-3 py-2 text-sm font-semibold lg:hidden">Menu</button></div></div>{open && <div className="mx-auto mt-3 max-w-[1520px] border-t border-slate-200 pt-2 lg:hidden">{links.map(([label, href]) => <a key={href} href={href} onClick={() => setOpen(false)} className="block border-b border-slate-100 py-3 text-sm font-semibold">{label}</a>)}</div>}</nav>;
+  return <nav className="sticky top-0 z-40 border-y border-slate-200 bg-white/95 px-5 py-3 text-[#102d49] backdrop-blur sm:px-8"><div className="mx-auto flex max-w-[1520px] items-center justify-between gap-4"><div className="hidden flex-wrap items-center gap-x-7 gap-y-2 text-sm font-semibold lg:flex">{links.map(([label, href]) => <a key={href} href={href} className="transition-opacity hover:opacity-60">{label}</a>)}<a href="/" className="rounded border border-slate-200 bg-white px-3 py-2 text-sm font-bold">← Back to G-Pages</a></div><div className="ml-auto flex items-center gap-2">{action}<button type="button" onClick={() => setOpen(!open)} className="rounded border border-slate-200 px-3 py-2 text-sm font-semibold lg:hidden">Menu</button></div></div>{open && <div className="mx-auto mt-3 max-w-[1520px] border-t border-slate-200 pt-2 lg:hidden">{links.map(([label, href]) => <a key={href} href={href} onClick={() => setOpen(false)} className="block border-b border-slate-100 py-3 text-sm font-semibold">{label}</a>)}<a href="/" onClick={() => setOpen(false)} className="block py-3 text-sm font-bold">← Back to G-Pages</a></div>}</nav>;
 }
 
 export function FoodDiningProfileMasthead({ place }) {
@@ -355,7 +355,7 @@ export function ReviewsBlock({ place }) {
 }
 
 export function BusinessFooter({ place }) {
-  return <footer className="bg-stone-950 px-5 py-10 text-white sm:px-8"><div className="mx-auto max-w-7xl"><h2 className="font-display text-2xl font-semibold">{place.name}</h2><p className="mt-3 text-sm text-white/60">{place.address}</p><p className="mt-6 text-xs text-white/40">{new Date().getFullYear()} {place.name}</p></div></footer>;
+  return <footer className="bg-stone-950 px-5 py-10 text-white sm:px-8" data-mobile-footer-layout="columns"><div className="mx-auto max-w-7xl"><h2 className="font-display text-2xl font-semibold">{place.name}</h2><p className="mt-3 text-sm text-white/60">{place.address}</p><p className="mt-6 text-xs text-white/40">{new Date().getFullYear()} {place.name}</p></div></footer>;
 }
 
 export function ProfileLoading({ error }) {

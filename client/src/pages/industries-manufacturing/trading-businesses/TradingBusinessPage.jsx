@@ -185,7 +185,7 @@ export default function TradingBusinessPage({ place, mapsUrl, onShare, onReport 
         </aside>
       </div>
 
-      <footer className="mt-5 bg-[#061a35] text-slate-300"><div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-3 px-5 py-5 text-xs"><span className="font-bold text-white">{place.name}</span><div className="flex flex-wrap gap-5">{navItems.slice(0, 6).map(([label, href]) => <a key={label} href={href} className="hover:text-white">{label}</a>)}</div><span>© {new Date().getFullYear()} {place.name}. All rights reserved.</span></div></footer>
+      <footer className="mt-5 bg-[#061a35] text-slate-300" data-mobile-footer-layout="columns"><div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-3 px-5 py-5 text-xs"><span className="font-bold text-white">{place.name}</span><div className="flex flex-wrap gap-5">{navItems.slice(0, 6).map(([label, href]) => <a key={label} href={href} className="hover:text-white">{label}</a>)}</div><span>© {new Date().getFullYear()} {place.name}. All rights reserved.</span></div></footer>
     </div>
   );
 }

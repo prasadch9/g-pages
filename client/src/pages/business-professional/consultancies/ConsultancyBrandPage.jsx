@@ -134,12 +134,20 @@ export default function ConsultancyBrandPage({ place }) {
   ].filter((item) => item.value);
   const placeId = business._id || business.id || business.slug || null;
   const categoryDetails = Object.entries(categoryData)
-    .filter(([_, value]) => value && (!Array.isArray(value) || value.length > 0))
+    .filter(([key, value]) => value && !['gallery', 'videoGallery', 'videos'].includes(key) && (!Array.isArray(value) || value.length > 0))
     .map(([key, value]) => ({
       label: key.replace(/([A-Z])/g, ' $1').replace(/^./, (char) => char.toUpperCase()),
-      value: Array.isArray(value) ? value : [String(value)],
-    }));
-  const backLink = '/categories';
+      value: (Array.isArray(value) ? value : [value])
+        .map((item) => {
+          if (typeof item === 'string' || typeof item === 'number') return String(item);
+          if (!item || typeof item !== 'object') return '';
+          return item.title || item.name || item.label || item.caption || item.value || item.text || '';
+        })
+        .filter(Boolean),
+    }))
+    .filter((detail) => detail.value.length > 0);
+  const backLink = '/';
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [slideIndex, setSlideIndex] = useState(0);
@@ -202,7 +210,7 @@ export default function ConsultancyBrandPage({ place }) {
   return (
     <div id="home" className={`min-h-screen text-slate-800 ${isLogistics ? 'bg-[#f1f5ef]' : 'bg-[#f4f7fb]'}`}>
       <header className={`${isLogistics ? 'bg-[#142c2a]' : 'bg-[#061f35]'} text-white shadow-md shadow-slate-900/10`}>
-        <div className="mx-auto grid max-w-[1700px] items-center gap-4 px-4 py-4 lg:grid-cols-[1fr_auto_auto] lg:px-7">
+        <div className="mx-auto grid max-w-[1700px] grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-4 lg:grid-cols-[1fr_auto_auto] lg:px-7">
           <div className="flex min-w-0 items-center gap-3 lg:justify-self-start">
             {businessLogo ? (
               <img src={businessLogo} alt={`${businessName} logo`} className="h-12 w-12 shrink-0 rounded-2xl bg-white object-contain p-1 shadow-sm sm:h-14 sm:w-14" />
@@ -227,7 +235,7 @@ export default function ConsultancyBrandPage({ place }) {
             ))}
           </nav>
 
-          <div className="flex flex-wrap items-center justify-end gap-3 lg:justify-self-end">
+          <div className="hidden flex-wrap items-center justify-end gap-3 lg:flex lg:justify-self-end">
             <a href={`tel:${phone}`} className={`rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition sm:px-6 sm:py-3 sm:text-base ${isLogistics ? 'bg-[#d66d32] shadow-[#d66d32]/20 hover:bg-[#bf5925]' : 'bg-sky-500 shadow-sky-500/20 hover:bg-sky-400'}`}>
               Call Now
             </a>
@@ -241,7 +249,12 @@ export default function ConsultancyBrandPage({ place }) {
               Back to Home
             </Link>
           </div>
+          <button type="button" onClick={() => setMobileNavOpen((open) => !open)} aria-label="Toggle business navigation" aria-expanded={mobileNavOpen} className="grid h-10 w-10 place-items-center rounded-lg border border-white/30 text-white lg:hidden">
+            <span className="sr-only">{mobileNavOpen ? 'Close navigation' : 'Open navigation'}</span>
+            {mobileNavOpen ? <span aria-hidden="true" className="relative h-4 w-4"><span className="absolute left-0 top-1/2 h-0.5 w-4 -rotate-45 bg-current" /><span className="absolute left-0 top-1/2 h-0.5 w-4 rotate-45 bg-current" /></span> : <span aria-hidden="true" className="flex w-4 flex-col gap-[3px]"><span className="h-0.5 w-full bg-current" /><span className="h-0.5 w-full bg-current" /><span className="h-0.5 w-full bg-current" /></span>}
+          </button>
         </div>
+        {mobileNavOpen && <nav className="border-t border-white/15 px-4 py-2 lg:hidden" aria-label="Business sections">{navItems.map((item) => <a key={item} href={`#${item.toLowerCase()}`} onClick={() => setMobileNavOpen(false)} className="block border-b border-white/10 py-3 text-sm font-semibold text-white/90 last:border-0">{item}</a>)}<a href={backLink} onClick={() => setMobileNavOpen(false)} className="block py-3 text-sm font-bold text-white">Back to G-Pages</a></nav>}
       </header>
 
       <main className={`${isLogistics ? 'bg-[linear-gradient(180deg,#f3f6ef_0%,#e7eee7_100%)]' : 'bg-[radial-gradient(circle_at_top,_rgba(125,211,252,0.12),_transparent_38%),linear-gradient(180deg,#f8fbff_0%,#eef5fb_100%)]'} py-8 sm:py-10`}>
@@ -397,8 +410,8 @@ export default function ConsultancyBrandPage({ place }) {
                 <div key={detail.label} className="rounded-[24px] border border-sky-100 bg-white p-5 shadow-sm shadow-sky-100/80">
                   <div className={`text-[10px] font-bold uppercase tracking-[0.18em] ${isLogistics ? 'text-[#a35a2b]' : 'text-sky-600'}`}>{detail.label}</div>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {detail.value.map((item) => (
-                      <span key={item} className={`rounded-full px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ${isLogistics ? 'bg-[#edf4ed] ring-[#d7e3d8]' : 'bg-sky-50 ring-sky-100'}`}>
+                    {detail.value.map((item, index) => (
+                      <span key={`${detail.label}-${index}`} className={`rounded-full px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ${isLogistics ? 'bg-[#edf4ed] ring-[#d7e3d8]' : 'bg-sky-50 ring-sky-100'}`}>
                         {item}
                       </span>
                     ))}
@@ -652,9 +665,9 @@ export default function ConsultancyBrandPage({ place }) {
         </section>
       </main>
 
-      <footer id="contact" className={`mt-12 border-t text-slate-200 ${isLogistics ? 'border-[#244c42] bg-[#142c2a]' : 'border-sky-900/60 bg-[#0d2943]'}`}>
-        <div className="mx-auto grid max-w-[1700px] gap-8 px-4 py-8 lg:grid-cols-[1.3fr_0.7fr_1fr_auto] lg:px-7">
-          <div className="flex items-start gap-3">
+      <footer id="contact" className={`mt-12 border-t text-slate-200 ${isLogistics ? 'border-[#244c42] bg-[#142c2a]' : 'border-sky-900/60 bg-[#0d2943]'}`} data-mobile-footer-layout="columns">
+        <div className="consultancy-footer-grid mx-auto grid max-w-[1700px] gap-5 px-4 py-6 sm:gap-8 sm:py-8 lg:grid-cols-[1.3fr_0.7fr_1fr_auto] lg:px-7">
+          <div className="consultancy-footer-brand flex items-start gap-3">
             {businessLogo ? (
               <img src={businessLogo} alt={`${businessName} logo`} className="h-12 w-12 shrink-0 rounded-2xl bg-white object-contain p-1 shadow-sm" />
             ) : (
@@ -662,16 +675,16 @@ export default function ConsultancyBrandPage({ place }) {
                 {businessName.charAt(0).toUpperCase() || 'V'}
               </div>
             )}
-            <div>
-              <div className="font-display text-[1.8rem] font-bold tracking-tight text-white">{businessName}</div>
+            <div className="min-w-0">
+              <div className="break-words font-display text-xl font-bold leading-tight tracking-tight text-white sm:text-[1.8rem]">{businessName}</div>
               <div className={`mt-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${isLogistics ? 'text-amber-200' : 'text-sky-200/90'}`}>{businessCategory}</div>
-              <div className="mt-3 text-sm text-slate-300">{address}</div>
+              <div className="mt-2 break-words text-[11px] text-slate-300 sm:mt-3 sm:text-sm">{address}</div>
             </div>
           </div>
 
-          <div>
-            <h3 className="text-lg font-semibold text-white">Quick Links</h3>
-            <ul className="mt-4 grid grid-cols-2 gap-2 text-sm text-slate-300">
+          <div className="consultancy-footer-links">
+            <h3 className="text-sm font-semibold text-white sm:text-lg">Quick Links</h3>
+            <ul className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] text-slate-300 sm:mt-4 sm:gap-2 sm:text-sm">
               <li><a href="#about" className="transition hover:text-white">Home</a></li>
               <li><a href="#gallery" className="transition hover:text-white">Gallery</a></li>
               <li><a href="#about" className="transition hover:text-white">About</a></li>
@@ -681,16 +694,16 @@ export default function ConsultancyBrandPage({ place }) {
             </ul>
           </div>
 
-          <div>
-            <h3 className="text-lg font-semibold text-white">Get in Touch</h3>
-            <ul className="mt-4 space-y-3 text-sm text-slate-300">
+          <div className="consultancy-footer-contact">
+            <h3 className="text-sm font-semibold text-white sm:text-lg">Get in Touch</h3>
+            <ul className="mt-2 space-y-1.5 text-[11px] text-slate-300 sm:mt-4 sm:space-y-3 sm:text-sm">
               <li className="flex items-center gap-2"><span>☎</span> <span>{phone}</span></li>
               <li className="flex items-center gap-2"><span>✉</span> <span>{email}</span></li>
               <li className="flex items-center gap-2"><span>📍</span> <span>{address}</span></li>
             </ul>
           </div>
 
-          <div className="flex flex-col items-start justify-between gap-4 lg:items-end">
+          <div className="consultancy-footer-actions flex flex-col items-start gap-3 lg:items-end">
             <Link
               to={backLink}
               className={`inline-flex items-center gap-2 rounded-full border bg-transparent px-4 py-2.5 text-sm font-semibold transition hover:bg-white/5 ${isLogistics ? 'border-amber-200/50 text-amber-100' : 'border-sky-200/70 text-sky-100'}`}
@@ -698,7 +711,7 @@ export default function ConsultancyBrandPage({ place }) {
               <span>←</span> Back to G-Pages
             </Link>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-nowrap items-center gap-2 sm:gap-3">
               {footerSocialLinks.map((item) => (
                 <a
                   key={item.network}
@@ -707,7 +720,7 @@ export default function ConsultancyBrandPage({ place }) {
                   rel="noopener noreferrer"
                   title={item.label}
                   aria-label={item.label}
-                  className={`flex h-10 w-10 items-center justify-center rounded-full text-white shadow-lg transition hover:-translate-y-0.5 hover:brightness-110 ${item.className}`}
+                  className={`flex h-8 w-8 items-center justify-center rounded-full text-white shadow-lg transition hover:-translate-y-0.5 hover:brightness-110 sm:h-10 sm:w-10 ${item.className}`}
                 >
                   <SocialIcon network={item.network} />
                 </a>

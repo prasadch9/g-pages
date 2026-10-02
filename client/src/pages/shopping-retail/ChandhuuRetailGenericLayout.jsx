@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import ReviewsSection from '../../components/ReviewsSection';
 
@@ -231,7 +231,7 @@ export function ChandhuuRetailGenericLayout({ place, mapsUrl, socialLinks = {}, 
         </section>
 
         {isShoppingCategory && (
-          <footer className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[#241b17] px-5 py-5 text-sm text-white/75">
+          <footer className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[#241b17] px-5 py-5 text-sm text-white/75" data-mobile-footer-layout="inline">
             <span className="font-semibold text-white">{place.name}</span>
             <span>{place.address}</span>
             <span>© {new Date().getFullYear()} {place.name}</span>
