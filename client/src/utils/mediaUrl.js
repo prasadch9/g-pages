@@ -1,4 +1,4 @@
-const configuredApiOrigin = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '').replace(/\/api$/, '');
+const configuredApiOrigin = (import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://plum-tapir-708238.hostingersite.com' : '')).replace(/\/+$/, '').replace(/\/api$/, '');
 
 export default function mediaUrl(value) {
   if (!value || value.startsWith('data:') || value.startsWith('blob:')) return value;

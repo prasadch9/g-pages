@@ -1,4 +1,4 @@
-const configuredApiOrigin = (import.meta.env?.VITE_API_URL || '')
+const configuredApiOrigin = (import.meta.env?.VITE_API_URL || (import.meta.env?.PROD ? 'https://plum-tapir-708238.hostingersite.com' : ''))
   .replace(/\/api\/?$/, '')
   .replace(/\/+$/, '');
 

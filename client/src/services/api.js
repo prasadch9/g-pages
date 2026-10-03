@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/+$/, '');
+const configuredApiUrl = (import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://plum-tapir-708238.hostingersite.com' : ''))?.replace(/\/+$/, '');
 const apiBaseUrl = configuredApiUrl
   ? configuredApiUrl.endsWith('/api')
     ? configuredApiUrl
